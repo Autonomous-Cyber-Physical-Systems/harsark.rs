@@ -18,9 +18,15 @@ fn main() -> ! {
 
     let mut stack1 = [0xDEADBEEF; 512];
     let mut stack2 = [0xDEADBEEF; 512];
+    let mut stack3 = [0xDEADBEEF; 512];
+
     let _ = create_thread(&mut stack1, || loop {
         let _ = hprintln!("in user task 1 !!");
         sleep(50);
+    });
+    let _ = create_thread(&mut stack3, || loop {
+        let _ = hprintln!("in user task 3 !!");
+        sleep(20);
     });
     let _ = create_thread_with_config(
         &mut stack2,

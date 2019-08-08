@@ -2,17 +2,10 @@
 
 use core::ptr;
 
-/// if creating a thread will cause more than 32 threads to exist (inclusing the idle thread)
-/// created by this library
 pub static ERR_TOO_MANY_THREADS: u8 = 0x01;
-/// Returned by create_thread or create_thread_with_config as Err(ERR_STACK_TOO_SMALL)
-/// if array to be used as stack area is too small. Smallest size is 32 u32's
 pub static ERR_STACK_TOO_SMALL: u8 = 0x02;
-/// Returned by create_thread or create_thread_with_config as Err(ERR_NO_CREATE_PRIV)
-/// if called from an unprivileged thread
 pub static ERR_NO_CREATE_PRIV: u8 = 0x03;
 
-/// Context switching and threads' state
 #[repr(C)]
 struct ThreadsState {
     // start fields used in assembly, do not change their order
@@ -102,51 +95,10 @@ pub fn init() -> ! {
     }
 }
 
-/// Create a thread with default configuration (lowest priority, unprivileged).
-///
-/// # Arguments
-/// * stack: mut array of u32's to be used as stack area
-/// * handler_fn: function to execute in created thread
-///
-/// # Example
-/// ```
-/// let mut stack1 = [0xDEADBEEF; 512];
-/// let _ = create_thread(
-///     &mut stack1,
-///     || {
-///         loop {
-///             let _ = hprintln!("in task 1 !!");
-///             sleep(50);
-///         }
-///     });
-///```
 pub fn create_thread(stack: &mut [u32], handler_fn: fn() -> !) -> Result<(), u8> {
     create_thread_with_config(stack, handler_fn, 0x00, false)
 }
 
-/// Create a thread with explicit configuration
-/// # Arguments
-/// * stack: mut array of u32's to be used as stack area
-/// * handler_fn: function to execute in created thread
-/// * priority: higher numeric value means higher priority
-/// * privileged: run thread in privileged mode
-///
-/// # Example
-/// ```
-/// let mut stack1 = [0xDEADBEEF; 512];
-/// let _ = create_thread_with_config(
-///     &mut stack1,
-///     || {
-///         loop {
-///             let _ = hprintln!("in task 1 !!");
-///             sleep(50);
-///         }
-///     },
-///     0xff, // priority, this is the maximum, higher number means higher priority
-///     true // this thread will be run in privileged mode
-///     );
-///```
-/// FIXME: take stack memory as a vec (arrayvec?, smallvec?) instead of &[]
 pub fn create_thread_with_config(
     stack: &mut [u32],
     handler_fn: fn() -> !,
@@ -177,13 +129,6 @@ pub fn create_thread_with_config(
     }
 }
 
-/// Handle a tick event. Typically, this would be called as SysTick handler, but can be
-/// called anytime. Call from thread handler code to yield and switch context.
-///
-/// * updates sleep_ticks field in sleeping threads, decreses by 1
-/// * if a sleeping thread has sleep_ticks == 0, wake it, i.e., change status to idle
-/// * find next thread to schedule
-/// * if context switch is required, will pend the PendSV exception, which will do the actual thread switching
 #[no_mangle]
 pub extern "C" fn SysTick() {
     unsafe {
@@ -216,22 +161,6 @@ pub fn get_thread_id() -> usize {
     handler.idx
 }
 
-/// Make current thread sleep for `ticks` ticks. Current thread will be put in `Sleeping`
-/// state and another thread will be scheduled immediately. Current thread will not be considered
-/// for scheduling until `tick()` is called at least `tick` times.
-///
-/// # Example
-/// ```
-/// let mut stack1 = [0xDEADBEEF; 512];
-/// let _ = create_thread(
-///     &mut stack1,
-///     || {
-///         loop {
-///             let _ = hprintln!("in task 1 !!");
-///             sleep(50);
-///         }
-///     });
-/// ```
 pub fn sleep(ticks: u32) {
     let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
     if handler.idx > 0 {
@@ -265,10 +194,10 @@ fn get_next_thread_idx() -> usize {
         .enumerate()
         .filter(|&(idx, x)| idx > 0 && idx < handler.add_idx && x.status != ThreadStatus::Sleeping)
         .max_by(|&(_, a), &(_, b)| a.priority.cmp(&b.priority))
-    {
-        Some((idx, _)) => idx,
-        _ => 0,
-    }
+        {
+            Some((idx, _)) => idx,
+            _ => 0,
+        }
 }
 
 fn create_tcb(
@@ -290,7 +219,7 @@ fn create_tcb(
     stack[idx - 5] = 0x22222222; // R2
     stack[idx - 6] = 0x11111111; // R1
     stack[idx - 7] = 0x00000000; // R0
-                                 // aditional regs
+    // aditional regs
     stack[idx - 08] = 0x77777777; // R7
     stack[idx - 09] = 0x66666666; // R6
     stack[idx - 10] = 0x55555555; // R5
