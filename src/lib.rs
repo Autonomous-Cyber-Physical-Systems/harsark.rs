@@ -9,8 +9,8 @@ pub static ERR_NO_CREATE_PRIV: u8 = 0x03;
 #[repr(C)]
 struct ThreadsState {
     // start fields used in assembly, do not change their order
-    curr: usize,
-    next: usize,
+    ptr_RT: usize, // pointer to running task
+    ptr_HT: usize, // pointer to current high priority task (or the next task to be scheduled)
     // end fields used in assembly
     inited: bool,
     idx: usize,
@@ -44,8 +44,8 @@ struct ThreadControlBlock {
 #[no_mangle]
 static mut __CORTEXM_THREADS_GLOBAL_PTR: u32 = 0;
 static mut __CORTEXM_THREADS_GLOBAL: ThreadsState = ThreadsState {
-    curr: 0,
-    next: 0,
+    ptr_RT: 0,
+    ptr_HT: 0,
     inited: false,
     idx: 0,
     add_idx: 1,
@@ -95,15 +95,10 @@ pub fn init() -> ! {
     }
 }
 
-pub fn create_thread(stack: &mut [u32], handler_fn: fn() -> !) -> Result<(), u8> {
-    create_thread_with_config(stack, handler_fn, 0x00, false)
-}
-
 pub fn create_thread_with_config(
     stack: &mut [u32],
     handler_fn: fn() -> !,
     priority: u8,
-    priviliged: bool,
 ) -> Result<(), u8> {
     unsafe {
         __CORTEXM_THREADS_cpsid();
@@ -114,7 +109,7 @@ pub fn create_thread_with_config(
         if handler.inited && handler.threads[handler.idx].privileged == 0 {
             return Err(ERR_NO_CREATE_PRIV);
         }
-        match create_tcb(stack, handler_fn, priority, priviliged) {
+        match create_tcb(stack, handler_fn, priority, true) {
             Ok(tcb) => {
                 insert_tcb(handler.add_idx, tcb);
                 handler.add_idx = handler.add_idx + 1;
@@ -136,14 +131,14 @@ pub extern "C" fn SysTick() {
     }
     let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
     if handler.inited {
-        if handler.curr == handler.next {
+        if handler.ptr_RT == handler.ptr_HT {
             // schedule a thread to be run
             handler.idx = get_next_thread_idx();
             unsafe {
-                handler.next = core::intrinsics::transmute(&handler.threads[handler.idx]);
+                handler.ptr_HT = core::intrinsics::transmute(&handler.threads[handler.idx]);
             }
         }
-        if handler.curr != handler.next {
+        if handler.ptr_RT != handler.ptr_HT {
             unsafe {
                 let pend = ptr::read_volatile(0xE000ED04 as *const u32);
                 ptr::write_volatile(0xE000ED04 as *mut u32, pend | 1 << 28);
@@ -193,7 +188,7 @@ fn get_next_thread_idx() -> usize {
         .into_iter()
         .enumerate()
         .filter(|&(idx, x)| idx > 0 && idx < handler.add_idx && x.status != ThreadStatus::Sleeping)
-        .max_by(|&(_, a), &(_, b)| a.priority.cmp(&b.priority))
+        .max_by(|&(i, _), &(j, _)| i.cmp(&j))
         {
             Some((idx, _)) => idx,
             _ => 0,
