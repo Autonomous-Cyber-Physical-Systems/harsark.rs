@@ -10,13 +10,6 @@ use cortexm_threads::*;
 
 #[entry]
 fn main() -> ! {
-    let cp = cortex_m::Peripherals::take().unwrap();
-    let mut syst = cp.SYST;
-    syst.set_clock_source(SystClkSource::Core);
-    syst.set_reload(80_000);
-    syst.enable_counter();
-    syst.enable_interrupt();
-
     unsafe {
         disable();
     }
@@ -25,22 +18,41 @@ fn main() -> ! {
     let mut stack2 = [0xDEADBEEF; 512];
     let mut stack3 = [0xDEADBEEF; 512];
 
-    let _ = create_thread_with_config(&mut stack1, || loop {
+    let _ = create_task(
+        1,
+        &mut stack1,
+        || loop {
+        for _ in 0..5 {
         let _ = hprintln!("in user task 1 !!");
-    },
-    1
+        }
+        block_unblock(1, true);
+        block_unblock(2, false);
+        block_unblock(3, false);
+    }
     );
-    let _ = create_thread_with_config(&mut stack3, || loop {
+    let _ = create_task(
+        3,
+        &mut stack3,
+                        || loop {
+        for _ in 0..5 {
         let _ = hprintln!("in user task 3 !!");
-    },
-    3
+        }
+        block_unblock(1, false);
+        block_unblock(2, false);
+        block_unblock(3, true);
+    }
     );
-    let _ = create_thread_with_config(
+    let _ = create_task(
+        2,
         &mut stack2,
         || loop {
+            for _ in 0..5 {
             let _ = hprintln!("in user task 2 !!");
-        },
-        2,
+            }
+            block_unblock(1, false);
+            block_unblock(2, true);
+            block_unblock(3, false);
+        }
     );
     release(&[1,2,3]);
 
