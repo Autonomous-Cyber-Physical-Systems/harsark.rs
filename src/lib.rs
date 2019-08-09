@@ -12,18 +12,10 @@ struct ThreadsState {
     ptr_RT: usize, // pointer to running task
     ptr_HT: usize, // pointer to current high priority task (or the next task to be scheduled)
     // end fields used in assembly
+    RT: usize,
     inited: bool,
-    idx: usize,
-    add_idx: usize,
     threads: [ThreadControlBlock; 32],
-}
-
-/// Thread status
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum ThreadStatus {
-    Idle,
-    Sleeping,
+    ATV: [bool; 32],
 }
 
 /// A single thread's state
@@ -35,9 +27,6 @@ struct ThreadControlBlock {
     sp: u32,
     privileged: u32, // make it a word, assembly is easier. FIXME
     // end fields used in assembly
-    priority: u8,
-    status: ThreadStatus,
-    sleep_ticks: u32,
 }
 
 // GLOBALS:
@@ -46,16 +35,13 @@ static mut __CORTEXM_THREADS_GLOBAL_PTR: u32 = 0;
 static mut __CORTEXM_THREADS_GLOBAL: ThreadsState = ThreadsState {
     ptr_RT: 0,
     ptr_HT: 0,
+    RT: 0,
     inited: false,
-    idx: 0,
-    add_idx: 1,
     threads: [ThreadControlBlock {
         sp: 0,
-        status: ThreadStatus::Idle,
-        priority: 0,
         privileged: 0,
-        sleep_ticks: 0,
     }; 32],
+    ATV: [false; 32]
 };
 // end GLOBALS
 
@@ -67,52 +53,30 @@ extern "C" {
 }
 
 /// Initialize the switcher system
-pub fn init() -> ! {
+pub fn init() {
     unsafe {
         __CORTEXM_THREADS_cpsid();
         let ptr: usize = core::intrinsics::transmute(&__CORTEXM_THREADS_GLOBAL);
         __CORTEXM_THREADS_GLOBAL_PTR = ptr as u32;
         __CORTEXM_THREADS_cpsie();
-        let mut idle_stack = [0xDEADBEEF; 64];
-        match create_tcb(
-            &mut idle_stack,
-            || loop {
-                __CORTEXM_THREADS_wfe();
-            },
-            0xff,
-            false,
-        ) {
-            Ok(tcb) => {
-                insert_tcb(0, tcb);
-            }
-            _ => panic!("Could not create idle thread"),
-        }
+
         __CORTEXM_THREADS_GLOBAL.inited = true;
         SysTick();
-        loop {
-            __CORTEXM_THREADS_wfe();
-        }
     }
 }
 
 pub fn create_thread_with_config(
     stack: &mut [u32],
     handler_fn: fn() -> !,
-    priority: u8,
+    priority: usize,
 ) -> Result<(), u8> {
     unsafe {
         __CORTEXM_THREADS_cpsid();
         let handler = &mut __CORTEXM_THREADS_GLOBAL;
-        if handler.add_idx >= handler.threads.len() {
-            return Err(ERR_TOO_MANY_THREADS);
-        }
-        if handler.inited && handler.threads[handler.idx].privileged == 0 {
-            return Err(ERR_NO_CREATE_PRIV);
-        }
-        match create_tcb(stack, handler_fn, priority, true) {
+
+        match create_tcb(stack, handler_fn,true) {
             Ok(tcb) => {
-                insert_tcb(handler.add_idx, tcb);
-                handler.add_idx = handler.add_idx + 1;
+                insert_tcb(priority, tcb);
             }
             Err(e) => {
                 __CORTEXM_THREADS_cpsie();
@@ -133,9 +97,9 @@ pub extern "C" fn SysTick() {
     if handler.inited {
         if handler.ptr_RT == handler.ptr_HT {
             // schedule a thread to be run
-            handler.idx = get_next_thread_idx();
+            handler.RT = get_next_thread_idx();
             unsafe {
-                handler.ptr_HT = core::intrinsics::transmute(&handler.threads[handler.idx]);
+                handler.ptr_HT = core::intrinsics::transmute(&handler.threads[handler.RT]);
             }
         }
         if handler.ptr_RT != handler.ptr_HT {
@@ -150,55 +114,23 @@ pub extern "C" fn SysTick() {
     }
 }
 
-/// Get id of current thread
-pub fn get_thread_id() -> usize {
-    let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-    handler.idx
-}
-
-pub fn sleep(ticks: u32) {
-    let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-    if handler.idx > 0 {
-        handler.threads[handler.idx].status = ThreadStatus::Sleeping;
-        handler.threads[handler.idx].sleep_ticks = ticks;
-        // schedule another thread
-        SysTick();
-    }
-}
-
+static mut bleh : usize = 1;
 fn get_next_thread_idx() -> usize {
-    let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-    if handler.add_idx <= 1 {
-        // no user threads, schedule idle thread
-        return 0;
+//    let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
+    unsafe {
+    if bleh == 1 {
+        bleh = 2;
+        return 2;
+    } else {
+        bleh = 1;
+        return 1;
     }
-    // user threads exist
-    // update sleeping threads
-    for i in 1..handler.add_idx {
-        if handler.threads[i].status == ThreadStatus::Sleeping {
-            if handler.threads[i].sleep_ticks > 0 {
-                handler.threads[i].sleep_ticks = handler.threads[i].sleep_ticks - 1;
-            } else {
-                handler.threads[i].status = ThreadStatus::Idle;
-            }
-        }
     }
-    match handler
-        .threads
-        .into_iter()
-        .enumerate()
-        .filter(|&(idx, x)| idx > 0 && idx < handler.add_idx && x.status != ThreadStatus::Sleeping)
-        .max_by(|&(i, _), &(j, _)| i.cmp(&j))
-        {
-            Some((idx, _)) => idx,
-            _ => 0,
-        }
 }
 
 fn create_tcb(
     stack: &mut [u32],
     handler: fn() -> !,
-    priority: u8,
     priviliged: bool,
 ) -> Result<ThreadControlBlock, u8> {
     if stack.len() < 32 {
@@ -227,10 +159,7 @@ fn create_tcb(
         let sp: usize = core::intrinsics::transmute(&stack[stack.len() - 16]);
         let tcb = ThreadControlBlock {
             sp: sp as u32,
-            priority: priority,
             privileged: if priviliged { 0x1 } else { 0x0 },
-            status: ThreadStatus::Idle,
-            sleep_ticks: 0,
         };
         Ok(tcb)
     }

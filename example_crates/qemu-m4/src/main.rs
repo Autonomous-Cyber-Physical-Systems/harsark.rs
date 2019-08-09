@@ -6,7 +6,7 @@ use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::interrupt::{enable,disable};
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
-use cortexm_threads::{create_thread_with_config, init, sleep};
+use cortexm_threads::{create_thread_with_config, init};
 
 #[entry]
 fn main() -> ! {
@@ -27,13 +27,11 @@ fn main() -> ! {
 
     let _ = create_thread_with_config(&mut stack1, || loop {
         let _ = hprintln!("in user task 1 !!");
-        sleep(10);
     },
-    2
+    1
     );
     let _ = create_thread_with_config(&mut stack3, || loop {
         let _ = hprintln!("in user task 3 !!");
-        sleep(20);
     },
     3
     );
@@ -41,9 +39,8 @@ fn main() -> ! {
         &mut stack2,
         || loop {
             let _ = hprintln!("in user task 2 !!");
-            sleep(30);
         },
-        1,
+        2,
     );
 
     unsafe {
@@ -51,4 +48,7 @@ fn main() -> ! {
     }
 
     init();
+    loop {
+
+    }
 }
