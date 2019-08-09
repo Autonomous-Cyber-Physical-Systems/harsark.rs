@@ -65,6 +65,15 @@ pub fn init() {
     }
 }
 
+pub fn release(task_ids: &[usize]) {
+    let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
+    task_ids.iter().for_each(|tid| {
+        unsafe {
+            handler.ATV[*tid] = true;
+        }
+    })
+}
+
 pub fn create_thread_with_config(
     stack: &mut [u32],
     handler_fn: fn() -> !,
@@ -116,16 +125,13 @@ pub extern "C" fn SysTick() {
 
 static mut bleh : usize = 1;
 fn get_next_thread_idx() -> usize {
-//    let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-    unsafe {
-    if bleh == 1 {
-        bleh = 2;
-        return 2;
-    } else {
-        bleh = 1;
-        return 1;
-    }
-    }
+    let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
+    for i in (0..32).rev() {
+        if handler.ATV[i] == true {
+            return i;
+        }
+    };
+    return 0;
 }
 
 fn create_tcb(
