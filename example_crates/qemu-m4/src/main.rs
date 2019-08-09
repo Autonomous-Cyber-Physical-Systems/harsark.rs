@@ -6,7 +6,7 @@ use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::interrupt::{enable,disable};
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
-use cortexm_threads::{create_thread_with_config, init};
+use cortexm_threads::*;
 
 #[entry]
 fn main() -> ! {
@@ -42,13 +42,14 @@ fn main() -> ! {
         },
         2,
     );
+    release(&[1,2,3]);
 
     unsafe {
         enable();
     }
 
     init();
-    loop {
 
+    loop {
     }
 }
