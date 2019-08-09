@@ -1,9 +1,10 @@
 #![no_std]
 
 use core::ptr;
+//use core::cell::RefCell;
 use cortex_m::interrupt::{disable as disable_interrupt, enable as enable_interrupt};
 
-use cortex_m::peripheral::{syst::SystClkSource, SYST};
+use cortex_m::peripheral::syst::SystClkSource;
 
 use cortex_m_semihosting::hprintln;
 
@@ -12,7 +13,7 @@ pub static ERR_STACK_TOO_SMALL: u8 = 0x02;
 pub static ERR_NO_CREATE_PRIV: u8 = 0x03;
 
 #[repr(C)]
-struct Scheduler {
+struct TaskState {
     // start fields used in assembly, do not change their order
     ptr_RT: usize, // pointer to running task
     ptr_HT: usize, // pointer to current high priority task (or the next task to be scheduled)
@@ -36,7 +37,7 @@ struct TaskControlBlock {
 // GLOBALS:
 #[no_mangle]
 static mut __CORTEXM_THREADS_GLOBAL_PTR: u32 = 0;
-static mut __CORTEXM_THREADS_GLOBAL: Scheduler = Scheduler {
+static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     ptr_RT: 0,
     ptr_HT: 0,
     RT: 0,
@@ -56,7 +57,7 @@ pub fn init() {
         __CORTEXM_THREADS_GLOBAL.is_running = true;
         enable_interrupt();
     }
-    /// The below section just sets up the timer and starts it.
+    // The below section just sets up the timer and starts it.
     let cp = cortex_m::Peripherals::take().unwrap();
     let mut syst = cp.SYST;
     syst.set_clock_source(SystClkSource::Core);
@@ -68,34 +69,32 @@ pub fn init() {
 pub fn release(task_ids: &[usize]) -> Result<(), ()> {
     let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
     for tid in task_ids {
-        unsafe {
-            if handler.threads[*tid].is_none() {
-                return Err(());
-            }
-            handler.ATV[*tid] = true;
+        if handler.threads[*tid].is_none() {
+            return Err(());
         }
+        handler.ATV[*tid] = true;
     }
     SysTick();
     return Ok(());
 }
 
 pub fn create_task(priority: usize, stack: &mut [u32], handler_fn: fn() -> !) -> Result<(), u8> {
-    unsafe {
-        disable_interrupt();
-        let handler = &mut __CORTEXM_THREADS_GLOBAL;
-
-        match create_tcb(stack, handler_fn, true) {
-            Ok(tcb) => {
-                insert_tcb(priority, tcb);
-            }
-            Err(e) => {
-                enable_interrupt();
-                return Err(e);
-            }
+    disable_interrupt();
+    match create_tcb(stack, handler_fn, true) {
+        Ok(tcb) => {
+            insert_tcb(priority, tcb);
         }
-        enable_interrupt();
-        Ok(())
+        Err(e) => {
+            unsafe {
+                enable_interrupt();
+            }
+            return Err(e);
+        }
     }
+    unsafe {
+        enable_interrupt();
+    }
+    Ok(())
 }
 
 fn preempt() -> Result<(), ()> {
@@ -105,16 +104,16 @@ fn preempt() -> Result<(), ()> {
         // schedule a thread to be run
         if handler.RT != HT {
             handler.RT = HT;
-            unsafe {
-                let task = &handler.threads[handler.RT];
-                if let Some(task) = task {
+            let task = &handler.threads[handler.RT];
+            if let Some(task) = task {
+                unsafe {
                     handler.ptr_HT = core::intrinsics::transmute(task);
                     // The following Causes PendSV interrupt, the interrupt handler is written in assembly
                     let pend = ptr::read_volatile(0xE000ED04 as *const u32);
                     ptr::write_volatile(0xE000ED04 as *mut u32, pend | 1 << 28);
-                } else {
-                    return Err(());
                 }
+            } else {
+                return Err(());
             }
         }
     }
@@ -124,9 +123,7 @@ fn preempt() -> Result<(), ()> {
 // SysTick Exception handler
 #[no_mangle]
 pub extern "C" fn SysTick() {
-    unsafe {
-        disable_interrupt();
-    }
+    disable_interrupt();
     preempt();
     unsafe {
         enable_interrupt();
@@ -170,14 +167,13 @@ fn create_tcb(
     stack[idx - 13] = 0xAAAAAAAA; // R10
     stack[idx - 14] = 0x99999999; // R9
     stack[idx - 15] = 0x88888888; // R8
-    unsafe {
-        let sp: usize = core::intrinsics::transmute(&stack[stack.len() - 16]);
-        let tcb = TaskControlBlock {
-            sp: sp as u32,
-            privileged: if priviliged { 0x1 } else { 0x0 },
-        };
-        Ok(tcb)
-    }
+
+    let sp: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
+    let tcb = TaskControlBlock {
+        sp: sp as u32,
+        privileged: if priviliged { 0x1 } else { 0x0 },
+    };
+    Ok(tcb)
 }
 
 fn insert_tcb(idx: usize, tcb: TaskControlBlock) {
