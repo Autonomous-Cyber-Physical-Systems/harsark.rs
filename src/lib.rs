@@ -1,15 +1,9 @@
 #![no_std]
 
 use core::ptr;
-use cortex_m::interrupt::{
-    disable as disable_interrupt,
-    enable as enable_interrupt,
-};
+use cortex_m::interrupt::{disable as disable_interrupt, enable as enable_interrupt};
 
-use cortex_m::peripheral::{
-    syst::SystClkSource,
-    SYST
-};
+use cortex_m::peripheral::{syst::SystClkSource, SYST};
 
 use cortex_m_semihosting::hprintln;
 
@@ -25,7 +19,7 @@ struct Scheduler {
     // end fields used in assembly
     RT: usize,
     is_running: bool,
-    threads: [TaskControlBlock; 32],
+    threads: [Option<TaskControlBlock>; 32],
     ATV: [bool; 32],
     BTV: [bool; 32],
 }
@@ -35,7 +29,7 @@ struct Scheduler {
 #[derive(Clone, Copy)]
 struct TaskControlBlock {
     // fields used in assembly, do not reorder them
-    sp: u32, // current stack pointer of this thread
+    sp: u32,         // current stack pointer of this thread
     privileged: u32, // make it a word, assembly is easier. FIXME
 }
 
@@ -47,10 +41,7 @@ static mut __CORTEXM_THREADS_GLOBAL: Scheduler = Scheduler {
     ptr_HT: 0,
     RT: 0,
     is_running: false,
-    threads: [TaskControlBlock {
-        sp: 0,
-        privileged: 0,
-    }; 32],
+    threads: [None; 32],
     ATV: [false; 32],
     BTV: [false; 32],
 };
@@ -65,35 +56,35 @@ pub fn init() {
         __CORTEXM_THREADS_GLOBAL.is_running = true;
         enable_interrupt();
     }
-        /// The below section just sets up the timer and starts it.
-        let cp = cortex_m::Peripherals::take().unwrap();
-        let mut syst = cp.SYST;
-        syst.set_clock_source(SystClkSource::Core);
-        syst.set_reload(80_000);
-        syst.enable_counter();
-        syst.enable_interrupt();
+    /// The below section just sets up the timer and starts it.
+    let cp = cortex_m::Peripherals::take().unwrap();
+    let mut syst = cp.SYST;
+    syst.set_clock_source(SystClkSource::Core);
+    syst.set_reload(80_000);
+    syst.enable_counter();
+    syst.enable_interrupt();
 }
 
-pub fn release(task_ids: &[usize]) {
+pub fn release(task_ids: &[usize]) -> Result<(), ()> {
     let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-    task_ids.iter().for_each(|tid| {
+    for tid in task_ids {
         unsafe {
+            if handler.threads[*tid].is_none() {
+                return Err(());
+            }
             handler.ATV[*tid] = true;
         }
-    });
+    }
     SysTick();
+    return Ok(());
 }
 
-pub fn create_task(
-    priority: usize,
-    stack: &mut [u32],
-    handler_fn: fn() -> !,
-) -> Result<(), u8> {
+pub fn create_task(priority: usize, stack: &mut [u32], handler_fn: fn() -> !) -> Result<(), u8> {
     unsafe {
         disable_interrupt();
         let handler = &mut __CORTEXM_THREADS_GLOBAL;
 
-        match create_tcb(stack, handler_fn,true) {
+        match create_tcb(stack, handler_fn, true) {
             Ok(tcb) => {
                 insert_tcb(priority, tcb);
             }
@@ -107,7 +98,7 @@ pub fn create_task(
     }
 }
 
-fn preempt() {
+fn preempt() -> Result<(), ()> {
     let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
     if handler.is_running {
         let HT = get_HT();
@@ -115,13 +106,19 @@ fn preempt() {
         if handler.RT != HT {
             handler.RT = HT;
             unsafe {
-                handler.ptr_HT = core::intrinsics::transmute(&handler.threads[handler.RT]);
-                // The following Causes PendSV interrupt, the interrupt handler is written in assembly
-                let pend = ptr::read_volatile(0xE000ED04 as *const u32);
-                ptr::write_volatile(0xE000ED04 as *mut u32, pend | 1 << 28);
+                let task = &handler.threads[handler.RT];
+                if let Some(task) = task {
+                    handler.ptr_HT = core::intrinsics::transmute(task);
+                    // The following Causes PendSV interrupt, the interrupt handler is written in assembly
+                    let pend = ptr::read_volatile(0xE000ED04 as *const u32);
+                    ptr::write_volatile(0xE000ED04 as *mut u32, pend | 1 << 28);
+                } else {
+                    return Err(());
+                }
             }
         }
     }
+    return Ok(());
 }
 
 // SysTick Exception handler
@@ -142,7 +139,7 @@ fn get_HT() -> usize {
         if handler.ATV[i] == true && handler.BTV[i] == false {
             return i;
         }
-    };
+    }
     return 0;
 }
 
@@ -164,7 +161,7 @@ fn create_tcb(
     stack[idx - 5] = 0x22222222; // R2
     stack[idx - 6] = 0x11111111; // R1
     stack[idx - 7] = 0x00000000; // R0
-    // aditional regs
+                                 // aditional regs
     stack[idx - 08] = 0x77777777; // R7
     stack[idx - 09] = 0x66666666; // R6
     stack[idx - 10] = 0x55555555; // R5
@@ -186,7 +183,7 @@ fn create_tcb(
 fn insert_tcb(idx: usize, tcb: TaskControlBlock) {
     unsafe {
         let handler = &mut __CORTEXM_THREADS_GLOBAL;
-        handler.threads[idx] = tcb;
+        handler.threads[idx] = Some(tcb);
     }
 }
 
