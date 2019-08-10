@@ -3,9 +3,9 @@
 
 .global __CORTEXM_THREADS_GLOBAL_PTR
 
-.global __CORTEXM_THREADS_wfe
+.global power_save_wfe
 .thumb_func
-__CORTEXM_THREADS_wfe:
+power_save_wfe:
 	wfe
 	bx		lr
 
