@@ -1,6 +1,7 @@
 #![no_std]
 
 use core::ptr;
+
 //use core::cell::RefCell;
 use cortex_m::interrupt::{disable as disable_interrupt, enable as enable_interrupt};
 
@@ -57,7 +58,10 @@ pub fn init() {
         __CORTEXM_THREADS_GLOBAL.is_running = true;
         enable_interrupt();
     }
-    // The below section just sets up the timer and starts it.
+}
+
+// The below section just sets up the timer and starts it.
+pub fn start_kernel() {
     let cp = cortex_m::Peripherals::take().unwrap();
     let mut syst = cp.SYST;
     syst.set_clock_source(SystClkSource::Core);
@@ -148,9 +152,10 @@ fn create_tcb(
     if stack.len() < 32 {
         return Err(ERR_STACK_TOO_SMALL);
     }
+
     let idx = stack.len() - 1;
     stack[idx] = 1 << 24; // xPSR
-    let pc: usize = unsafe { core::intrinsics::transmute(handler as *const fn()) };
+    let pc: usize = handler as usize;
     stack[idx - 1] = pc as u32; // PC
     stack[idx - 2] = 0xFFFFFFFD; // LR
     stack[idx - 3] = 0xCCCCCCCC; // R12

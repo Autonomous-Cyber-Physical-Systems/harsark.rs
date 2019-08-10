@@ -49,6 +49,7 @@ fn main() -> ! {
     }
 
     init();
+    start_kernel();
 
     loop {}
 }
