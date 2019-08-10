@@ -6,7 +6,8 @@ use cortex_m::interrupt::{disable, enable};
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
-use cortexm_threads::*;
+
+use cortexm_threads::task_manager::*;
 
 #[entry]
 fn main() -> ! {
