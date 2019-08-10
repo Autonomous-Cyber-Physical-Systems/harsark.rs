@@ -10,9 +10,7 @@ use cortexm_threads::*;
 
 #[entry]
 fn main() -> ! {
-    unsafe {
-        disable();
-    }
+    disable();
 
     let mut stack1 = [0xDEADBEEF; 512];
     let mut stack2 = [0xDEADBEEF; 512];

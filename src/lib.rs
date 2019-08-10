@@ -3,9 +3,7 @@
 use core::ptr;
 
 //use core::cell::RefCell;
-use cortex_m::interrupt::{
-    disable as disable_interrupt, enable as enable_interrupt, free as execute_critical,
-};
+use cortex_m::interrupt::free as execute_critical;
 
 use cortex_m::peripheral::syst::SystClkSource;
 
