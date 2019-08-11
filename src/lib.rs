@@ -1,4 +1,4 @@
 #![no_std]
 
 pub mod task_manager;
-pub mod semaphores;
+pub mod resource_management;

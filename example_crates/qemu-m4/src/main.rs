@@ -47,7 +47,7 @@ fn main() -> ! {
         enable();
     }
 
-    init();
+    init(true);
     start_kernel();
 
     loop {}

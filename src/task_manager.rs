@@ -45,17 +45,19 @@ static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     ATV: [false; 32],
     BTV: [false; 32],
 };
+static mut IS_PREEMPTIVE: bool = false;
 // end GLOBALS
 
 /// Initialize the switcher system
-pub fn init() {
-    unsafe {
+pub fn init(is_preemptive: bool) {
         execute_critical(|_| {
+    unsafe {
             let ptr: usize = core::intrinsics::transmute(&__CORTEXM_THREADS_GLOBAL);
             __CORTEXM_THREADS_GLOBAL_PTR = ptr as u32;
             __CORTEXM_THREADS_GLOBAL.is_running = true;
-        });
+            IS_PREEMPTIVE = is_preemptive;
     }
+        });
 }
 
 // The below section just sets up the timer and starts it.
@@ -66,6 +68,7 @@ pub fn start_kernel() {
     syst.set_reload(80_000);
     syst.enable_counter();
     syst.enable_interrupt();
+    preempt();
 }
 
 pub fn release(task_ids: &[usize]) {
@@ -111,9 +114,11 @@ fn preempt() {
 // SysTick Exception handler
 #[no_mangle]
 pub extern "C" fn SysTick() {
+    if unsafe {IS_PREEMPTIVE} {
     execute_critical(|_| {
         preempt();
     });
+    }
 }
 
 fn get_HT() -> usize {
@@ -177,4 +182,11 @@ pub fn block_unblock(tid: usize, flag: bool) {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         handler.BTV[tid] = flag;
     });
+}
+
+pub fn get_RT() -> usize {
+    execute_critical(|_| {
+        let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
+        return handler.RT;
+    })
 }
