@@ -50,14 +50,12 @@ static mut IS_PREEMPTIVE: bool = false;
 
 /// Initialize the switcher system
 pub fn init(is_preemptive: bool) {
-        execute_critical(|_| {
-    unsafe {
-            let ptr: usize = core::intrinsics::transmute(&__CORTEXM_THREADS_GLOBAL);
-            __CORTEXM_THREADS_GLOBAL_PTR = ptr as u32;
-            __CORTEXM_THREADS_GLOBAL.is_running = true;
-            IS_PREEMPTIVE = is_preemptive;
-    }
-        });
+    execute_critical(|_| unsafe {
+        let ptr: usize = core::intrinsics::transmute(&__CORTEXM_THREADS_GLOBAL);
+        __CORTEXM_THREADS_GLOBAL_PTR = ptr as u32;
+        __CORTEXM_THREADS_GLOBAL.is_running = true;
+        IS_PREEMPTIVE = is_preemptive;
+    });
 }
 
 // The below section just sets up the timer and starts it.
@@ -71,11 +69,13 @@ pub fn start_kernel() {
     preempt();
 }
 
-pub fn release(task_ids: &[usize]) {
+pub fn release(task_ids: &[bool; 32]) {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-        for tid in task_ids {
-            handler.ATV[*tid] = true;
+        for (tid, val) in task_ids.iter().enumerate() {
+            if *val == true {
+                handler.ATV[tid] = *val;
+            }
         }
     });
 }
@@ -114,10 +114,10 @@ fn preempt() {
 // SysTick Exception handler
 #[no_mangle]
 pub extern "C" fn SysTick() {
-    if unsafe {IS_PREEMPTIVE} {
-    execute_critical(|_| {
-        preempt();
-    });
+    if unsafe { IS_PREEMPTIVE } {
+        execute_critical(|_| {
+            preempt();
+        });
     }
 }
 
@@ -152,7 +152,7 @@ fn create_tcb(
     stack[idx - 5] = 0x22222222; // R2
     stack[idx - 6] = 0x11111111; // R1
     stack[idx - 7] = 0x00000000; // R0
-    // aditional regs
+                                 // aditional regs
     stack[idx - 08] = 0x77777777; // R7
     stack[idx - 09] = 0x66666666; // R6
     stack[idx - 10] = 0x55555555; // R5
