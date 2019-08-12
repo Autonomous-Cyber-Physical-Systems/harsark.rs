@@ -25,7 +25,7 @@ struct MCB {
 
 static mut MCB_TABLE: [MCB; 32] = [MCB {
     receivers: [false; 32],
-    src_buffer: &[],
+    src_buffer: &[9],
 }; 32];
 
 static mut MsgSCB_TABLE: [SCB; 32] = [SCB {
@@ -36,12 +36,14 @@ static mut MsgSCB_TABLE: [SCB; 32] = [SCB {
 
 pub fn broadcast(var: usize) {
     execute_critical(|_| {
-        let tasks = unsafe { MCB_TABLE[var].receivers };
+//        let tasks = unsafe { MCB_TABLE[var].receivers };
+        let mut tasks = [false; 32];
+        tasks[2] = true;
         msg_signal_release(var, &tasks);
     })
 }
 
-pub fn receive(var: usize) -> bool {
+pub fn receive(var: usize) -> Result<Buffer,()> {
     execute_critical(|_| {
     let tcb_table = unsafe {&mut TCB_TABLE};
     let mcb_table = unsafe {&mut MCB_TABLE};
@@ -49,9 +51,9 @@ pub fn receive(var: usize) -> bool {
 
     if (msg_test_reset(var)) {
         tcb_table[rt].dest_buffer = mcb_table[var].src_buffer;
-        return true;
+        return Ok(tcb_table[rt].dest_buffer);
     }
-        return false;
+        Err(())
     })
 }
 
@@ -60,6 +62,7 @@ fn msg_signal_release(var:usize, tasks: &[bool]) {
     for i in 0..32 {
         scb_table[var].flags[i] = tasks[i];
     }
+    scb_table[var].tasks[2] = true;
     release(&scb_table[var].tasks);
 }
 
@@ -73,3 +76,5 @@ fn msg_test_reset(var:usize) -> bool {
             return false;
         }
 }
+
+//fn configure_msg(var: u32, tasks: &[usize], )
