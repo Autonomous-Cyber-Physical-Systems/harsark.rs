@@ -1,4 +1,7 @@
-use crate::task_manager::release;
+use crate::task_manager::{
+    release,
+    get_RT
+};
 use cortex_m::interrupt::free as execute_critical;
 #[derive(Clone, Copy)]
 struct SCB {
@@ -28,4 +31,17 @@ pub fn semaphore_set_tasks(semaphore: usize, tasks: &[usize]) {
             scb_table[semaphore].tasks[*tid] = true;
         }
     });
+}
+
+pub fn test_and_reset(semaphore: usize) -> bool {
+    execute_critical(|_| {
+        let scb_table = unsafe { &mut SCB_TABLE };
+        let rt = get_RT();
+        if scb_table[semaphore].flags[rt] == true {
+            scb_table[semaphore].flags[rt] = false;
+            return true;
+        } else {
+            return false;
+        }
+    })
 }
