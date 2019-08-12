@@ -9,6 +9,7 @@ use cortex_m_semihosting::hprintln;
 
 use cortexm_threads::task_manager::*;
 use cortexm_threads::semaphores::*;
+use cortexm_threads::messaging::*;
 
 #[entry]
 fn main() -> ! {
@@ -18,17 +19,20 @@ fn main() -> ! {
     let mut stack2 = [0xDEADBEEF; 512];
     let mut stack3 = [0xDEADBEEF; 512];
 
-    semaphore_set_tasks(1, &[2]);
 
     let _ = create_task(1, &mut stack1, || loop {
         for _ in 0..5 {
             let _ = hprintln!("in user task 1 !!");
         }
-        signal_and_release(1, &[3]);
+        broadcast(1);
     });
     let _ = create_task(2, &mut stack2, || loop {
         for _ in 0..5 {
             let _ = hprintln!("in user task 2 !!");
+        }
+        if let Ok(msg) = receive(1) {
+            let x = msg[0];
+            hprintln!("abcdefghijklmnop {:?}", msg);
         }
     });
     let _ = create_task(3, &mut stack3, || loop {
