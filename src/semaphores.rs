@@ -3,10 +3,11 @@ use crate::task_manager::{
     get_RT
 };
 use cortex_m::interrupt::free as execute_critical;
+
 #[derive(Clone, Copy)]
-struct SCB {
-    flags: [bool; 32],
-    tasks: [bool; 32],
+pub struct SCB {
+    pub flags: [bool; 32],
+    pub tasks: [bool; 32],
 }
 
 static mut SCB_TABLE: [SCB; 32] = [SCB {
