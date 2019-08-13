@@ -2,14 +2,9 @@ use core::ptr;
 
 //use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
-
 use cortex_m::peripheral::syst::SystClkSource;
 
 use cortex_m_semihosting::hprintln;
-
-pub static ERR_TOO_MANY_THREADS: u8 = 0x01;
-pub static ERR_STACK_TOO_SMALL: u8 = 0x02;
-pub static ERR_NO_CREATE_PRIV: u8 = 0x03;
 
 #[repr(C)]
 struct TaskState {
@@ -20,8 +15,8 @@ struct TaskState {
     RT: usize,
     is_running: bool,
     threads: [Option<TaskControlBlock>; 32],
-    ATV: [bool; 32],
-    BTV: [bool; 32],
+    BTV: u32,
+    ATV: u32,
 }
 
 /// A single thread's state
@@ -29,8 +24,7 @@ struct TaskState {
 #[derive(Clone, Copy)]
 struct TaskControlBlock {
     // fields used in assembly, do not reorder them
-    sp: u32,         // current stack pointer of this thread
-    privileged: u32, // make it a word, assembly is easier. FIXME
+    sp: usize, // current stack pointer of this thread
 }
 
 // GLOBALS:
@@ -42,8 +36,8 @@ static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     RT: 0,
     is_running: false,
     threads: [None; 32],
-    ATV: [false; 32],
-    BTV: [false; 32],
+    ATV: 0,
+    BTV: 0,
 };
 static mut IS_PREEMPTIVE: bool = false;
 // end GLOBALS
@@ -69,14 +63,10 @@ pub fn start_kernel() {
     preempt();
 }
 
-pub fn release(task_ids: &[bool; 32]) {
+pub fn release(tasks_mask: &u32) {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-        for (tid, val) in task_ids.iter().enumerate() {
-            if *val == true {
-                handler.ATV[tid] = *val;
-            }
-        }
+        handler.ATV |= *tasks_mask;
     });
 }
 
@@ -124,12 +114,13 @@ pub extern "C" fn SysTick() {
 fn get_HT() -> usize {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-        for i in (0..32).rev() {
-            if handler.ATV[i] == true && handler.BTV[i] == false {
-                return i;
+        for i in (1..31).rev() {
+            let i_mask = (1 << i);
+            if handler.ATV & i_mask == i_mask {
+                return i as usize;
             }
         }
-        return 0;
+        return 3;
     })
 }
 
@@ -137,9 +128,9 @@ fn create_tcb(
     stack: &mut [u32],
     handler: fn() -> !,
     priviliged: bool,
-) -> Result<TaskControlBlock, u8> {
+) -> Result<TaskControlBlock, ()> {
     if stack.len() < 32 {
-        return Err(ERR_STACK_TOO_SMALL);
+        return Err(());
     }
 
     let idx = stack.len() - 1;
@@ -163,10 +154,7 @@ fn create_tcb(
     stack[idx - 15] = 0x88888888; // R8
 
     let sp: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
-    let tcb = TaskControlBlock {
-        sp: sp as u32,
-        privileged: if priviliged { 0x1 } else { 0x0 },
-    };
+    let tcb = TaskControlBlock { sp: sp as usize };
     Ok(tcb)
 }
 
@@ -174,13 +162,6 @@ fn insert_tcb(idx: usize, tcb: TaskControlBlock) {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         handler.threads[idx] = Some(tcb);
-    });
-}
-
-pub fn block_unblock(tid: usize, flag: bool) {
-    execute_critical(|_| {
-        let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-        handler.BTV[tid] = flag;
     });
 }
 
