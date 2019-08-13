@@ -1,10 +1,7 @@
 //use core::alloc::
-use cortex_m::interrupt::free as execute_critical;
-use crate::task_manager::{
-    get_RT,
-    release
-};
 use crate::semaphores::SCB;
+use crate::task_manager::{get_RT, release};
+use cortex_m::interrupt::free as execute_critical;
 
 pub type Buffer = &'static [u32];
 
@@ -13,26 +10,20 @@ struct TCB {
     dest_buffer: Buffer,
 }
 
-static mut TCB_TABLE: [TCB; 32] = [TCB {
-    dest_buffer: &[]
-}; 32];
+static mut TCB_TABLE: [TCB; 32] = [TCB { dest_buffer: &[] }; 32];
 
 #[derive(Clone, Copy)]
 struct MCB {
-    receivers: [bool; 32],
+    receivers: u32,
     src_buffer: Buffer,
 }
 
 static mut MCB_TABLE: [MCB; 32] = [MCB {
-    receivers: [false; 32],
+    receivers: 0,
     src_buffer: &[],
 }; 32];
 
-static mut MsgSCB_TABLE: [SCB; 32] = [SCB {
-    flags: [false; 32],
-    tasks: [false; 32],
-}; 32];
-
+static mut MsgSCB_TABLE: [SCB; 32] = [SCB { flags: 0, tasks: 0 }; 32];
 
 pub fn broadcast(var: usize) {
     execute_critical(|_| {
@@ -41,50 +32,45 @@ pub fn broadcast(var: usize) {
     })
 }
 
-pub fn receive(var: usize) -> Result<Buffer,()> {
+pub fn receive(var: usize) -> Result<Buffer, ()> {
     execute_critical(|_| {
-    let tcb_table = unsafe {&mut TCB_TABLE};
-    let mcb_table = unsafe {&mut MCB_TABLE};
-    let rt = get_RT();
+        let tcb_table = unsafe { &mut TCB_TABLE };
+        let mcb_table = unsafe { &mut MCB_TABLE };
+        let rt = get_RT();
 
-    if (msg_test_reset(var)) {
-        tcb_table[rt].dest_buffer = mcb_table[var].src_buffer;
-        return Ok(tcb_table[rt].dest_buffer);
-    }
+        if (msg_test_reset(var)) {
+            tcb_table[rt].dest_buffer = mcb_table[var].src_buffer;
+            return Ok(tcb_table[rt].dest_buffer);
+        }
         Err(())
     })
 }
 
-fn msg_signal_release(var:usize, tasks: &[bool]) {
+fn msg_signal_release(semaphore: usize, tasks_mask: &u32) {
     let scb_table = unsafe { &mut MsgSCB_TABLE };
-    for i in 0..32 {
-        scb_table[var].flags[i] = tasks[i];
+    scb_table[semaphore].flags |= *tasks_mask;
+    release(&scb_table[semaphore].tasks);
+}
+
+fn msg_test_reset(semaphore: usize) -> bool {
+    let scb_table = unsafe { &mut MsgSCB_TABLE };
+    let rt = get_RT() as u32;
+    let rt_mask = (1 << rt);
+    if scb_table[semaphore].flags & rt_mask == rt_mask {
+        scb_table[semaphore].flags &= !rt_mask;
+        return true;
+    } else {
+        return false;
     }
-    release(&scb_table[var].tasks);
 }
 
-fn msg_test_reset(var:usize) -> bool {
-        let scb_table = unsafe { &mut MsgSCB_TABLE };
-        let rt = get_RT();
-        if scb_table[var].flags[rt] == true {
-            scb_table[var].flags[rt] = false;
-            return true;
-        } else {
-            return false;
-        }
-}
-
-pub fn configure_msg (var: usize, tasks: &[usize], receivers: &[usize], src_msg: Buffer) {
+pub fn configure_msg(var: usize, tasks: &u32, receivers: &u32, src_msg: Buffer) {
     execute_critical(|_| {
-        let mcb_table = unsafe {&mut MCB_TABLE};
+        let mcb_table = unsafe { &mut MCB_TABLE };
         let scb_table = unsafe { &mut MsgSCB_TABLE };
 
         mcb_table[var].src_buffer = src_msg;
-        for tid in tasks {
-            scb_table[var].tasks[*tid] = true;
-        }
-        for tid in receivers {
-            mcb_table[var].receivers[*tid] = true;
-        }
+        scb_table[var].tasks |= *tasks;
+        mcb_table[var].receivers |= *receivers;
     })
 }

@@ -21,7 +21,7 @@ fn main() -> ! {
 
     static mesg: [u32; 1]= [23];
 
-    configure_msg(1, &[2], &[2], &mesg);
+    configure_msg(1, &4, &4, &mesg);
 
     let _ = create_task(1, &mut stack1, || loop {
         for _ in 0..5 {
@@ -44,9 +44,7 @@ fn main() -> ! {
         }
     });
 
-    let mut task_list = [false;32];
-    task_list[1] = true;
-    release(&task_list);
+    release(&2);
 
     unsafe {
         enable();
