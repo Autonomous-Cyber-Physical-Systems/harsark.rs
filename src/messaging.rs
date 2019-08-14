@@ -2,15 +2,19 @@
 use crate::semaphores::SCB;
 use crate::task_manager::{get_RT, release};
 use cortex_m::interrupt::free as execute_critical;
+use cortex_m_semihosting::hprintln;
+
+const MAX_BUFFER_SIZE: usize = 32;
 
 pub type Buffer = &'static [u32];
 
 #[derive(Clone, Copy)]
 struct TCB {
-    dest_buffer: Buffer,
+    dest_buffer: [u32; MAX_BUFFER_SIZE],
+    msg_size: usize,
 }
 
-static mut TCB_TABLE: [TCB; 32] = [TCB { dest_buffer: &[] }; 32];
+static mut TCB_TABLE: [TCB; 32] = [TCB { dest_buffer: [0; 32], msg_size: 0 }; 32];
 
 #[derive(Clone, Copy)]
 struct MCB {
@@ -27,20 +31,34 @@ static mut MsgSCB_TABLE: [SCB; 32] = [SCB { flags: 0, tasks: 0 }; 32];
 
 pub fn broadcast(var: usize) {
     execute_critical(|_| {
-        let tasks = unsafe { MCB_TABLE[var].receivers };
-        msg_signal_release(var, &tasks);
+        let mcb = unsafe { MCB_TABLE[var] };
+
+        copy(&mcb.receivers, mcb.src_buffer);
+        msg_signal_release(var, &mcb.receivers);
     })
 }
 
-pub fn receive(var: usize) -> Result<Buffer, ()> {
+fn copy (tasks_mask: &u32, src_msg: Buffer) {
+    let tcb_table = unsafe { &mut TCB_TABLE };
+    for tid in 1..32 {
+        let tid_mask = (1<<tid);
+        if tasks_mask & tid_mask == tid_mask {
+            for i in 0..src_msg.len() {
+                tcb_table[tid].dest_buffer[i] = src_msg[i];
+            }
+            tcb_table[tid].msg_size = src_msg.len();
+        }
+    }
+}
+
+pub fn receive<'a >(var: usize) -> Result<&'a [u32], ()> {
     execute_critical(|_| {
         let tcb_table = unsafe { &mut TCB_TABLE };
         let mcb_table = unsafe { &mut MCB_TABLE };
         let rt = get_RT();
 
         if (msg_test_reset(var)) {
-            tcb_table[rt].dest_buffer = mcb_table[var].src_buffer;
-            return Ok(tcb_table[rt].dest_buffer);
+            return Ok(&tcb_table[rt].dest_buffer[0..tcb_table[rt].msg_size]);
         }
         Err(())
     })
