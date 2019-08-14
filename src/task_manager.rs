@@ -4,7 +4,13 @@ use core::ptr;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m_semihosting::hprintln;
+use core::f64::MAX;
+use crate::errors::KernelError;
 
+use crate::config::{
+    MAX_TASKS,
+    SYSTICK_INTERRUPT_INTERVAL
+};
 
 #[repr(C)]
 struct TaskState {
@@ -14,7 +20,7 @@ struct TaskState {
     // end fields used in assembly
     RT: usize,
     is_running: bool,
-    threads: [Option<TaskControlBlock>; 32],
+    threads: [Option<TaskControlBlock>; MAX_TASKS],
     BTV: u32,
     ATV: u32,
 }
@@ -35,7 +41,7 @@ static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     ptr_HT: 0,
     RT: 0,
     is_running: false,
-    threads: [None; 32],
+    threads: [None; MAX_TASKS],
     ATV: 0,
     BTV: 0,
 };
@@ -57,7 +63,7 @@ pub fn start_kernel() {
     let cp = cortex_m::Peripherals::take().unwrap();
     let mut syst = cp.SYST;
     syst.set_clock_source(SystClkSource::Core);
-    syst.set_reload(80_000);
+    syst.set_reload(SYSTICK_INTERRUPT_INTERVAL);
     syst.enable_counter();
     syst.enable_interrupt();
     unsafe {
@@ -117,13 +123,13 @@ pub extern "C" fn SysTick() {
 fn get_HT() -> usize {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-        for i in (1..31).rev() {
+        for i in (1..MAX_TASKS as u32).rev() {
             let i_mask = (1 << i);
-            if handler.ATV & i_mask == i_mask {
+            if (handler.ATV & i_mask == i_mask) && (handler.BTV & i_mask != i_mask){
                 return i as usize;
             }
         }
-        return 3;
+        return 0;
     })
 }
 
@@ -131,9 +137,9 @@ fn create_tcb(
     stack: &mut [u32],
     handler: fn() -> !,
     priviliged: bool,
-) -> Result<TaskControlBlock, ()> {
+) -> Result<TaskControlBlock, KernelError> {
     if stack.len() < 32 {
-        return Err(());
+        return Err(KernelError::StackTooSmall);
     }
 
     let idx = stack.len() - 1;
