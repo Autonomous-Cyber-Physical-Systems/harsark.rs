@@ -43,14 +43,21 @@ fn main() -> ! {
         }
     });
 
-    release(&2);
+//    release(&2);
 
     unsafe {
         enable();
     }
 
-    init(true);
-    start_kernel();
+//    init(false);
+//    start_kernel();
+
+    let cp = cortex_m::Peripherals::take().unwrap();
+    let mut syst = cp.SYST;
+    syst.set_clock_source(SystClkSource::Core);
+    syst.set_reload(80_000);
+    syst.enable_counter();
+    syst.enable_interrupt();
 
     loop {}
 }

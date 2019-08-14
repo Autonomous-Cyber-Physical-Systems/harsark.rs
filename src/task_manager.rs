@@ -45,7 +45,7 @@ static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     ATV: 0,
     BTV: 0,
 };
-static mut IS_PREEMPTIVE: bool = false;
+pub static mut IS_PREEMPTIVE: bool = false;
 // end GLOBALS
 
 /// Initialize the switcher system
@@ -92,7 +92,7 @@ pub fn create_task(priority: usize, stack: &mut [u32], handler_fn: fn() -> !) ->
     }
 }
 
-fn preempt() -> Result<(), KernelError>{
+pub fn preempt() -> Result<(), KernelError>{
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         if handler.is_running {
@@ -115,16 +115,6 @@ fn preempt() -> Result<(), KernelError>{
         }
         return Ok(());
     })
-}
-
-// SysTick Exception handler
-#[no_mangle]
-pub extern "C" fn SysTick() {
-    if unsafe { IS_PREEMPTIVE } {
-        execute_critical(|_| {
-            preempt();
-        });
-    }
 }
 
 fn get_HT() -> usize {
