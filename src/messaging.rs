@@ -1,8 +1,11 @@
 //use core::alloc::
 use crate::semaphores::SCB;
 use crate::task_manager::{get_RT, release};
+use crate::errors::KernelError;
+
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
+
 
 const MAX_BUFFER_SIZE: usize = 32;
 
@@ -29,17 +32,23 @@ static mut MCB_TABLE: [MCB; 32] = [MCB {
 
 static mut MsgSCB_TABLE: [SCB; 32] = [SCB { flags: 0, tasks: 0 }; 32];
 
-pub fn broadcast(var: usize) {
+pub fn broadcast(var: usize) -> Result<(), KernelError> {
     execute_critical(|_| {
-        let mcb = unsafe { MCB_TABLE[var] };
-
-        copy(&mcb.receivers, mcb.src_buffer);
+        let mcb = unsafe { MCB_TABLE.get(var) };
+        if let Some(mcb) = mcb {
+        copy_all (&mcb.receivers, mcb.src_buffer)?;
         msg_signal_release(var, &mcb.receivers);
+            return Ok(());
+        }
+        return Err(KernelError::NotFound);
     })
 }
 
-fn copy (tasks_mask: &u32, src_msg: Buffer) {
+fn copy_all (tasks_mask: &u32, src_msg: Buffer) -> Result<(), KernelError>{
     let tcb_table = unsafe { &mut TCB_TABLE };
+    if MAX_BUFFER_SIZE < src_msg.len() {
+        return Err(KernelError::BufferOverflow);
+    }
     for tid in 1..32 {
         let tid_mask = (1<<tid);
         if tasks_mask & tid_mask == tid_mask {
@@ -49,18 +58,19 @@ fn copy (tasks_mask: &u32, src_msg: Buffer) {
             tcb_table[tid].msg_size = src_msg.len();
         }
     }
+    return Ok(());
 }
 
-pub fn receive<'a >(var: usize) -> Result<&'a [u32], ()> {
+pub fn receive<'a >(var: usize) -> Option<&'a [u32]> {
     execute_critical(|_| {
         let tcb_table = unsafe { &mut TCB_TABLE };
         let mcb_table = unsafe { &mut MCB_TABLE };
         let rt = get_RT();
 
         if (msg_test_reset(var)) {
-            return Ok(&tcb_table[rt].dest_buffer[0..tcb_table[rt].msg_size]);
+            return Some(&tcb_table[rt].dest_buffer[0..tcb_table[rt].msg_size]);
         }
-        Err(())
+        return None;
     })
 }
 

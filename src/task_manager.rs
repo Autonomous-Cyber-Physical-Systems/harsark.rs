@@ -5,6 +5,7 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m_semihosting::hprintln;
 
+
 #[repr(C)]
 struct TaskState {
     // start fields used in assembly, do not change their order
@@ -59,6 +60,9 @@ pub fn start_kernel() {
     syst.set_reload(80_000);
     syst.enable_counter();
     syst.enable_interrupt();
+    unsafe {
+        __CORTEXM_THREADS_GLOBAL.is_running = true;
+    }
     preempt();
 }
 
