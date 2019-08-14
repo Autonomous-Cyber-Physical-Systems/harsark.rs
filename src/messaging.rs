@@ -35,7 +35,7 @@ pub fn broadcast(var: usize) -> Result<(), KernelError> {
         let mcb = unsafe { MCB_TABLE.get(var) };
         if let Some(mcb) = mcb {
         copy_all (&mcb.receivers, mcb.src_buffer)?;
-        msg_signal_release(var, &mcb.receivers);
+        msg_signal_release(var, &mcb.receivers)?;
             return Ok(());
         }
         return Err(KernelError::NotFound);
@@ -65,28 +65,36 @@ pub fn receive<'a >(var: usize) -> Option<&'a [u32]> {
         let mcb_table = unsafe { &mut MCB_TABLE };
         let rt = get_RT();
 
-        if (msg_test_reset(var)) {
-            return Some(&tcb_table[rt].dest_buffer[0..tcb_table[rt].msg_size]);
+        match msg_test_reset(var) {
+            Ok(res) if res == true =>
+                return Some(&tcb_table[rt].dest_buffer[0..tcb_table[rt].msg_size]),
+            _ => return None
         }
-        return None;
     })
 }
 
-fn msg_signal_release(semaphore: usize, tasks_mask: &u32) {
+fn msg_signal_release(semaphore: usize, tasks_mask: &u32) -> Result<(),KernelError>{
     let scb_table = unsafe { &mut MsgSCB_TABLE };
+    if scb_table.get(semaphore).is_none() {
+        return Err(KernelError::NotFound);
+    }
     scb_table[semaphore].flags |= *tasks_mask;
     release(&scb_table[semaphore].tasks);
+    return Ok(());
 }
 
-fn msg_test_reset(semaphore: usize) -> bool {
+fn msg_test_reset(semaphore: usize) -> Result<bool, KernelError> {
     let scb_table = unsafe { &mut MsgSCB_TABLE };
     let rt = get_RT() as u32;
     let rt_mask = (1 << rt);
+    if scb_table.get(semaphore).is_none() {
+        return Err(KernelError::NotFound)
+    }
     if scb_table[semaphore].flags & rt_mask == rt_mask {
         scb_table[semaphore].flags &= !rt_mask;
-        return true;
+        return Ok(true);
     } else {
-        return false;
+        return Ok(false);
     }
 }
 

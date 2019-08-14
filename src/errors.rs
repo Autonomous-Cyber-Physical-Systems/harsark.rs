@@ -1,5 +1,6 @@
 pub enum KernelError {
     BufferOverflow,
     NotFound,
-    StackTooSmall
+    StackTooSmall,
+    DoesNotExist
 }
