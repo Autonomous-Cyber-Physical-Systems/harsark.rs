@@ -40,6 +40,6 @@ pub extern "C" fn SysTick() {
             *min = 0;
             hour_flag = true;
         }
-        hprintln!("{} {} {} {} ", m_sec, sec, min, hour_flag);
+
     });
 }

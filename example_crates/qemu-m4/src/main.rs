@@ -13,7 +13,6 @@ use cortexm_threads::messaging::*;
 
 #[entry]
 fn main() -> ! {
-    disable();
 
     let mut stack1 = [0xDEADBEEF; 512];
     let mut stack2 = [0xDEADBEEF; 512];
@@ -43,21 +42,10 @@ fn main() -> ! {
         }
     });
 
-//    release(&2);
+    release(&2);
 
-    unsafe {
-        enable();
-    }
-
-//    init(false);
-//    start_kernel();
-
-    let cp = cortex_m::Peripherals::take().unwrap();
-    let mut syst = cp.SYST;
-    syst.set_clock_source(SystClkSource::Core);
-    syst.set_reload(80_000);
-    syst.enable_counter();
-    syst.enable_interrupt();
+    init(false);
+    start_kernel();
 
     loop {}
 }
