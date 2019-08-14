@@ -1,6 +1,6 @@
 enum EventType {
     FreeRunning,
-    OnOFF
+    OnOFF,
 }
 
 struct Event {
@@ -14,4 +14,3 @@ struct Event {
     msg_index: u8,
     next_event: u32,
 }
-

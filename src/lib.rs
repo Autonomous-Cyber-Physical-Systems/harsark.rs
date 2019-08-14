@@ -1,12 +1,12 @@
 #![no_std]
 
+pub mod errors;
+pub mod event_manager;
+mod interrupt_handlers;
 pub mod messaging;
 pub mod resource_management;
 pub mod semaphores;
 pub mod task_manager;
-pub mod event_manager;
-pub mod errors;
-mod interrupt_handlers;
 
 mod config {
     pub const MAX_TASKS: usize = 32;
