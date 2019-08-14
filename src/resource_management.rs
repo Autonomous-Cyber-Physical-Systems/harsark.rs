@@ -3,8 +3,8 @@ use core::cmp::max;
 const PI: i8 = -1;
 static mut RCB: [i8; 32] = [PI; 32];
 
-static mut top: u8 = 0;
-static mut PI_Stack: [u8; 32] = [0; 32];
+static mut TOP: u8 = 0;
+static mut PI_STACK: [u8; 32] = [0; 32];
 
 //static mut
 

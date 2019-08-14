@@ -59,7 +59,7 @@ pub fn init(is_preemptive: bool) {
 }
 
 // The below section just sets up the timer and starts it.
-pub fn start_kernel() {
+pub fn start_kernel() -> Result<(), KernelError>{
     let cp = cortex_m::Peripherals::take().unwrap();
     let mut syst = cp.SYST;
     syst.set_clock_source(SystClkSource::Core);
@@ -69,7 +69,8 @@ pub fn start_kernel() {
     unsafe {
         __CORTEXM_THREADS_GLOBAL.is_running = true;
     }
-    preempt();
+    preempt()?;
+    return Ok(());
 }
 
 pub fn release(tasks_mask: &u32) {
@@ -79,16 +80,19 @@ pub fn release(tasks_mask: &u32) {
     });
 }
 
-pub fn create_task(priority: usize, stack: &mut [u32], handler_fn: fn() -> !) {
+pub fn create_task(priority: usize, stack: &mut [u32], handler_fn: fn() -> !) -> Result<(),KernelError>{
     match create_tcb(stack, handler_fn, true) {
         Ok(tcb) => {
-            insert_tcb(priority, tcb);
+            insert_tcb(priority, tcb)?;
+            return Ok(())
         }
-        Err(e) => {}
+        Err(e) => {
+            return Err(e)
+        }
     }
 }
 
-fn preempt() {
+fn preempt() -> Result<(), KernelError>{
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         if handler.is_running {
@@ -104,10 +108,13 @@ fn preempt() {
                         let pend = ptr::read_volatile(0xE000ED04 as *const u32);
                         ptr::write_volatile(0xE000ED04 as *mut u32, pend | 1 << 28);
                     }
+                } else {
+                    return Err(KernelError::DoesNotExist);
                 }
             }
         }
-    });
+        return Ok(());
+    })
 }
 
 // SysTick Exception handler
@@ -167,11 +174,15 @@ fn create_tcb(
     Ok(tcb)
 }
 
-fn insert_tcb(idx: usize, tcb: TaskControlBlock) {
+fn insert_tcb(idx: usize, tcb: TaskControlBlock) -> Result<(), KernelError>{
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
+        if idx >=MAX_TASKS {
+            return Err(KernelError::DoesNotExist);
+        }
         handler.threads[idx] = Some(tcb);
-    });
+        return Ok(());
+    })
 }
 
 pub fn get_RT() -> usize {
