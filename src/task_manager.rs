@@ -1,16 +1,13 @@
 use core::ptr;
 
 //use core::cell::RefCell;
+use crate::errors::KernelError;
+use core::f64::MAX;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m_semihosting::hprintln;
-use core::f64::MAX;
-use crate::errors::KernelError;
 
-use crate::config::{
-    MAX_TASKS,
-    SYSTICK_INTERRUPT_INTERVAL
-};
+use crate::config::{MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
 
 #[repr(C)]
 struct TaskState {
@@ -59,7 +56,7 @@ pub fn init(is_preemptive: bool) {
 }
 
 // The below section just sets up the timer and starts it.
-pub fn start_kernel() -> Result<(), KernelError>{
+pub fn start_kernel() -> Result<(), KernelError> {
     let cp = cortex_m::Peripherals::take().unwrap();
     let mut syst = cp.SYST;
     syst.set_clock_source(SystClkSource::Core);
@@ -80,19 +77,21 @@ pub fn release(tasks_mask: &u32) {
     });
 }
 
-pub fn create_task(priority: usize, stack: &mut [u32], handler_fn: fn() -> !) -> Result<(),KernelError>{
+pub fn create_task(
+    priority: usize,
+    stack: &mut [u32],
+    handler_fn: fn() -> !,
+) -> Result<(), KernelError> {
     match create_tcb(stack, handler_fn, true) {
         Ok(tcb) => {
             insert_tcb(priority, tcb)?;
-            return Ok(())
+            return Ok(());
         }
-        Err(e) => {
-            return Err(e)
-        }
+        Err(e) => return Err(e),
     }
 }
 
-pub fn preempt() -> Result<(), KernelError>{
+pub fn preempt() -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         if handler.is_running {
@@ -122,7 +121,7 @@ fn get_HT() -> usize {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         for i in (1..MAX_TASKS as u32).rev() {
             let i_mask = (1 << i);
-            if (handler.ATV & i_mask == i_mask) && (handler.BTV & i_mask != i_mask){
+            if (handler.ATV & i_mask == i_mask) && (handler.BTV & i_mask != i_mask) {
                 return i as usize;
             }
         }
@@ -164,10 +163,10 @@ fn create_tcb(
     Ok(tcb)
 }
 
-fn insert_tcb(idx: usize, tcb: TaskControlBlock) -> Result<(), KernelError>{
+fn insert_tcb(idx: usize, tcb: TaskControlBlock) -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-        if idx >=MAX_TASKS {
+        if idx >= MAX_TASKS {
             return Err(KernelError::DoesNotExist);
         }
         handler.threads[idx] = Some(tcb);
