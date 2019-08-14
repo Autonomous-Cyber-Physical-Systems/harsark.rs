@@ -19,7 +19,7 @@ fn main() -> ! {
     let mut stack2 = [0xDEADBEEF; 512];
     let mut stack3 = [0xDEADBEEF; 512];
 
-    static mesg: [u32; 1]= [23];
+    static mesg: [u32; 2]= [23, 34];
 
     configure_msg(1, &4, &4, &mesg);
 
@@ -34,7 +34,6 @@ fn main() -> ! {
             let _ = hprintln!("in user task 2 !!");
         }
         if let Ok(msg) = receive(1) {
-            let x = msg[0];
             hprintln!("abcdefghijklmnop {:?}", msg);
         }
     });

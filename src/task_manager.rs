@@ -3,7 +3,6 @@ use core::ptr;
 //use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
-
 use cortex_m_semihosting::hprintln;
 
 #[repr(C)]
