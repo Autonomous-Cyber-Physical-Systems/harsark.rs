@@ -1,5 +1,6 @@
 use crate::task_manager::{get_RT, release};
 use cortex_m::interrupt::free as execute_critical;
+use crate::config::SEMAPHORE_COUNT;
 
 #[derive(Clone, Copy)]
 pub struct SCB {
@@ -7,7 +8,7 @@ pub struct SCB {
     pub tasks: u32,
 }
 
-static mut SCB_TABLE: [SCB; 32] = [SCB { flags: 0, tasks: 0 }; 32];
+static mut SCB_TABLE: [SCB; 32] = [SCB { flags: 0, tasks: 0 }; SEMAPHORE_COUNT];
 
 pub fn signal_and_release(semaphore: usize, tasks_mask: &u32) {
     execute_critical(|_| {

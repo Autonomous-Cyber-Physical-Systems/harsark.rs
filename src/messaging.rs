@@ -2,12 +2,10 @@
 use crate::semaphores::SCB;
 use crate::task_manager::{get_RT, release};
 use crate::errors::KernelError;
+use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, MCB_COUNT};
 
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
-
-
-const MAX_BUFFER_SIZE: usize = 32;
 
 pub type Buffer = &'static [u32];
 
@@ -17,7 +15,7 @@ struct TCB {
     msg_size: usize,
 }
 
-static mut TCB_TABLE: [TCB; 32] = [TCB { dest_buffer: [0; 32], msg_size: 0 }; 32];
+static mut TCB_TABLE: [TCB; MAX_TASKS] = [TCB { dest_buffer: [0; MAX_TASKS], msg_size: 0 }; MAX_TASKS];
 
 #[derive(Clone, Copy)]
 struct MCB {
@@ -25,12 +23,12 @@ struct MCB {
     src_buffer: Buffer,
 }
 
-static mut MCB_TABLE: [MCB; 32] = [MCB {
+static mut MCB_TABLE: [MCB; MCB_COUNT] = [MCB {
     receivers: 0,
     src_buffer: &[],
-}; 32];
+}; MCB_COUNT];
 
-static mut MsgSCB_TABLE: [SCB; 32] = [SCB { flags: 0, tasks: 0 }; 32];
+static mut MsgSCB_TABLE: [SCB; MCB_COUNT] = [SCB { flags: 0, tasks: 0 }; MCB_COUNT];
 
 pub fn broadcast(var: usize) -> Result<(), KernelError> {
     execute_critical(|_| {
@@ -49,7 +47,7 @@ fn copy_all (tasks_mask: &u32, src_msg: Buffer) -> Result<(), KernelError>{
     if MAX_BUFFER_SIZE < src_msg.len() {
         return Err(KernelError::BufferOverflow);
     }
-    for tid in 1..32 {
+    for tid in 1..MAX_TASKS {
         let tid_mask = (1<<tid);
         if tasks_mask & tid_mask == tid_mask {
             for i in 0..src_msg.len() {
