@@ -33,7 +33,7 @@ fn main() -> ! {
         for _ in 0..5 {
             let _ = hprintln!("in user task 2 !!");
         }
-        if let Ok(msg) = receive(1) {
+        if let Some(msg) = receive(1) {
             hprintln!("abcdefghijklmnop {:?}", msg);
         }
     });
