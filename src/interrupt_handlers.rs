@@ -1,6 +1,7 @@
 use crate::task_manager::{preempt, IS_PREEMPTIVE};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
+use crate::event_manager::{sweep_event_table, EventTimeType};
 
 static mut M_SEC: u32 = 0;
 static mut SEC: u32 = 0;
@@ -24,22 +25,34 @@ pub extern "C" fn SysTick() {
         let mut min_flag = false;
         let mut hour_flag = false;
 
-        if *m_sec >= 10 {
+        if *m_sec >= 1000 {
             *sec += 1;
             *m_sec = 0;
             sec_flag = true;
         }
 
-        if *sec >= 5 {
+        if *sec >= 60 {
             *min += 1;
             *sec = 0;
             min_flag = true;
         }
 
-        if *min >= 5 {
+        if *min >= 60 {
             *min = 0;
             hour_flag = true;
         }
 
+        if m_sec_flag {
+            sweep_event_table(EventTimeType::MSec);
+        }
+        if sec_flag {
+            sweep_event_table(EventTimeType::Sec);
+        }
+        if min_flag {
+            sweep_event_table(EventTimeType::Min);
+        }
+        if hour_flag {
+            sweep_event_table(EventTimeType::Hour);
+        }
     });
 }
