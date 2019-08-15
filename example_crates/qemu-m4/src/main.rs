@@ -23,10 +23,10 @@ fn main() -> ! {
     configure_msg(1, &4, &4, &mesg);
 
     let _ = create_task(1, &mut stack1, || loop {
-        for _ in 0..5 {
-            let _ = hprintln!("in user task 1 !!");
-        }
-        broadcast(1);
+//        for _ in 0..5 {
+//            let _ = hprintln!("in user task 1 !!");
+//        }
+//        broadcast(1);
     });
     let _ = create_task(2, &mut stack2, || loop {
         for _ in 0..5 {
