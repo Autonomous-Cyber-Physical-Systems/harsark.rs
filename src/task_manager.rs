@@ -180,3 +180,22 @@ pub fn get_RT() -> usize {
         return handler.RT;
     })
 }
+
+pub fn task_exit() {
+    execute_critical(|_| {
+        let ht = get_HT();
+        let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
+        handler.ATV &= !(1 << ht as u32);
+        preempt();
+    })
+}
+
+#[macro_export]
+macro_rules! task {
+    ($priority: expr, $stack: expr, $handler_fn: block) => {
+        create_task($priority, $stack,|| loop {
+            $handler_fn
+            task_exit();
+        });
+    }
+}
