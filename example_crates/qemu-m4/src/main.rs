@@ -10,6 +10,7 @@ use cortex_m_semihosting::hprintln;
 use cortexm_threads::task_manager::*;
 use cortexm_threads::semaphores::*;
 use cortexm_threads::messaging::*;
+use cortexm_threads::event_manager::*;
 
 #[entry]
 fn main() -> ! {
@@ -21,19 +22,23 @@ fn main() -> ! {
     static mesg: [u32; 2]= [23, 34];
 
     configure_msg(1, &4, &4, &mesg);
+    semaphore_set_tasks(1,&4);
+    define_event(1,true,EventType::FreeRunning, 10, 1, 1, 4, 0, 0);
 
     let _ = create_task(1, &mut stack1, || loop {
-//        for _ in 0..5 {
-//            let _ = hprintln!("in user task 1 !!");
-//        }
-//        broadcast(1);
+        for _ in 0..5 {
+            let _ = hprintln!("in user task 1 !!");
+        }
+        dispatch_event(1);
     });
     let _ = create_task(2, &mut stack2, || loop {
         for _ in 0..5 {
             let _ = hprintln!("in user task 2 !!");
         }
-        if let Some(msg) = receive(1) {
-            hprintln!("abcdefghijklmnop {:?}", msg);
+        if let Ok(x) = test_and_reset(1) {
+            if ( x == true) {
+                hprintln!("abcdefghijklmnop");
+            }
         }
     });
     let _ = create_task(3, &mut stack3, || loop {
@@ -44,7 +49,7 @@ fn main() -> ! {
 
     release(&2);
 
-    init(false);
+    init(true);
     start_kernel();
 
     loop {}

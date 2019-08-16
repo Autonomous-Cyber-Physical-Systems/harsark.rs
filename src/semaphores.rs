@@ -41,8 +41,9 @@ pub fn test_and_reset(semaphore: usize) -> Result<bool, KernelError> {
         if scb_table.get(semaphore).is_none() {
             return Err(KernelError::NotFound);
         }
-        if scb_table[semaphore].flags & (1 << rt) == 1 {
-            scb_table[semaphore].flags &= !(1 << rt);
+        let rt_mask = (1 << rt);
+        if scb_table[semaphore].flags & rt_mask == rt_mask {
+            scb_table[semaphore].flags &= !rt_mask;
             return Ok(true);
         } else {
             return Ok(false);
