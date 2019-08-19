@@ -1,15 +1,15 @@
 #![no_std]
 
-mod task_manager;
 mod interrupt_handlers;
+mod task_manager;
 
 pub mod event_manager;
 pub mod messaging;
 pub mod resource_management;
 pub mod semaphores;
 
-use core::fmt;
 use crate::errors::KernelError;
+use core::fmt;
 
 pub mod tasks {
     pub use crate::task_manager::create_task;
@@ -43,18 +43,10 @@ pub mod errors {
 impl fmt::Debug for KernelError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            KernelError::DoesNotExist => {
-                write!(f,"DoesNotExist")
-            },
-            KernelError::BufferOverflow => {
-                write!(f,"BufferOverflow")
-            },
-            KernelError::NotFound => {
-                write!(f,"NotFound")
-            },
-            KernelError::StackTooSmall => {
-                write!(f,"StackTooSmall")
-            },
+            KernelError::DoesNotExist => write!(f, "DoesNotExist"),
+            KernelError::BufferOverflow => write!(f, "BufferOverflow"),
+            KernelError::NotFound => write!(f, "NotFound"),
+            KernelError::StackTooSmall => write!(f, "StackTooSmall"),
         }
     }
 }

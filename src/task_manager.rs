@@ -1,10 +1,9 @@
-//extern crate paste;
 use core::ptr;
 
+use crate::config::{MAX_STACK_SIZE, MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
 use crate::errors::KernelError;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
-use crate::config::{MAX_STACK_SIZE, MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
 use cortex_m_semihosting::hprintln;
 
 pub type TaskId = u32;
@@ -60,7 +59,8 @@ pub fn init(is_preemptive: bool) {
         */
         create_task(0, || loop {
             cortex_m::asm::wfe();
-        }).unwrap();
+        })
+        .unwrap();
     });
 }
 
@@ -129,7 +129,7 @@ pub fn preempt() -> Result<(), KernelError> {
 fn get_HT() -> usize {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
-        for i in (0..MAX_TASKS as u32).rev() {
+        for i in (1..MAX_TASKS as u32).rev() {
             let i_mask = (1 << i);
             if (handler.ATV & i_mask == i_mask) && (handler.BTV & i_mask != i_mask) {
                 return i as usize;
@@ -159,7 +159,7 @@ fn create_tcb(
         stack[idx - 5] = 0x22222222; // R2
         stack[idx - 6] = 0x11111111; // R1
         stack[idx - 7] = 0x00000000; // R0
-        // aditional regs
+                                     // aditional regs
         stack[idx - 08] = 0x77777777; // R7
         stack[idx - 09] = 0x66666666; // R6
         stack[idx - 10] = 0x55555555; // R5
@@ -218,12 +218,11 @@ pub fn task_exit() {
 
 pub fn release_tasks(tasks: &[TaskId]) {
     execute_critical(|_| {
-
         let mut mask = 0;
-    for tid in tasks {
-        mask |= 1 << *tid;
-    }
-    release(&mask);
+        for tid in tasks {
+            mask |= 1 << *tid;
+        }
+        release(&mask);
     })
 }
 

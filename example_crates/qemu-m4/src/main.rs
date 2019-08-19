@@ -2,15 +2,15 @@
 #![no_main]
 
 extern crate panic_semihosting;
-use cortex_m::interrupt::{free};
+use cortex_m::interrupt::free;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-//use cortexm_threads::event_manager::*;
-//use cortexm_threads::messaging::*;
-//use cortexm_threads::resource_management::*;
-//use cortexm_threads::semaphores::*;
+use cortexm_threads::event_manager::*;
+use cortexm_threads::messaging::*;
+use cortexm_threads::resource_management::*;
+use cortexm_threads::semaphores::*;
 use cortexm_threads::spawn;
 
 use cortexm_threads::tasks::*;
@@ -31,7 +31,7 @@ fn main() -> ! {
         release_tasks(&[thread1]);
     });
 
-    release_tasks(&[1]);
+    release_tasks(&[thread1]);
     init(true);
     start_kernel();
 
