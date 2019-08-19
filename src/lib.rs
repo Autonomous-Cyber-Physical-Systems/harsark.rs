@@ -1,12 +1,15 @@
 #![no_std]
 
 mod task_manager;
+mod interrupt_handlers;
 
 pub mod event_manager;
-mod interrupt_handlers;
 pub mod messaging;
 pub mod resource_management;
 pub mod semaphores;
+
+use core::fmt;
+use crate::errors::KernelError;
 
 pub mod tasks {
     pub use crate::task_manager::create_task;
@@ -25,7 +28,7 @@ mod config {
     pub const MAX_BUFFER_SIZE: usize = 32;
     pub const EVENT_NO: usize = 32;
     pub const EVENT_INDEX_TABLE_COUNT: usize = 8;
-    pub const MAX_STACK_SIZE: usize = 128;
+    pub const MAX_STACK_SIZE: usize = 256;
 }
 
 pub mod errors {
@@ -34,5 +37,24 @@ pub mod errors {
         NotFound,
         StackTooSmall,
         DoesNotExist,
+    }
+}
+
+impl fmt::Debug for KernelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            KernelError::DoesNotExist => {
+                write!(f,"DoesNotExist")
+            },
+            KernelError::BufferOverflow => {
+                write!(f,"BufferOverflow")
+            },
+            KernelError::NotFound => {
+                write!(f,"NotFound")
+            },
+            KernelError::StackTooSmall => {
+                write!(f,"StackTooSmall")
+            },
+        }
     }
 }
