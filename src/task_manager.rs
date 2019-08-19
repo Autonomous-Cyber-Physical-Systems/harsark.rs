@@ -181,6 +181,20 @@ pub fn get_RT() -> usize {
     })
 }
 
+pub fn block_tasks(tasks_mask: u32) {
+    execute_critical(|_| {
+        let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
+        handler.BTV |= tasks_mask;
+    })
+}
+
+pub fn unblock_tasks(tasks_mask: u32) {
+    execute_critical(|_| {
+        let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
+        handler.BTV &= !tasks_mask;
+    })
+}
+
 pub fn task_exit() {
     execute_critical(|_| {
         let ht = get_HT();

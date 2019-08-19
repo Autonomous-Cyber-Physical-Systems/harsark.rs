@@ -9,43 +9,32 @@ use cortex_m_semihosting::hprintln;
 
 use cortexm_threads::event_manager::*;
 use cortexm_threads::messaging::*;
+use cortexm_threads::resource_management::*;
 use cortexm_threads::semaphores::*;
 use cortexm_threads::task;
 use cortexm_threads::task_manager::*;
+
 #[entry]
 fn main() -> ! {
-    let mut stack1 = [0xDEADBEEF; 512];
-    let mut stack2 = [0xDEADBEEF; 512];
-    let mut stack3 = [0xDEADBEEF; 512];
+    let mut stack1 = [0; 512];
+    let mut stack2 = [0; 512];
+    let mut stack3 = [0; 512];
 
-    static mesg: [u32; 2] = [23, 34];
-
-    configure_msg(1, &4, &4, &mesg);
-    semaphore_set_tasks(1, &4);
-    define_event(1, true, EventType::FreeRunning, 10, 1, 1, 4, 0, 0);
+    set_permitted_tasks(1, 6);
 
     let _ = task!(1, &mut stack1, {
         loop {
             for _ in 0..5 {
                 let _ = hprintln!("in user task 1 !!");
             }
-            dispatch_event(1);
+            lock(1);
+            release(&4);
         }
     });
     let _ = task!(2, &mut stack2, {
-        for _ in 0..5 {
-            let _ = hprintln!("in user task 2 !!");
-        }
-        if let Ok(x) = test_and_reset(1) {
-            if (x == true) {
-                hprintln!("abcdefghijklmnop");
-            }
-        }
-    });
-    let _ = task!(3, &mut stack3, {
         loop {
             for _ in 0..5 {
-                let _ = hprintln!("in user task 3 !!");
+                let _ = hprintln!("in user task 2 !!");
             }
         }
     });
