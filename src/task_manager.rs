@@ -226,10 +226,13 @@ pub fn release_tasks(tasks: &[TaskId]) {
 #[macro_export]
 macro_rules! spawn {
     ($task_name: ident, $priority: expr, $handler_fn: block) => {
-        create_task($priority,|| loop {
+        let task_stat = create_task($priority,|| loop {
             $handler_fn
             task_exit();
         });
+        if task_stat.is_err() {
+            panic!();
+        }
         static $task_name: TaskId = $priority;
     }
 }
