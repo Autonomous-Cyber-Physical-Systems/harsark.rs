@@ -6,12 +6,14 @@ use cortex_m::interrupt::{disable, enable};
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
+
 use cortexm_threads::event_manager::*;
 use cortexm_threads::messaging::*;
 use cortexm_threads::resource_management::*;
 use cortexm_threads::semaphores::*;
 use cortexm_threads::spawn;
-use cortexm_threads::task_manager::*;
+
+use cortexm_threads::tasks::*;
 
 #[entry]
 fn main() -> ! {
