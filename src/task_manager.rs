@@ -6,7 +6,7 @@ use core::f64::MAX;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 
-use crate::config::{MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL, MAX_STACK_SIZE};
+use crate::config::{MAX_STACK_SIZE, MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
 
 pub type TaskId = u32;
 
@@ -44,7 +44,7 @@ static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     BTV: 0,
 };
 pub static mut IS_PREEMPTIVE: bool = false;
-static mut TASK_STACKS: [[u32; MAX_STACK_SIZE]; MAX_TASKS] = [ [0; MAX_STACK_SIZE] ; MAX_TASKS ];
+static mut TASK_STACKS: [[u32; MAX_STACK_SIZE]; MAX_TASKS] = [[0; MAX_STACK_SIZE]; MAX_TASKS];
 // end GLOBALS
 
 /// Initialize the switcher system
@@ -58,10 +58,8 @@ pub fn init(is_preemptive: bool) {
             This is the default task, that just puts the board for a power-save mode
             until any event (interrupt/exception) occurs.
         */
-        create_task(0, || {
-            loop {
-                cortex_m::asm::wfe();
-            }
+        create_task(0, || loop {
+            cortex_m::asm::wfe();
         });
     });
 }
@@ -88,11 +86,8 @@ pub fn release(tasks_mask: &u32) {
     });
 }
 
-pub fn create_task(
-    priority: usize,
-    handler_fn: fn() -> !,
-) -> Result<(), KernelError> {
-    let mut stack = unsafe {&mut TASK_STACKS[priority]} ;
+pub fn create_task(priority: usize, handler_fn: fn() -> !) -> Result<(), KernelError> {
+    let mut stack = unsafe { &mut TASK_STACKS[priority] };
     match create_tcb(stack, handler_fn, true) {
         Ok(tcb) => {
             insert_tcb(priority, tcb)?;

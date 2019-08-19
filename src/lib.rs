@@ -10,10 +10,10 @@ pub mod semaphores;
 
 pub mod tasks {
     pub use crate::task_manager::create_task;
-    pub use crate::task_manager::start_kernel;
     pub use crate::task_manager::init;
-    pub use crate::task_manager::task_exit;
     pub use crate::task_manager::release_tasks;
+    pub use crate::task_manager::start_kernel;
+    pub use crate::task_manager::task_exit;
     pub use crate::task_manager::TaskId;
 }
 
