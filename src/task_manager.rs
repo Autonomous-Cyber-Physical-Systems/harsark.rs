@@ -54,6 +54,15 @@ pub fn init(is_preemptive: bool) {
         __CORTEXM_THREADS_GLOBAL_PTR = ptr as u32;
         __CORTEXM_THREADS_GLOBAL.is_running = true;
         IS_PREEMPTIVE = is_preemptive;
+        /*
+            This is the default task, that just puts the board for a power-save mode
+            until any event (interrupt/exception) occurs.
+        */
+        create_task(0, || {
+            loop {
+                cortex_m::asm::wfe();
+            }
+        });
     });
 }
 
