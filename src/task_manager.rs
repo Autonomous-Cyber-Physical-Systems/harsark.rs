@@ -1,13 +1,14 @@
+//extern crate paste;
 use core::ptr;
-
 //use core::cell::RefCell;
 use crate::errors::KernelError;
 use core::f64::MAX;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
-use cortex_m_semihosting::hprintln;
 
 use crate::config::{MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
+
+pub type TaskId = u32;
 
 #[repr(C)]
 struct TaskState {
@@ -204,12 +205,26 @@ pub fn task_exit() {
     })
 }
 
+pub fn release_tasks(tasks: &[TaskId]) {
+    let mut mask = 0;
+    for tid in tasks {
+        mask |= 1 << *tid;
+    }
+    release(&mask);
+}
+
 #[macro_export]
-macro_rules! task {
-    ($priority: expr, $stack: expr, $handler_fn: block) => {
-        create_task($priority, $stack,|| loop {
+macro_rules! spawn {
+    ($task_name: ident, $priority: expr, $handler_fn: block) => {
+        let mut $task_name = [0;128];
+        create_task($priority, &mut $task_name,|| loop {
             $handler_fn
             task_exit();
         });
+        /*
+            There might be an issue as above we are naming the stack with the same name. Hence the naming
+            the task_name is done in the end.
+        */
+        let $task_name: TaskId = $priority;
     }
 }

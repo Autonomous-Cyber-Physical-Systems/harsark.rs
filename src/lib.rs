@@ -16,4 +16,5 @@ mod config {
     pub const MAX_BUFFER_SIZE: usize = 32;
     pub const EVENT_NO: usize = 32;
     pub const EVENT_INDEX_TABLE_COUNT: usize = 8;
+    pub const MAX_STACK_SIZE: usize = 512;
 }
