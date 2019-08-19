@@ -14,7 +14,7 @@ static mut MIN: u32 = 0;
 pub extern "C" fn SysTick() {
     execute_critical(|_| {
         if unsafe { IS_PREEMPTIVE } {
-            preempt();
+            preempt().unwrap();
         }
         let mut m_sec = unsafe { &mut M_SEC };
         let mut sec = unsafe { &mut SEC };
