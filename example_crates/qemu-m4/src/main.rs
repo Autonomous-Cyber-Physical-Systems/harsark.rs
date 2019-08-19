@@ -17,19 +17,19 @@ use cortexm_threads::tasks::*;
 
 #[entry]
 fn main() -> ! {
-    set_permitted_tasks(1,6);
+    set_permitted_tasks(1, 6);
 
     spawn!(thread1, 1, {
-            for _ in 0..5 {
-                let _ = hprintln!("in user task 1 !!");
-            }
-//            release(&4);
+        for _ in 0..5 {
+            let _ = hprintln!("in user task 1 !!");
+        }
+        //            release(&4);
     });
 
     spawn!(thread2, 2, {
-            for _ in 0..5 {
-                let _ = hprintln!("in user task 2 !!");
-            }
+        for _ in 0..5 {
+            let _ = hprintln!("in user task 2 !!");
+        }
     });
 
     release_tasks(&[thread1]);
