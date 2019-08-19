@@ -15,16 +15,13 @@ use cortexm_threads::task_manager::*;
 
 #[entry]
 fn main() -> ! {
-    let mut stack1 = [0; 512];
-    let mut stack2 = [0; 512];
-    let mut stack3 = [0; 512];
-
     set_permitted_tasks(1,6);
 
     spawn!(thread1, 1, {
             for _ in 0..5 {
                 let _ = hprintln!("in user task 1 !!");
             }
+//            release(&4);
     });
 
     spawn!(thread2, 2, {
@@ -33,8 +30,7 @@ fn main() -> ! {
             }
     });
 
-//    release_tasks(&[1]);
-    release(&2);
+    release_tasks(&[thread1]);
     init(true);
     start_kernel();
 
