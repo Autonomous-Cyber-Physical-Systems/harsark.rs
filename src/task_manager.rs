@@ -6,7 +6,7 @@ use core::f64::MAX;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 
-use crate::config::{MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
+use crate::config::{MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL, MAX_STACK_SIZE};
 
 pub type TaskId = u32;
 
@@ -44,6 +44,7 @@ static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     BTV: 0,
 };
 pub static mut IS_PREEMPTIVE: bool = false;
+static mut TASK_STACKS: [[u32; MAX_STACK_SIZE]; MAX_TASKS] = [ [0; MAX_STACK_SIZE] ; MAX_TASKS ];
 // end GLOBALS
 
 /// Initialize the switcher system
@@ -80,9 +81,9 @@ pub fn release(tasks_mask: &u32) {
 
 pub fn create_task(
     priority: usize,
-    stack: &mut [u32],
     handler_fn: fn() -> !,
 ) -> Result<(), KernelError> {
+    let mut stack = unsafe {&mut TASK_STACKS[priority]} ;
     match create_tcb(stack, handler_fn, true) {
         Ok(tcb) => {
             insert_tcb(priority, tcb)?;
@@ -216,15 +217,10 @@ pub fn release_tasks(tasks: &[TaskId]) {
 #[macro_export]
 macro_rules! spawn {
     ($task_name: ident, $priority: expr, $handler_fn: block) => {
-        let mut $task_name = [0;128];
-        create_task($priority, &mut $task_name,|| loop {
+        create_task($priority,|| loop {
             $handler_fn
             task_exit();
         });
-        /*
-            There might be an issue as above we are naming the stack with the same name. Hence the naming
-            the task_name is done in the end.
-        */
-        let $task_name: TaskId = $priority;
+        static $task_name: TaskId = $priority;
     }
 }
