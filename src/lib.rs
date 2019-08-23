@@ -37,6 +37,7 @@ pub mod errors {
         NotFound,
         StackTooSmall,
         DoesNotExist,
+        LimitExceeded
     }
 }
 
@@ -47,6 +48,15 @@ impl fmt::Debug for KernelError {
             KernelError::BufferOverflow => write!(f, "BufferOverflow"),
             KernelError::NotFound => write!(f, "NotFound"),
             KernelError::StackTooSmall => write!(f, "StackTooSmall"),
+            KernelError::LimitExceeded => write!(f, "LimitExceeded"),
         }
     }
+}
+
+pub fn generate_task_mask(tasks: &[u32]) -> u32{
+    let mut task_mask = 0;
+    for tid in tasks {
+        task_mask |= 1 << *tid ;
+    }
+    task_mask
 }
