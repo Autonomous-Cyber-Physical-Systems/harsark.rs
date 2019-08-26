@@ -1,5 +1,8 @@
 #![no_std]
 
+#[macro_use]
+extern crate lazy_static;
+
 mod interrupt_handlers;
 mod task_manager;
 

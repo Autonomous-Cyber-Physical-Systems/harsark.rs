@@ -1,8 +1,14 @@
+
 use crate::config::SEMAPHORE_COUNT;
 use crate::errors::KernelError;
 use crate::task_manager::{get_RT, release};
 use cortex_m::interrupt::free as execute_critical;
 use crate::generate_task_mask;
+
+use core::cell::RefCell;
+use cortex_m::interrupt::{Mutex};
+use core::borrow::BorrowMut;
+//use lazy_static;
 
 pub type SemaphoreId = usize;
 
@@ -17,10 +23,14 @@ pub struct Semaphores {
     curr: usize
 }
 
-static mut SCB_TABLE: Semaphores = Semaphores {
-    table: [ SCB { flags: 0, tasks: 0}; SEMAPHORE_COUNT],
-    curr: 0
-};
+lazy_static! {
+    static ref SCB_TABLE: Mutex<RefCell<Semaphores>> = Mutex::new(RefCell::new(
+        Semaphores {
+            table: [ SCB { flags: 0, tasks: 0}; SEMAPHORE_COUNT],
+            curr: 0
+        }
+    ));
+}
 
 impl SCB {
     pub fn signal_and_release(&mut self, tasks_mask: &u32) -> Result<(), KernelError> {
@@ -45,15 +55,14 @@ impl SCB {
 }
 
 impl Semaphores {
-    pub fn new(tasks: &[u32]) -> Result<SemaphoreId, KernelError> {
+    pub fn new(&mut self, tasks: &[u32]) -> Result<SemaphoreId, KernelError> {
         execute_critical(|_| {
-            let scb_table = unsafe {&mut SCB_TABLE};
-            if scb_table.curr >= SEMAPHORE_COUNT {
+            if self.curr >= SEMAPHORE_COUNT {
                 return Err(KernelError::LimitExceeded)
             }
-            let id = scb_table.curr;
-            scb_table.curr += 1;
-            scb_table.table[id].tasks = generate_task_mask(tasks);
+            let id = self.curr;
+            self.curr += 1;
+            self.table[id].tasks = generate_task_mask(tasks);
             Ok(id)
         })
     }
@@ -65,4 +74,22 @@ impl Semaphores {
     pub fn test_and_reset(&mut self, sem_id: SemaphoreId) -> Result<bool, KernelError> {
         self.table[sem_id].test_and_reset()
     }
+}
+
+pub fn sem_post(sem_id: SemaphoreId, tasks_mask: &u32)  -> Result<(), KernelError> {
+    execute_critical(|cs_token| {
+        SCB_TABLE.borrow(cs_token).borrow_mut().signal_and_release(sem_id, tasks_mask)
+    })
+}
+
+pub fn sem_wait(sem_id: SemaphoreId)  -> Result<bool, KernelError>{
+    execute_critical(|cs_token| {
+        SCB_TABLE.borrow(cs_token).borrow_mut().test_and_reset(sem_id)
+    })
+}
+
+pub fn new(tasks: &[u32]) -> Result<SemaphoreId, KernelError> {
+    execute_critical(|cs_token| {
+        SCB_TABLE.borrow(cs_token).borrow_mut().new(tasks)
+    })
 }
