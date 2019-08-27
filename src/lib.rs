@@ -3,13 +3,14 @@
 #[macro_use]
 extern crate lazy_static;
 
+mod helper;
 mod interrupt_handlers;
 mod task_manager;
 
 pub mod event_manager;
 pub mod messaging;
 pub mod resource_management;
-pub mod semaphores;
+mod semaphores;
 
 use crate::errors::KernelError;
 use core::fmt;
@@ -21,6 +22,13 @@ pub mod tasks {
     pub use crate::task_manager::start_kernel;
     pub use crate::task_manager::task_exit;
     pub use crate::task_manager::TaskId;
+}
+
+pub mod sync {
+    pub use crate::semaphores::new;
+    pub use crate::semaphores::sem_post;
+    pub use crate::semaphores::sem_wait;
+    pub use crate::semaphores::SemaphoreId;
 }
 
 mod config {
@@ -40,7 +48,7 @@ pub mod errors {
         NotFound,
         StackTooSmall,
         DoesNotExist,
-        LimitExceeded
+        LimitExceeded,
     }
 }
 
@@ -54,12 +62,4 @@ impl fmt::Debug for KernelError {
             KernelError::LimitExceeded => write!(f, "LimitExceeded"),
         }
     }
-}
-
-pub fn generate_task_mask(tasks: &[u32]) -> u32{
-    let mut task_mask = 0;
-    for tid in tasks {
-        task_mask |= 1 << *tid ;
-    }
-    task_mask
 }
