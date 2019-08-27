@@ -97,7 +97,7 @@ fn execute_opcode(event: &mut Event) {
         let opcode_enable_event = 1 << 3;
 
         if event.opcode & opcode_signal == opcode_signal {
-//            signal_and_release(event.semaphores, &event.tasks);
+            //            signal_and_release(event.semaphores, &event.tasks);
         }
         if event.opcode & opcode_send_msg == opcode_send_msg {
             broadcast(event.msg_index);
