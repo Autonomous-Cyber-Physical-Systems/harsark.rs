@@ -8,7 +8,6 @@ use cortex_m_semihosting::hprintln;
 use core::borrow::BorrowMut;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
-//use lazy_static;
 
 pub type SemaphoreId = usize;
 
@@ -19,15 +18,8 @@ pub struct SCB {
 }
 
 pub struct Semaphores {
-    table: [SCB; SEMAPHORE_COUNT],
-    curr: usize,
-}
-
-lazy_static! {
-    static ref SCB_TABLE: Mutex<RefCell<Semaphores>> = Mutex::new(RefCell::new(Semaphores {
-        table: [SCB { flags: 0, tasks: 0 }; SEMAPHORE_COUNT],
-        curr: 0
-    }));
+    pub table: [SCB; SEMAPHORE_COUNT],
+    pub curr: usize,
 }
 
 impl SCB {
@@ -76,26 +68,4 @@ impl Semaphores {
     pub fn test_and_reset(&mut self, sem_id: SemaphoreId) -> Result<bool, KernelError> {
         self.table[sem_id].test_and_reset()
     }
-}
-
-pub fn sem_post(sem_id: SemaphoreId, tasks: &[u32]) -> Result<(), KernelError> {
-    execute_critical(|cs_token| {
-        SCB_TABLE
-            .borrow(cs_token)
-            .borrow_mut()
-            .signal_and_release(sem_id, &generate_task_mask(tasks))
-    })
-}
-
-pub fn sem_wait(sem_id: SemaphoreId) -> Result<bool, KernelError> {
-    execute_critical(|cs_token| {
-        SCB_TABLE
-            .borrow(cs_token)
-            .borrow_mut()
-            .test_and_reset(sem_id)
-    })
-}
-
-pub fn new(tasks: &[u32]) -> Result<SemaphoreId, KernelError> {
-    execute_critical(|cs_token| SCB_TABLE.borrow(cs_token).borrow_mut().new(tasks))
 }
