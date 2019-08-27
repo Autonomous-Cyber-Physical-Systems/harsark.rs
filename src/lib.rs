@@ -9,7 +9,7 @@ pub mod event_manager;
 mod helper;
 mod interrupt_handlers;
 pub mod messaging;
-pub mod resource_management;
+pub mod resources;
 pub mod sync;
 mod task_manager;
 
@@ -27,6 +27,7 @@ pub mod tasks {
 
 mod config {
     pub const MAX_TASKS: usize = 32;
+    pub const MAX_RESOURCES: usize = 32;
     pub const SYSTICK_INTERRUPT_INTERVAL: u32 = 15_000;
     pub const SEMAPHORE_COUNT: usize = 32;
     pub const MCB_COUNT: usize = 32;
