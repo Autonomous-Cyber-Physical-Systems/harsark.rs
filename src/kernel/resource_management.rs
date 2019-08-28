@@ -1,6 +1,6 @@
 use crate::config::MAX_RESOURCES;
 use crate::event_manager::execute_event;
-use crate::task_manager::{block_tasks, preempt, unblock_tasks};
+use crate::kernel::task_manager::{block_tasks, preempt, unblock_tasks};
 use core::cmp::max;
 use core::pin::Pin;
 use cortex_m_semihosting::hprintln;

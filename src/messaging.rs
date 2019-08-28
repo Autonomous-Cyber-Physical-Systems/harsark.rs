@@ -2,7 +2,7 @@
 use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, MCB_COUNT};
 use crate::errors::KernelError;
 use crate::kernel::semaphores::SCB;
-use crate::task_manager::{get_RT, release};
+use crate::kernel::task_manager::{get_RT, release};
 
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;

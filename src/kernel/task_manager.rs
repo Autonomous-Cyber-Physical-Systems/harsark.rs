@@ -32,6 +32,7 @@ struct TaskControlBlock {
 // GLOBALS:
 #[no_mangle]
 static mut __CORTEXM_THREADS_GLOBAL_PTR: u32 = 0;
+#[no_mangle]
 static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     ptr_RT: 0,
     ptr_HT: 0,
@@ -41,8 +42,9 @@ static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     ATV: 1,
     BTV: 0,
 };
-pub static mut IS_PREEMPTIVE: bool = false;
+#[no_mangle]
 static mut TASK_STACKS: [[u32; MAX_STACK_SIZE]; MAX_TASKS] = [[0; MAX_STACK_SIZE]; MAX_TASKS];
+pub static mut IS_PREEMPTIVE: bool = false;
 // end GLOBALS
 
 /// Initialize the switcher system
@@ -106,6 +108,7 @@ pub fn preempt() -> Result<(), KernelError> {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         if handler.is_running {
             let HT = get_HT();
+//            hprintln!("{}:{}", HT, handler.RT);
             // schedule a thread to be run
             if handler.RT != HT {
                 handler.RT = HT;

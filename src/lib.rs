@@ -11,18 +11,12 @@ mod interrupt_handlers;
 pub mod messaging;
 pub mod resources;
 pub mod sync;
-mod task_manager;
 
 use crate::errors::KernelError;
 use core::fmt;
 
 pub mod tasks {
-    pub use crate::task_manager::create_task;
-    pub use crate::task_manager::init;
-    pub use crate::task_manager::release_tasks;
-    pub use crate::task_manager::start_kernel;
-    pub use crate::task_manager::task_exit;
-    pub use crate::task_manager::TaskId;
+    pub use crate::kernel::task_manager::*;
 }
 
 mod config {
