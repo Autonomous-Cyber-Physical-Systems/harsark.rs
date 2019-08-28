@@ -9,7 +9,7 @@ use cortex_m_semihosting::hprintln;
 pub type TaskId = u32;
 
 #[repr(C)]
-struct TaskState {
+struct TaskManager {
     // start fields used in assembly, do not change their order
     ptr_RT: usize, // pointer to running task
     ptr_HT: usize, // pointer to current high priority task (or the next task to be scheduled)
@@ -19,6 +19,7 @@ struct TaskState {
     threads: [Option<TaskControlBlock>; MAX_TASKS],
     BTV: u32,
     ATV: u32,
+    is_preemptive: bool,
 }
 
 /// A single thread's state
@@ -33,7 +34,7 @@ struct TaskControlBlock {
 #[no_mangle]
 static mut __CORTEXM_THREADS_GLOBAL_PTR: u32 = 0;
 #[no_mangle]
-static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
+static mut __CORTEXM_THREADS_GLOBAL: TaskManager = TaskManager {
     ptr_RT: 0,
     ptr_HT: 0,
     RT: 50,
@@ -41,10 +42,10 @@ static mut __CORTEXM_THREADS_GLOBAL: TaskState = TaskState {
     threads: [None; MAX_TASKS],
     ATV: 1,
     BTV: 0,
+    is_preemptive: false,
 };
 #[no_mangle]
 static mut TASK_STACKS: [[u32; MAX_STACK_SIZE]; MAX_TASKS] = [[0; MAX_STACK_SIZE]; MAX_TASKS];
-pub static mut IS_PREEMPTIVE: bool = false;
 // end GLOBALS
 
 /// Initialize the switcher system
@@ -53,7 +54,7 @@ pub fn init(is_preemptive: bool) {
         unsafe {
             let ptr: usize = core::intrinsics::transmute(&__CORTEXM_THREADS_GLOBAL);
             __CORTEXM_THREADS_GLOBAL_PTR = ptr as u32;
-            IS_PREEMPTIVE = is_preemptive;
+            __CORTEXM_THREADS_GLOBAL.is_preemptive = is_preemptive;
         }
         /*
             This is the default task, that just puts the board for a power-save mode
@@ -87,6 +88,7 @@ pub fn release(tasks_mask: &u32) {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         handler.ATV |= *tasks_mask;
+        preempt();
     });
 }
 
@@ -108,7 +110,6 @@ pub fn preempt() -> Result<(), KernelError> {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         if handler.is_running {
             let HT = get_HT();
-//            hprintln!("{}:{}", HT, handler.RT);
             // schedule a thread to be run
             if handler.RT != HT {
                 handler.RT = HT;
@@ -156,21 +157,6 @@ fn create_tcb(
         stack[idx] = 1 << 24; // xPSR
         let pc: usize = handler as usize;
         stack[idx - 1] = pc as u32; // PC
-        stack[idx - 2] = 0xFFFFFFFD; // LR
-        stack[idx - 3] = 0xCCCCCCCC; // R12
-        stack[idx - 4] = 0x33333333; // R3
-        stack[idx - 5] = 0x22222222; // R2
-        stack[idx - 6] = 0x11111111; // R1
-        stack[idx - 7] = 0x00000000; // R0
-                                     // aditional regs
-        stack[idx - 08] = 0x77777777; // R7
-        stack[idx - 09] = 0x66666666; // R6
-        stack[idx - 10] = 0x55555555; // R5
-        stack[idx - 11] = 0x44444444; // R4
-        stack[idx - 12] = 0xBBBBBBBB; // R11
-        stack[idx - 13] = 0xAAAAAAAA; // R10
-        stack[idx - 14] = 0x99999999; // R9
-        stack[idx - 15] = 0x88888888; // R8
 
         let sp: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
         let tcb = TaskControlBlock { sp: sp as usize };
@@ -186,6 +172,13 @@ fn insert_tcb(idx: usize, tcb: TaskControlBlock) -> Result<(), KernelError> {
         }
         handler.threads[idx] = Some(tcb);
         return Ok(());
+    })
+}
+
+pub fn is_preemptive() -> bool {
+    execute_critical(|_| {
+        let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
+        handler.is_preemptive
     })
 }
 
