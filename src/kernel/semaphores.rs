@@ -1,7 +1,7 @@
 use crate::config::SEMAPHORE_COUNT;
 use crate::errors::KernelError;
 use crate::helper::generate_task_mask;
-use crate::task_manager::{get_RT, release};
+use crate::kernel::task_manager::{get_RT, release};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
