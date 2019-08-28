@@ -12,17 +12,17 @@ use cortex_m::interrupt::Mutex;
 pub type SemaphoreId = usize;
 
 #[derive(Clone, Copy)]
-pub struct SCB {
+pub struct SemaphoreControlBlock {
     pub flags: u32,
     pub tasks: u32,
 }
 
 pub struct Semaphores {
-    pub table: [SCB; SEMAPHORE_COUNT],
+    pub table: [SemaphoreControlBlock; SEMAPHORE_COUNT],
     pub curr: usize,
 }
 
-impl SCB {
+impl SemaphoreControlBlock {
     pub fn signal_and_release(&mut self, tasks_mask: &u32) -> Result<(), KernelError> {
         execute_critical(|_| {
             self.flags |= *tasks_mask;

@@ -1,7 +1,7 @@
 use crate::event_manager::{
     sweep_event_table, HR_EVENT_TABLE, MIN_EVENT_TABLE, MS_EVENT_TABLE, SEC_EVENT_TABLE,
 };
-use crate::kernel::task_manager::{preempt, IS_PREEMPTIVE};
+use crate::kernel::task_manager::{preempt, is_preemptive};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
@@ -13,7 +13,7 @@ static mut MIN: u32 = 0;
 #[no_mangle]
 pub extern "C" fn SysTick() {
     execute_critical(|_| {
-        if unsafe { IS_PREEMPTIVE } {
+        if is_preemptive() {
             preempt().unwrap();
         }
         let mut m_sec = unsafe { &mut M_SEC };

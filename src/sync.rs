@@ -12,7 +12,7 @@ pub use crate::kernel::semaphores::SemaphoreId;
 
 lazy_static! {
     static ref SCB_table: Mutex<RefCell<Semaphores>> = Mutex::new(RefCell::new(Semaphores {
-        table: [SCB { flags: 0, tasks: 0 }; SEMAPHORE_COUNT],
+        table: [SemaphoreControlBlock { flags: 0, tasks: 0 }; SEMAPHORE_COUNT],
         curr: 0
     }));
 }
