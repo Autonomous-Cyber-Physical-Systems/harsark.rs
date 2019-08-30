@@ -1,114 +1,51 @@
 //use core::alloc::
 use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, MCB_COUNT};
 use crate::errors::KernelError;
-use crate::kernel::semaphores::SemaphoreControlBlock as SCB;
+use crate::kernel::semaphores::SemaphoreId;
 use crate::kernel::task_manager::{get_RT, release};
-
-use cortex_m::interrupt::free as execute_critical;
+use cortex_m::interrupt::{free as execute_critical, CriticalSection};
 use cortex_m_semihosting::hprintln;
 
-pub type Buffer = &'static [u32];
+use core::cell::RefCell;
+use cortex_m::interrupt::Mutex;
 
-#[derive(Clone, Copy)]
-struct TCB {
-    dest_buffer: [u32; MAX_BUFFER_SIZE],
-    msg_size: usize,
+use crate::kernel::messaging::*;
+
+lazy_static!{
+    static ref Messaging: Mutex<RefCell<MessagingManager>> = Mutex::new(RefCell::new(MessagingManager::new()));
 }
 
-static mut TCB_TABLE: [TCB; MAX_TASKS] = [TCB {
-    dest_buffer: [0; MAX_TASKS],
-    msg_size: 0,
-}; MAX_TASKS];
-
-#[derive(Clone, Copy)]
-struct MCB {
-    receivers: u32,
-    src_buffer: Buffer,
-}
-
-static mut MCB_TABLE: [MCB; MCB_COUNT] = [MCB {
-    receivers: 0,
-    src_buffer: &[],
-}; MCB_COUNT];
-
-static mut MsgSCB_TABLE: [SCB; MCB_COUNT] = [SCB { flags: 0, tasks: 0 }; MCB_COUNT];
-
-pub fn broadcast(var: usize) -> Result<(), KernelError> {
-    execute_critical(|_| {
-        let mcb = unsafe { MCB_TABLE.get(var) };
-        if let Some(mcb) = mcb {
-            copy_all(&mcb.receivers, mcb.src_buffer)?;
-            msg_signal_release(var, &mcb.receivers)?;
-            return Ok(());
-        }
-        return Err(KernelError::NotFound);
+pub fn broadcast(sem_id: SemaphoreId) -> Result<(), KernelError> {
+    execute_critical(|cs_token| {
+        Messaging
+            .borrow(cs_token)
+            .borrow_mut()
+            .broadcast(sem_id)
     })
 }
 
-fn copy_all(tasks_mask: &u32, src_msg: Buffer) -> Result<(), KernelError> {
-    let tcb_table = unsafe { &mut TCB_TABLE };
-    if MAX_BUFFER_SIZE < src_msg.len() {
-        return Err(KernelError::BufferOverflow);
-    }
-    for tid in 1..MAX_TASKS {
-        let tid_mask = (1 << tid);
-        if tasks_mask & tid_mask == tid_mask {
-            for i in 0..src_msg.len() {
-                tcb_table[tid].dest_buffer[i] = src_msg[i];
+pub fn receive(sem_id: SemaphoreId, buffer: &mut [u32]) -> usize {
+    execute_critical(|cs_token:&CriticalSection| {
+        let mut msg = Messaging
+            .borrow(cs_token)
+            .borrow_mut();
+        let msg = msg.receive(sem_id);
+        if let Some(msg) = msg {
+            for i in 0..msg.len() {
+                buffer[i] = msg[i];
             }
-            tcb_table[tid].msg_size = src_msg.len();
-        }
-    }
-    return Ok(());
-}
-
-pub fn receive<'a>(var: usize) -> Option<&'a [u32]> {
-    execute_critical(|_| {
-        let tcb_table = unsafe { &mut TCB_TABLE };
-        let mcb_table = unsafe { &mut MCB_TABLE };
-        let rt = get_RT();
-
-        match msg_test_reset(var) {
-            Ok(res) if res == true => {
-                return Some(&tcb_table[rt].dest_buffer[0..tcb_table[rt].msg_size])
-            }
-            _ => return None,
+            msg.len()
+        } else {
+            0
         }
     })
 }
 
-fn msg_signal_release(semaphore: usize, tasks_mask: &u32) -> Result<(), KernelError> {
-    let scb_table = unsafe { &mut MsgSCB_TABLE };
-    if scb_table.get(semaphore).is_none() {
-        return Err(KernelError::NotFound);
-    }
-    scb_table[semaphore].flags |= *tasks_mask;
-    release(&scb_table[semaphore].tasks);
-    return Ok(());
-}
-
-fn msg_test_reset(semaphore: usize) -> Result<bool, KernelError> {
-    let scb_table = unsafe { &mut MsgSCB_TABLE };
-    let rt = get_RT() as u32;
-    let rt_mask = (1 << rt);
-    if scb_table.get(semaphore).is_none() {
-        return Err(KernelError::NotFound);
-    }
-    if scb_table[semaphore].flags & rt_mask == rt_mask {
-        scb_table[semaphore].flags &= !rt_mask;
-        return Ok(true);
-    } else {
-        return Ok(false);
-    }
-}
-
-pub fn configure_msg(var: usize, tasks: &u32, receivers: &u32, src_msg: Buffer) {
-    execute_critical(|_| {
-        let mcb_table = unsafe { &mut MCB_TABLE };
-        let scb_table = unsafe { &mut MsgSCB_TABLE };
-
-        mcb_table[var].src_buffer = src_msg;
-        scb_table[var].tasks |= *tasks;
-        mcb_table[var].receivers |= *receivers;
+pub fn new(var: usize, tasks: &[u32], receivers: &[u32], src_buffer: StaticBuffer) -> Result<SemaphoreId,KernelError> {
+    execute_critical(|cs_token| {
+        Messaging
+            .borrow(cs_token)
+            .borrow_mut()
+            .create(tasks, receivers, src_buffer)
     })
 }
