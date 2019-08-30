@@ -1,11 +1,11 @@
 use crate::config::MAX_RESOURCES;
+use crate::errors::KernelError;
 use crate::event_manager::execute_event;
+use crate::helper::get_msb;
 use crate::kernel::task_manager::{block_tasks, preempt, unblock_tasks};
 use core::cmp::max;
 use core::pin::Pin;
 use cortex_m_semihosting::hprintln;
-use crate::helper::get_msb;
-use crate::errors::KernelError;
 
 pub type ResourceId = usize;
 
@@ -16,24 +16,24 @@ pub struct ResourceManager {
     top: usize,
     pi_stack: [u32; MAX_RESOURCES],
     curr: usize, // used to track current no. of resources initialized
-    system_ceiling: u32
+    system_ceiling: u32,
 }
 
 impl ResourceManager {
-    pub fn init () -> Self {
+    pub fn init() -> Self {
         ResourceManager {
             RCB: [PI; MAX_RESOURCES],
             top: 0,
             pi_stack: [0; MAX_RESOURCES],
             curr: 0,
-            system_ceiling: PI
+            system_ceiling: PI,
         }
     }
 
-    pub fn new(&mut self ,tasks_mask: &u32)  -> Result<ResourceId,KernelError> {
+    pub fn new(&mut self, tasks_mask: &u32) -> Result<ResourceId, KernelError> {
         let id = self.curr;
         if id >= MAX_RESOURCES {
-            return Err(KernelError::LimitExceeded)
+            return Err(KernelError::LimitExceeded);
         }
         self.RCB[id] = get_msb(&tasks_mask) as u32;
         self.curr += 1;

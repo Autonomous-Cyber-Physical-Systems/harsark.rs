@@ -1,7 +1,7 @@
 use crate::event_manager::{
     sweep_event_table, HR_EVENT_TABLE, MIN_EVENT_TABLE, MS_EVENT_TABLE, SEC_EVENT_TABLE,
 };
-use crate::kernel::task_manager::{preempt, is_preemptive};
+use crate::kernel::task_manager::{is_preemptive, preempt};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
