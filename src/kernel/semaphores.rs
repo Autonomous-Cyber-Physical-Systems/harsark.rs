@@ -45,14 +45,14 @@ impl SemaphoreControlBlock {
 }
 
 impl Semaphores {
-    pub fn new(&mut self, tasks: &[u32]) -> Result<SemaphoreId, KernelError> {
+    pub fn new(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
         execute_critical(|_| {
             if self.curr >= SEMAPHORE_COUNT {
                 return Err(KernelError::LimitExceeded);
             }
             let id = self.curr;
             self.curr += 1;
-            self.table[id].tasks = generate_task_mask(tasks);
+            self.table[id].tasks = task_mask;
             Ok(id)
         })
     }
