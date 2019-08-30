@@ -36,5 +36,5 @@ pub fn sem_wait(sem_id: SemaphoreId) -> Result<bool, KernelError> {
 }
 
 pub fn new(tasks: &[u32]) -> Result<SemaphoreId, KernelError> {
-    execute_critical(|cs_token| SCB_table.borrow(cs_token).borrow_mut().new(tasks))
+    execute_critical(|cs_token| SCB_table.borrow(cs_token).borrow_mut().new(generate_task_mask(tasks)))
 }
