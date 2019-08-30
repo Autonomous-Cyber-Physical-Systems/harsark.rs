@@ -1,7 +1,8 @@
 use crate::event_manager::{
-    sweep_event_table, HR_EVENT_TABLE, MIN_EVENT_TABLE, MS_EVENT_TABLE, SEC_EVENT_TABLE,
+    sweep_event_table,
 };
 use crate::kernel::task_manager::{is_preemptive, preempt};
+use crate::kernel::event_manager::EventTableType;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
@@ -45,16 +46,16 @@ pub extern "C" fn SysTick() {
         }
 
         if m_sec_flag {
-            sweep_event_table(unsafe { &MS_EVENT_TABLE });
+            sweep_event_table(EventTableType::MilliSec);
         }
         if sec_flag {
-            sweep_event_table(unsafe { &SEC_EVENT_TABLE });
+            sweep_event_table(EventTableType::Sec);
         }
         if min_flag {
-            sweep_event_table(unsafe { &MIN_EVENT_TABLE });
+            sweep_event_table(EventTableType::Min);
         }
         if hour_flag {
-            sweep_event_table(unsafe { &HR_EVENT_TABLE });
+            sweep_event_table(EventTableType::Hour);
         }
     });
 }
