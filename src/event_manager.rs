@@ -8,18 +8,19 @@ use core::borrow::{BorrowMut};
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
-lazy_static! {
-    static ref event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));
-}
+static event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));
 
 pub fn sweep_event_table(event_type: EventTableType) {
     execute_critical(|cs_token| {
-        event_manager.borrow(cs_token).borrow_mut().sweep(event_type);
+        event_manager
+            .borrow(cs_token)
+            .borrow_mut()
+            .sweep(event_type);
     })
 }
 
 pub fn dispatch_event(event_id: EventId) {
     execute_critical(|cs_token| {
-        event_manager.borrow(cs_token).borrow_mut().execute_event(event_id);
+    //    event_manager.borrow(cs_token).borrow_mut().execute_event(event_id);
     })
 }

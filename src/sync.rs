@@ -10,12 +10,7 @@ use cortex_m::interrupt::Mutex;
 
 pub use crate::kernel::semaphores::SemaphoreId;
 
-lazy_static! {
-    static ref SCB_table: Mutex<RefCell<Semaphores>> = Mutex::new(RefCell::new(Semaphores {
-        table: [SemaphoreControlBlock { flags: 0, tasks: 0 }; SEMAPHORE_COUNT],
-        curr: 0
-    }));
-}
+    static SCB_table: Mutex<RefCell<Semaphores>> = Mutex::new(RefCell::new(Semaphores::new()));
 
 pub fn sem_post(sem_id: SemaphoreId, tasks: &[u32]) -> Result<(), KernelError> {
     execute_critical(|cs_token| {
@@ -35,11 +30,11 @@ pub fn sem_wait(sem_id: SemaphoreId) -> Result<bool, KernelError> {
     })
 }
 
-pub fn new(tasks: &[u32]) -> Result<SemaphoreId, KernelError> {
+pub fn create(tasks: &[u32]) -> Result<SemaphoreId, KernelError> {
     execute_critical(|cs_token| {
         SCB_table
             .borrow(cs_token)
             .borrow_mut()
-            .new(generate_task_mask(tasks))
+            .create(generate_task_mask(tasks))
     })
 }

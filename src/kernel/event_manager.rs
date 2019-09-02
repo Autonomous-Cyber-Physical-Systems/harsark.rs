@@ -50,7 +50,7 @@ pub struct EventManager {
 }
 
 impl EventIndexTable {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             table: [0; EVENT_INDEX_TABLE_COUNT],
             curr: 0,
@@ -64,7 +64,7 @@ impl EventIndexTable {
 }
 
 impl EventManager {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             event_table: [Event {
                 is_enabled: false,

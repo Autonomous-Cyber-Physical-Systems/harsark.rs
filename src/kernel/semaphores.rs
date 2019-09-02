@@ -13,13 +13,14 @@ pub type SemaphoreId = usize;
 
 #[derive(Clone, Copy)]
 pub struct SemaphoreControlBlock {
-    pub flags: u32,
-    pub tasks: u32,
+    flags: u32,
+    tasks: u32,
 }
 
+#[derive(Clone, Copy)]
 pub struct Semaphores {
-    pub table: [SemaphoreControlBlock; SEMAPHORE_COUNT],
-    pub curr: usize,
+    table: [SemaphoreControlBlock; SEMAPHORE_COUNT],
+    curr: usize,
 }
 
 impl SemaphoreControlBlock {
@@ -45,7 +46,13 @@ impl SemaphoreControlBlock {
 }
 
 impl Semaphores {
-    pub fn new(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
+    pub const fn new() -> Self {
+        Self {
+            table: [SemaphoreControlBlock { flags: 0, tasks: 0 }; SEMAPHORE_COUNT],
+            curr: 0
+        }
+    }
+    pub fn create(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
         execute_critical(|_| {
             if self.curr >= SEMAPHORE_COUNT {
                 return Err(KernelError::LimitExceeded);

@@ -1,8 +1,5 @@
 #![no_std]
 
-#[macro_use]
-extern crate lazy_static;
-
 mod kernel;
 
 pub mod event_manager;

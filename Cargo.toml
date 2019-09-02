@@ -9,5 +9,4 @@ cc = "1.0.28"
 
 [dependencies]
 cortex-m-semihosting = "0.3.2"
-cortex-m = "0.5.8"
-lazy_static = {version="*", features=["spin_no_std"]}
+cortex-m = {version="0.5.8", features=["const-fn"]}

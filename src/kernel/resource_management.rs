@@ -10,6 +10,7 @@ pub type ResourceId = usize;
 
 const PI: u32 = 0;
 
+#[derive(Clone, Copy)]
 pub struct ResourceManager {
     RCB: [u32; MAX_RESOURCES], // Resource Control Block, holds u32 expressing which tasks have access to it.
     top: usize,
@@ -19,7 +20,7 @@ pub struct ResourceManager {
 }
 
 impl ResourceManager {
-    pub fn init() -> Self {
+    pub const fn new() -> Self {
         ResourceManager {
             RCB: [PI; MAX_RESOURCES],
             top: 0,
@@ -29,7 +30,7 @@ impl ResourceManager {
         }
     }
 
-    pub fn new(&mut self, tasks_mask: &u32) -> Result<ResourceId, KernelError> {
+    pub fn create(&mut self, tasks_mask: &u32) -> Result<ResourceId, KernelError> {
         let id = self.curr;
         if id >= MAX_RESOURCES {
             return Err(KernelError::LimitExceeded);

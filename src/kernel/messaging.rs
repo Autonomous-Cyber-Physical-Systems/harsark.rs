@@ -1,3 +1,4 @@
+#![feature(const_fn)]
 //use core::alloc::
 use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, SEMAPHORE_COUNT};
 use crate::errors::KernelError;
@@ -17,33 +18,27 @@ pub struct TCB {
 
 #[derive(Clone, Copy)]
 pub struct MCB {
-    receivers: u32,
-    src_buffer: StaticBuffer,
+    pub receivers: u32,
+    pub src_buffer: StaticBuffer,
 }
 
+#[derive(Clone, Copy)]
 pub struct MessagingManager {
-    tcb_table: [TCB; MAX_TASKS],
-    mcb_table: [MCB; SEMAPHORE_COUNT],
-    msg_scb_table: Semaphores,
+    pub tcb_table: [TCB; MAX_TASKS],
+    pub mcb_table: [MCB; SEMAPHORE_COUNT],
+    pub msg_scb_table: Semaphores,
+}
+
+impl TCB {
+    pub const fn new() -> Self {
+        Self {
+            dest_buffer: [0; MAX_TASKS],
+            msg_size: 0,
+        }
+    }
 }
 
 impl<'a> MessagingManager {
-    pub fn new() -> Self {
-        Self {
-            tcb_table: [TCB {
-                dest_buffer: [0; MAX_TASKS],
-                msg_size: 0,
-            }; MAX_TASKS],
-            mcb_table: [MCB {
-                receivers: 0,
-                src_buffer: &[],
-            }; SEMAPHORE_COUNT],
-            msg_scb_table: Semaphores {
-                table: [SemaphoreControlBlock { flags: 0, tasks: 0 }; SEMAPHORE_COUNT],
-                curr: 0,
-            },
-        }
-    }
 
     pub fn broadcast(&mut self, sem_id: SemaphoreId) -> Result<(), KernelError> {
         if self.mcb_table.get(sem_id).is_none() {
@@ -90,7 +85,7 @@ impl<'a> MessagingManager {
         receivers: &[u32],
         src_buffer: StaticBuffer,
     ) -> Result<SemaphoreId, KernelError> {
-        let sem_id = self.msg_scb_table.new(generate_task_mask(tasks))?;
+        let sem_id = self.msg_scb_table.create(generate_task_mask(tasks))?;
         self.mcb_table[sem_id].src_buffer = src_buffer;
         self.mcb_table[sem_id].receivers |= generate_task_mask(receivers);
         return Ok(sem_id);
