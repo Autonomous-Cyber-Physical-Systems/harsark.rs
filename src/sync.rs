@@ -10,7 +10,7 @@ use cortex_m::interrupt::Mutex;
 
 pub use crate::kernel::semaphores::SemaphoreId;
 
-    static SCB_table: Mutex<RefCell<Semaphores>> = Mutex::new(RefCell::new(Semaphores::new()));
+static SCB_table: Mutex<RefCell<Semaphores>> = Mutex::new(RefCell::new(Semaphores::new()));
 
 pub fn sem_post(sem_id: SemaphoreId, tasks: &[u32]) -> Result<(), KernelError> {
     execute_critical(|cs_token| {

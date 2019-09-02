@@ -39,7 +39,6 @@ impl TCB {
 }
 
 impl<'a> MessagingManager {
-
     pub fn broadcast(&mut self, sem_id: SemaphoreId) -> Result<(), KernelError> {
         if self.mcb_table.get(sem_id).is_none() {
             return Err(KernelError::NotFound);

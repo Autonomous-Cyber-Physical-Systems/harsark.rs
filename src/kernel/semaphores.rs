@@ -49,7 +49,7 @@ impl Semaphores {
     pub const fn new() -> Self {
         Self {
             table: [SemaphoreControlBlock { flags: 0, tasks: 0 }; SEMAPHORE_COUNT],
-            curr: 0
+            curr: 0,
         }
     }
     pub fn create(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {

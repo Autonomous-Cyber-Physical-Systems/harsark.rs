@@ -1,8 +1,8 @@
 use crate::config::MAX_TASKS;
-use core::ops::Shl;
 use core::ops::BitOrAssign;
+use core::ops::Shl;
 
-pub fn generate_task_mask (tasks: &[u32]) -> u32 {
+pub fn generate_task_mask(tasks: &[u32]) -> u32 {
     let mut task_mask: u32 = 0;
     for tid in tasks {
         task_mask |= 1 << *tid;

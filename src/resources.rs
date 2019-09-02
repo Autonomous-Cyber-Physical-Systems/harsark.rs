@@ -6,7 +6,8 @@ use crate::errors::KernelError;
 use crate::helper::generate_task_mask;
 use crate::kernel::resource_management::{ResourceId, ResourceManager};
 
-static Resources: Mutex<RefCell<ResourceManager>> = Mutex::new(RefCell::new(ResourceManager::new()));
+static Resources: Mutex<RefCell<ResourceManager>> =
+    Mutex::new(RefCell::new(ResourceManager::new()));
 
 pub fn create(tasks: &[u32]) -> Result<ResourceId, KernelError> {
     execute_critical(|cs_token| {

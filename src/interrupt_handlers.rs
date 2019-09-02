@@ -1,8 +1,6 @@
-use crate::event_manager::{
-    sweep_event_table,
-};
-use crate::kernel::task_manager::{is_preemptive, preempt};
+use crate::event_manager::sweep_event_table;
 use crate::kernel::event_manager::EventTableType;
+use crate::kernel::task_manager::{is_preemptive, preempt};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
@@ -13,7 +11,7 @@ static mut MIN: u32 = 0;
 // SysTick Exception handler
 #[no_mangle]
 pub extern "C" fn SysTick() {
-   execute_critical(|_| {
+    execute_critical(|_| {
         if is_preemptive() {
             preempt().unwrap();
         }
@@ -46,16 +44,16 @@ pub extern "C" fn SysTick() {
         }
 
         if m_sec_flag {
-           sweep_event_table(EventTableType::MilliSec);
+            sweep_event_table(EventTableType::MilliSec);
         }
         if sec_flag {
-           sweep_event_table(EventTableType::Sec);
+            sweep_event_table(EventTableType::Sec);
         }
         if min_flag {
-           sweep_event_table(EventTableType::Min);
+            sweep_event_table(EventTableType::Min);
         }
         if hour_flag {
-           sweep_event_table(EventTableType::Hour);
+            sweep_event_table(EventTableType::Hour);
         }
-   });
+    });
 }
