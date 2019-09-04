@@ -1,9 +1,6 @@
 #![no_std]
 #![no_main]
 
-#[macro_use]
-extern crate lazy_static;
-
 extern crate panic_semihosting;
 use cortex_m::interrupt::free;
 use cortex_m::peripheral::syst::SystClkSource;
@@ -17,6 +14,7 @@ use cortexm_threads::tasks::*;
 #[entry]
 fn main() -> ! {
     let sem1: SemaphoreId = sync::create(&[thread2]).unwrap();
+
     spawn!(thread2, 2, {
         for _ in 0..5 {
             let _ = hprintln!("in user task 2 !!");
