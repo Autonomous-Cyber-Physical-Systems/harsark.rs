@@ -7,11 +7,10 @@ version = "0.1.0"
 
 [dependencies]
 cortexm-threads = { path = "../.." }
-cortex-m = "0.5.8"
-cortex-m-rt = "0.6.5"
-cortex-m-semihosting = "0.3.2"
+cortex-m = {version="0.6.1", features=["inline-asm"]}
+cortex-m-rt = "0.6.10"
+cortex-m-semihosting = "0.3.3"
 panic-semihosting = "0.5.1"
-lazy_static = {version="*", features=["spin_no_std"]}
 
 # this lets you use `cargo fix`!
 [[bin]]
