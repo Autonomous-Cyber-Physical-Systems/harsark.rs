@@ -1,5 +1,5 @@
 use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
-use crate::helper::generate_task_mask;
+use crate::kernel::helper::generate_task_mask;
 use crate::kernel::semaphores::SemaphoreId;
 use crate::kernel::task_manager::{release, TaskId};
 use crate::{messaging::*, sync::*};

@@ -5,7 +5,7 @@ use crate::errors::KernelError;
 use crate::kernel::semaphores::{SemaphoreControlBlock, SemaphoreId, Semaphores};
 use crate::kernel::task_manager::{get_RT, release};
 
-use crate::helper::generate_task_mask;
+use crate::kernel::helper::generate_task_mask;
 use cortex_m_semihosting::hprintln;
 
 pub type StaticBuffer = &'static [u32];

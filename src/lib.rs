@@ -3,7 +3,6 @@
 mod kernel;
 
 pub mod event_manager;
-mod helper;
 mod interrupt_handlers;
 pub mod messaging;
 pub mod sync;

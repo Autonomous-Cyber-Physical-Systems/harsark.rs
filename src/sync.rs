@@ -1,6 +1,6 @@
 use crate::config::SEMAPHORE_COUNT;
 use crate::errors::KernelError;
-use crate::helper::generate_task_mask;
+use crate::kernel::helper::generate_task_mask;
 use crate::kernel::semaphores::*;
 use cortex_m::interrupt::free as execute_critical;
 

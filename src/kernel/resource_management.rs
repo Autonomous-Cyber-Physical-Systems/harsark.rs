@@ -1,6 +1,6 @@
 use crate::config::MAX_RESOURCES;
 use crate::errors::KernelError;
-use crate::helper::get_msb;
+use crate::kernel::helper::get_msb;
 use crate::kernel::task_manager::{block_tasks, preempt, unblock_tasks};
 use core::cmp::max;
 use core::pin::Pin;
