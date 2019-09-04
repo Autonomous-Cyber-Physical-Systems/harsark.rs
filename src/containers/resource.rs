@@ -3,7 +3,7 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
 use crate::errors::KernelError;
-use crate::helper::generate_task_mask;
+use crate::kernel::helper::generate_task_mask;
 use crate::kernel::resource_management::{ResourceId, ResourceManager};
 
 static resources_list: Mutex<RefCell<ResourceManager>> = Mutex::new(RefCell::new(ResourceManager::new()));
