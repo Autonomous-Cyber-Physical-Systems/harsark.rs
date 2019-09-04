@@ -40,7 +40,7 @@ impl ResourceManager {
         Ok(id)
     }
 
-    pub fn lock(&mut self, id: ResourceId) {
+    pub fn lock(&mut self, id: ResourceId) -> bool{
         let rt_ceiling = self.RCB[id];
         if rt_ceiling > self.system_ceiling {
             self.push_stack(rt_ceiling);
@@ -53,7 +53,9 @@ impl ResourceManager {
 
             self.system_ceiling = self.RCB[id];
             block_tasks(mask);
+            return true
         }
+        return false
     }
 
     pub fn unlock(&mut self, id: ResourceId) {
