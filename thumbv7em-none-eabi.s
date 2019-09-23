@@ -1,58 +1,105 @@
+/*
+ * This file is part of os.h.
+ *
+ * Copyright (C) 2016 Adam Heinrich <adam@adamh.cz>
+ *
+ * Os.h is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Os.h is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with os.h.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+ .syntax unified
+.cpu cortex-m0
+.fpu softvfp
+
 .thumb
-.syntax unified
-
-.global __CORTEXM_THREADS_GLOBAL_PTR
-
-.global power_save_wfe
-.thumb_func
-power_save_wfe:
-	wfe
-	bx		lr
 
 .global PendSV
-.thumb_func
+.type PendSV, %function
 PendSV:
+	/* Disable interrupts: */
 	cpsid	i
-	ldr		r1,			=__CORTEXM_THREADS_GLOBAL_PTR /* r1 = &&OS_PTR */
-	ldr		r1,			[r1, 0x0] /* r1 = &OS_PTR */
-	ldr		r1,			[r1, 0x0] /* r1 = OS_PTR.curr ( &current_thread ) */
-	cmp		r1,			0x0
-	beq		__CORTEXM_THREADS_PENDSV_RESTORE
-	ldr		r2,			[r1, 0x4] /* r2 = current_thread.privileged */
-	cmp		r2,			0x0
-	beq		__str_unpriv
-	mrs		r0,			msp
-	b __str_end
-	__str_unpriv:
-	mrs		r0,			psp
-	__str_end:
-	stmdb	r0!,		{r4-r11}
-	str		r0,			[r1, 0x0] /* current_thread.sp = sp */
-	__CORTEXM_THREADS_PENDSV_RESTORE:
-	ldr		r1,			=__CORTEXM_THREADS_GLOBAL_PTR	/* r1 = &&OS_PTR */
-	ldr		r1,			[r1, 0x0]	/* r1 = &OS_PTR */
-	ldr 	r2,			[r1, 0x4]	/* r2 = OS_PTR.next */
-	ldr		r3,			[r2, 0x0]	/* r3 = OS_PTR.next.sp */
-	ldr		r0,			[r2, 0x4]	/* r0 = OS_PTR.next.privileged */
-	ldr		r1,			=__CORTEXM_THREADS_GLOBAL_PTR	/* r1 = &&OS_PTR */
-	ldr		r1,			[r1, 0x0]	/* r1 = &OS_PTR */
-	ldr		r2,			[r1, 0x4]	/* r2 = &OS.next */
-	str		r2,			[r1, 0x0]	/* set OS.curr = os.next */
-	ldmia	r3!,		{r4-r11}
-	cmp		r0, 		0x0
-	beq		__load_unpriv
-	movs	r0,			#0x3
-	msr		control,	r0
-	isb
-	msr 	msp,		r3
-	ldr 	r0,			=0xFFFFFFF9
-	b		__load_end
-	__load_unpriv:
-	movs	r0,			#0x1
-	msr		control,	r0
-	isb
-	msr 	psp,		r3
-	ldr 	r0,			=0xFFFFFFFD
-	__load_end:
+
+	/*
+	Exception frame saved by the NVIC hardware onto stack:
+	+------+
+	|      | <- SP before interrupt (orig. SP)
+	| xPSR |
+	|  PC  |
+	|  LR  |
+	|  R12 |
+	|  R3  |
+	|  R2  |
+	|  R1  |
+	|  R0  | <- SP after entering interrupt (orig. SP + 32 bytes)
+	+------+
+
+	Registers saved by the software (PendSV):
+	+------+
+	|  R7  |
+	|  R6  |
+	|  R5  |
+	|  R4  |
+	|  R11 |
+	|  R10 |
+	|  R9  |
+	|  R8  | <- Saved SP (orig. SP + 64 bytes)
+	+------+
+	*/
+
+	/* Save registers R4-R11 (32 bytes) onto current PSP (process stack
+	   pointer) and make the PSP point to the last stacked register (R8):
+	   - The MRS/MSR instruction is for loading/saving a special registers.
+	   - The STMIA inscruction can only save low registers (R0-R7), it is
+	     therefore necesary to copy registers R8-R11 into R4-R7 and call
+	     STMIA twice. */
+	mrs	r0, psp
+	subs	r0, #16
+	stmia	r0!,{r4-r7}
+	mov	r4, r8
+	mov	r5, r9
+	mov	r6, r10
+	mov	r7, r11
+	subs	r0, #32
+	stmia	r0!,{r4-r7}
+	subs	r0, #16
+
+	/* Save current task's SP: */
+	ldr	r2, =os_curr_task
+	ldr	r1, [r2]
+	str	r0, [r1]
+
+	/* Load next task's SP: */
+	ldr	r2, =os_next_task
+	ldr	r1, [r2]
+	ldr	r0, [r1]
+
+	/* Load registers R4-R11 (32 bytes) from the new PSP and make the PSP
+	   point to the end of the exception stack frame. The NVIC hardware
+	   will restore remaining registers after returning from exception): */
+	ldmia	r0!,{r4-r7}
+	mov	r8, r4
+	mov	r9, r5
+	mov	r10, r6
+	mov	r11, r7
+	ldmia	r0!,{r4-r7}
+	msr	psp, r0
+
+	/* EXC_RETURN - Thread mode with PSP: */
+	ldr r0, =0xFFFFFFFD
+
+	/* Enable interrupts: */
 	cpsie	i
-	bx 		r0
+
+	bx	r0
+
+.size PendSV, .-PendSV
