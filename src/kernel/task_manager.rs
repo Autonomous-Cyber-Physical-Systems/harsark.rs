@@ -5,6 +5,8 @@ use crate::errors::KernelError;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m_semihosting::hprintln;
+use crate::interrupt_handlers::svc_call; 
+use cortex_m::register::control::Npriv;
 
 pub type TaskId = u32;
 
@@ -61,7 +63,7 @@ pub fn init(is_preemptive: bool) {
             until any event (interrupt/exception) occurs.
         */
         create_task(0, || loop {
-            cortex_m::asm::wfe();
+            cortex_m::asm::wfi();
         })
         .unwrap();
     });
@@ -79,7 +81,7 @@ pub fn start_kernel() -> Result<(), KernelError> {
         unsafe {
             __CORTEXM_THREADS_GLOBAL.is_running = true;
         }
-        preempt()?;
+        preempt();
         return Ok(());
     })
 }
@@ -105,7 +107,16 @@ pub fn create_task(priority: usize, handler_fn: fn() -> !) -> Result<(), KernelE
     })
 }
 
-pub fn preempt() -> Result<(), KernelError> {
+pub fn preempt() {
+    let ctrl_reg = cortex_m::register::control::read();
+    if ctrl_reg.npriv() == Npriv::Privileged {
+       preempt_call(); 
+    } else {
+        svc_call();
+    }
+}
+
+pub fn preempt_call() -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         if handler.is_running {
@@ -208,7 +219,7 @@ pub fn task_exit() {
         let rt = get_RT();
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         handler.ATV &= !(1 << rt as u32);
-        preempt().unwrap();
+        preempt();
     })
 }
 

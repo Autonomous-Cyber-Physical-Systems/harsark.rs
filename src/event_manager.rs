@@ -21,6 +21,6 @@ pub fn sweep_event_table(event_type: EventTableType) {
 
 pub fn dispatch_event(event_id: EventId) {
     execute_critical(|cs_token| {
-        //    event_manager.borrow(cs_token).borrow_mut().execute_event(event_id);
+           event_manager.borrow(cs_token).borrow_mut().execute_event(event_id);
     })
 }
