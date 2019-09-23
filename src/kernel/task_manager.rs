@@ -32,14 +32,15 @@ struct TaskControlBlock {
     sp: usize, // current stack pointer of this thread
 }
 
+static empty_task: TaskControlBlock = TaskControlBlock {
+    sp: 0
+};
+
 // GLOBALS:
-#[no_mangle]
-static mut __CORTEXM_THREADS_GLOBAL_PTR: u32 = 0;
-#[no_mangle]
 static mut __CORTEXM_THREADS_GLOBAL: TaskManager = TaskManager {
     ptr_RT: 0,
     ptr_HT: 0,
-    RT: 50,
+    RT: 0,
     is_running: false,
     threads: [None; MAX_TASKS],
     ATV: 1,
@@ -48,6 +49,10 @@ static mut __CORTEXM_THREADS_GLOBAL: TaskManager = TaskManager {
 };
 #[no_mangle]
 static mut TASK_STACKS: [[u32; MAX_STACK_SIZE]; MAX_TASKS] = [[0; MAX_STACK_SIZE]; MAX_TASKS];
+#[no_mangle]
+static mut os_curr_task: &TaskControlBlock = &empty_task;
+#[no_mangle]
+static mut os_next_task: &TaskControlBlock = &empty_task;
 // end GLOBALS
 
 /// Initialize the switcher system
@@ -55,7 +60,6 @@ pub fn init(is_preemptive: bool) {
     execute_critical(|_| {
         unsafe {
             let ptr: usize = core::intrinsics::transmute(&__CORTEXM_THREADS_GLOBAL);
-            __CORTEXM_THREADS_GLOBAL_PTR = ptr as u32;
             __CORTEXM_THREADS_GLOBAL.is_preemptive = is_preemptive;
         }
         /*
@@ -63,7 +67,8 @@ pub fn init(is_preemptive: bool) {
             until any event (interrupt/exception) occurs.
         */
         create_task(0, || loop {
-            cortex_m::asm::wfi();
+            hprintln!("waiting");
+            cortex_m::asm::wfe();
         })
         .unwrap();
     });
@@ -121,16 +126,22 @@ pub fn preempt_call() -> Result<(), KernelError> {
         let handler = unsafe { &mut __CORTEXM_THREADS_GLOBAL };
         if handler.is_running {
             let HT = get_HT();
+            hprintln!("{} -> {}",handler.RT, HT);
             // schedule a thread to be run
             if handler.RT != HT {
+                let task_rt = &handler.threads[handler.RT];
+                if let Some(task_rt) = task_rt {
+                    unsafe {
+                        os_curr_task = &task_rt;
+                    }
+                }
                 handler.RT = HT;
                 let task = &handler.threads[handler.RT];
                 if let Some(task) = task {
                     unsafe {
                         handler.ptr_HT = core::intrinsics::transmute(task);
-                        // The following Causes PendSV interrupt, the interrupt handler is written in assembly
-                        let pend = ptr::read_volatile(0xE000ED04 as *const u32);
-                        ptr::write_volatile(0xE000ED04 as *mut u32, pend | 1 << 28);
+                        os_next_task = &task;
+                        cortex_m::peripheral::SCB::set_pendsv();
                     }
                 } else {
                     return Err(KernelError::DoesNotExist);
