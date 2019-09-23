@@ -1,9 +1,10 @@
 #![no_std]
+#![feature(asm)]
 
 mod kernel;
 
 pub mod event_manager;
-mod interrupt_handlers;
+pub mod interrupt_handlers;
 pub mod messaging;
 pub mod sync;
 pub mod containers;
