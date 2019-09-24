@@ -11,10 +11,6 @@ pub type TaskId = u32;
 
 #[repr(C)]
 struct TaskManager {
-    // start fields used in assembly, do not change their order
-    ptr_RT: usize, // pointer to running task
-    ptr_HT: usize, // pointer to current high priority task (or the next task to be scheduled)
-    // end fields used in assembly
     RT: usize,
     is_running: bool,
     threads: [Option<TaskControlBlock>; MAX_TASKS],
@@ -38,8 +34,6 @@ static empty_task: TaskControlBlock = TaskControlBlock {
 
 // GLOBALS:
 static mut all_tasks: TaskManager = TaskManager {
-    ptr_RT: 0,
-    ptr_HT: 0,
     RT: 0,
     is_running: false,
     threads: [None; MAX_TASKS],
@@ -142,7 +136,6 @@ pub fn preempt_call() -> Result<(), KernelError> {
                 let task = &handler.threads[handler.RT];
                 if let Some(task) = task {
                     unsafe {
-                        handler.ptr_HT = core::intrinsics::transmute(task);
                         os_next_task = &task;
                         cortex_m::peripheral::SCB::set_pendsv();
                     }

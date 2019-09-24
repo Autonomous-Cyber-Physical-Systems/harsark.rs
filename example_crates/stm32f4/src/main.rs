@@ -2,7 +2,7 @@
 #![no_main]
 
 extern crate panic_halt;
-extern crate cortexm_threads;
+extern crate hartex_rust;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m_rt::{entry,exception};
 use cortex_m_semihosting::hprintln;
@@ -13,9 +13,9 @@ use stm32f4::stm32f407::interrupt;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
-use cortexm_threads::spawn;
-use cortexm_threads::sync::{self, SemaphoreId};
-use cortexm_threads::tasks::*;
+use hartex_rust::spawn;
+use hartex_rust::sync::{self, SemaphoreId};
+use hartex_rust::tasks::*;
 
 static mut BOARD_PER: Option<stm32f407::Peripherals> = None;
 
