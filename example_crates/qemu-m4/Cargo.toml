@@ -1,12 +1,11 @@
 [package]
-authors = ["Nipun Kumar <nipunkumar@outlook.com>"]
-edition = "2018"
-readme = "README.md"
 name = "qemu-m4"
-version = "0.1.0"
+version = "0.2.0"
+authors = ["kanishkarj"]
+edition = "2018"
 
 [dependencies]
-# cortexm-threads = { path = "../.." }
+# hartex-rust = { path = "../.." }
 cortex-m = {version="0.5.8", features=["inline-asm"]}
 cortex-m-rt = "*"
 panic-halt = "0.2.0"

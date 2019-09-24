@@ -12,10 +12,10 @@ use stm32f4::stm32f407::interrupt;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
-use cortexm_threads::{create_thread_with_config, init, sleep};
-use cortexm_threads::spawn;
-use cortexm_threads::sync::{self, SemaphoreId};
-use cortexm_threads::tasks::*;
+use hartex_rust::{create_thread_with_config, init, sleep};
+use hartex_rust::spawn;
+use hartex_rust::sync::{self, SemaphoreId};
+use hartex_rust::tasks::*;
 
 #[entry]
 fn main() -> ! {
@@ -37,6 +37,6 @@ fn main() -> ! {
     // release_tasks(&[1]);
     // init(true);
     // start_kernel();
-    // cortexm_threads::interrupt_handlers::svc_call();
+    // hartex_rust::interrupt_handlers::svc_call();
     loop {}
 }
