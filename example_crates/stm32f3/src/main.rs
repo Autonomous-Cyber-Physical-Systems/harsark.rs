@@ -56,22 +56,27 @@ fn main() -> ! {
         }
     });
 
-    let sem1: SemaphoreId = sync::create(&[thread2]).unwrap();
+    let sem1: SemaphoreId = sync::create(&[thread3]).unwrap();
 
     spawn!(thread1, 1, {
-        for _ in 0..5 {
-            let _ = hprintln!("in user task 1 !!");
+        loop {
+             cortex_m::asm::wfe();
         }
-        sync::sem_post(0, &[thread2]);
     });
     spawn!(thread2, 2, {
         for _ in 0..5 {
             let _ = hprintln!("in user task 2 !!");
         }
+        sync::sem_post(0, &[thread3]);
+    });
+    spawn!(thread3,3, {
+        for _ in 0..5 {
+            let _ = hprintln!("in user task 3 !!");
+        }
     });
 
     init(true);
-    release_tasks(&[1,2]);
+    release_tasks(&[0,2,3]);
     start_kernel();
 
     loop {}
