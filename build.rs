@@ -23,8 +23,8 @@ fn main() -> Result<(), Box<Error>> {
 
     let target: String = env::var("TARGET").unwrap();
     let asm_file: Option<String> = match target.as_str() {
-        "thumbv6m-none-eabi" => Some("thumbv6m-none-eabi.s".to_string()),
-        "thumbv7m-none-eabi" => Some("thumbv6m-none-eabi.s".to_string()),
+        // "thumbv6m-none-eabi" => Some("thumbv6m-none-eabi.s".to_string()),
+        // "thumbv7m-none-eabi" => Some("thumbv6m-none-eabi.s".to_string()),
         "thumbv7em-none-eabi" => Some("thumbv7em-none-eabi.s".to_string()),
         _ => None,
     };
