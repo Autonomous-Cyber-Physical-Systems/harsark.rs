@@ -65,7 +65,11 @@ fn main() -> ! {
     });
     spawn!(thread2, 2, {
         for _ in 0..5 {
-            let _ = hprintln!("in user task 2 !!");
+            let _ = hprintln!("in user task 2:1 !!");
+        }
+        sync::sem_post(0, &[thread3]);
+        for _ in 0..5 {
+            let _ = hprintln!("in user task 2:2 !!");
         }
         sync::sem_post(0, &[thread3]);
     });
@@ -76,7 +80,7 @@ fn main() -> ! {
     });
 
     init(true);
-    release_tasks(&[0,2,3]);
+    release_tasks(&[2,3]);
     start_kernel();
 
     loop {}

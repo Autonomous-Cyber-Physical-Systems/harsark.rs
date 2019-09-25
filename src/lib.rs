@@ -1,5 +1,6 @@
 #![no_std]
 #![feature(asm)]
+#![feature(const_fn)]
 
 mod kernel;
 
