@@ -12,8 +12,7 @@ pub fn generate_task_mask(tasks: &[u32]) -> u32 {
 
 pub fn get_msb(val: &u32) -> usize {
     for i in (0..MAX_TASKS).rev() {
-        let mut mask = 0;
-        mask <<= i;
+        let mut mask = 1 << i;
         if val & mask == mask {
             return i;
         }

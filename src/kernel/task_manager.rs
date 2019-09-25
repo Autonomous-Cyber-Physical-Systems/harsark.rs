@@ -6,6 +6,7 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use crate::interrupt_handlers::svc_call; 
 use cortex_m::register::control::Npriv;
+use crate::kernel::helper::get_msb;
 
 pub type TaskId = u32;
 
@@ -151,13 +152,8 @@ pub fn preempt_call() -> Result<(), KernelError> {
 fn get_HT() -> usize {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
-        for i in (1..MAX_TASKS as u32).rev() {
-            let i_mask = (1 << i);
-            if (handler.ATV & i_mask == i_mask) && (handler.BTV & i_mask != i_mask) {
-                return i as usize;
-            }
-        }
-        return 0;
+        let mask = handler.ATV & !handler.BTV;
+        return get_msb(&mask);
     })
 }
 
@@ -236,6 +232,20 @@ pub fn release_tasks(tasks: &[TaskId]) {
             mask |= 1 << *tid;
         }
         release(&mask);
+    })
+}
+
+pub fn enable_preemption() {
+    execute_critical(|_| {
+        let handler = unsafe { &mut all_tasks };
+        handler.is_preemptive = true;
+    })
+}
+
+pub fn disable_preemption() {
+    execute_critical(|_| {
+        let handler = unsafe { &mut all_tasks };
+        handler.is_preemptive = false;
     })
 }
 
