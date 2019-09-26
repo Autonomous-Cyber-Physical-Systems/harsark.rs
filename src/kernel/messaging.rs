@@ -44,18 +44,14 @@ impl<'a> MessagingManager {
             return Err(KernelError::NotFound);
         }
         let mcb = self.mcb_table[sem_id];
-        self.copy_msg(sem_id)?;
         self.msg_scb_table
             .signal_and_release(sem_id, &mcb.receivers)?;
         return Ok(());
     }
 
-    fn copy_msg(&mut self, sem_id: SemaphoreId) -> Result<(), KernelError> {
+    fn copy_msg(&mut self, sem_id: SemaphoreId) {
         let src_msg = self.mcb_table[sem_id].src_buffer;
         let tasks_mask = self.mcb_table[sem_id].receivers;
-        if MAX_BUFFER_SIZE < src_msg.len() {
-            return Err(KernelError::BufferOverflow);
-        }
         for tid in 1..MAX_TASKS {
             let tid_mask = (1 << tid) as u32;
             if tasks_mask & tid_mask == tid_mask {
@@ -65,17 +61,18 @@ impl<'a> MessagingManager {
                 self.tcb_table[tid].msg_size = src_msg.len();
             }
         }
-        return Ok(());
     }
 
     pub fn receive(&'a mut self, sem_id: SemaphoreId) -> Option<&'a [u32]> {
         let rt = get_RT();
+        self.copy_msg(sem_id);
         let tcb = &self.tcb_table[rt];
         match self.msg_scb_table.test_and_reset(sem_id) {
-            Ok(res) if res == true => return Some(&tcb.dest_buffer[0..tcb.msg_size]),
+            Ok(res) if res == true => {
+                    return Some(&tcb.dest_buffer[0..tcb.msg_size])
+                },
             _ => return None,
         }
-        return None;
     }
 
     pub fn create(
@@ -84,6 +81,9 @@ impl<'a> MessagingManager {
         receivers: &[u32],
         src_buffer: StaticBuffer,
     ) -> Result<SemaphoreId, KernelError> {
+        if MAX_BUFFER_SIZE < src_buffer.len() {
+            return Err(KernelError::BufferOverflow);
+        }
         let sem_id = self.msg_scb_table.create(generate_task_mask(tasks))?;
         self.mcb_table[sem_id].src_buffer = src_buffer;
         self.mcb_table[sem_id].receivers |= generate_task_mask(receivers);
