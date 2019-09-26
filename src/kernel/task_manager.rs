@@ -2,11 +2,11 @@ use core::ptr;
 
 use crate::config::{MAX_STACK_SIZE, MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
 use crate::errors::KernelError;
+use crate::interrupt_handlers::svc_call;
+use crate::kernel::helper::get_msb;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
-use crate::interrupt_handlers::svc_call; 
 use cortex_m::register::control::Npriv;
-use crate::kernel::helper::get_msb;
 
 pub type TaskId = u32;
 
@@ -18,7 +18,7 @@ struct TaskManager {
     BTV: u32,
     ATV: u32,
     is_preemptive: bool,
-    started: bool
+    started: bool,
 }
 
 /// A single thread's state
@@ -29,9 +29,7 @@ struct TaskControlBlock {
     sp: usize, // current stack pointer of this thread
 }
 
-static empty_task: TaskControlBlock = TaskControlBlock {
-    sp: 0
-};
+static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
 // GLOBALS:
 static mut all_tasks: TaskManager = TaskManager {
@@ -110,7 +108,7 @@ pub fn create_task(priority: usize, handler_fn: fn() -> !) -> Result<(), KernelE
 pub fn preempt() {
     let ctrl_reg = cortex_m::register::control::read();
     if ctrl_reg.npriv() == Npriv::Privileged {
-       preempt_call(); 
+        preempt_call();
     } else {
         svc_call();
     }
@@ -131,7 +129,7 @@ pub fn preempt_call() -> Result<(), KernelError> {
                         }
                     }
                 } else {
-                    handler.started = true;    
+                    handler.started = true;
                 }
                 handler.RT = HT;
                 let task = &handler.threads[handler.RT];
@@ -157,10 +155,7 @@ fn get_HT() -> usize {
     })
 }
 
-fn create_tcb(
-    stack: &mut [u32],
-    handler: fn() -> !,
-) -> Result<TaskControlBlock, KernelError> {
+fn create_tcb(stack: &mut [u32], handler: fn() -> !) -> Result<TaskControlBlock, KernelError> {
     execute_critical(|_| {
         if stack.len() < 32 {
             return Err(KernelError::StackTooSmall);

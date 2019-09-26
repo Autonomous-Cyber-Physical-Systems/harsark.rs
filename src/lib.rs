@@ -4,11 +4,11 @@
 
 mod kernel;
 
+pub mod containers;
 pub mod event_manager;
 pub mod interrupt_handlers;
 pub mod messaging;
 pub mod sync;
-pub mod containers;
 
 use crate::errors::KernelError;
 use core::fmt;
@@ -28,7 +28,6 @@ mod config {
     pub const EVENT_INDEX_TABLE_COUNT: usize = 8;
     pub const MAX_STACK_SIZE: usize = 256;
 }
-
 
 pub mod errors {
     pub enum KernelError {

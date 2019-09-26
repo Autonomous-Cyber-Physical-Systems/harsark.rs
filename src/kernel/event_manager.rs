@@ -148,7 +148,6 @@ impl EventManager {
 
     fn execute_opcode(&mut self, event_id: EventId) {
         let event = self.event_table[event_id];
-        
 
         if event.opcode & OPCODE_SIGNAL == OPCODE_SIGNAL {
             // sem_post(event.semaphores, &event.tasks);
@@ -184,7 +183,7 @@ impl EventManager {
         is_enabled: bool,
         event_type: EventType,
         threshold: u8,
-        event_counter_type: EventTableType
+        event_counter_type: EventTableType,
     ) -> EventId {
         let id = self.curr;
         self.event_table[id] = Event {
@@ -208,35 +207,19 @@ impl EventManager {
         return id;
     }
 
-    pub fn set_semaphore(
-        &mut self,
-        event_id: EventId,
-        sem: SemaphoreId,
-    ) {
+    pub fn set_semaphore(&mut self, event_id: EventId, sem: SemaphoreId) {
         self.event_table[event_id].semaphore = sem;
     }
 
-    pub fn set_tasks(
-        &mut self,
-        event_id: EventId,
-        tasks: u32,
-    ) {
+    pub fn set_tasks(&mut self, event_id: EventId, tasks: u32) {
         self.event_table[event_id].tasks = tasks;
     }
 
-    pub fn set_msg(
-        &mut self,
-        event_id: EventId,
-        msg_id: usize,
-    ) {
+    pub fn set_msg(&mut self, event_id: EventId, msg_id: usize) {
         self.event_table[event_id].msg_index = msg_id;
     }
 
-    pub fn set_next_event(
-        &mut self,
-        event_id: EventId,
-        next: usize,
-    ) {
+    pub fn set_next_event(&mut self, event_id: EventId, next: usize) {
         self.event_table[event_id].next_event = next;
     }
 }

@@ -21,53 +21,61 @@ pub fn sweep_event_table(event_type: EventTableType) {
 
 pub fn dispatch_event(event_id: EventId) {
     execute_critical(|cs_token| {
-           event_manager.borrow(cs_token).borrow_mut().execute_event(event_id);
+        event_manager
+            .borrow(cs_token)
+            .borrow_mut()
+            .execute_event(event_id);
     })
 }
 
 pub fn create(
-        is_enabled: bool,
-        event_type: EventType,
-        threshold: u8,
-        event_counter_type: EventTableType
-    ) -> EventId {
-        execute_critical(|cs_token| {
-           event_manager.borrow(cs_token).borrow_mut().create(is_enabled, event_type, threshold, event_counter_type)
-        })
-    }
+    is_enabled: bool,
+    event_type: EventType,
+    threshold: u8,
+    event_counter_type: EventTableType,
+) -> EventId {
+    execute_critical(|cs_token| {
+        event_manager.borrow(cs_token).borrow_mut().create(
+            is_enabled,
+            event_type,
+            threshold,
+            event_counter_type,
+        )
+    })
+}
 
-    pub fn set_semaphore(
-        event_id: EventId,
-        sem: SemaphoreId,
-    ) {
-        execute_critical(|cs_token| {
-           event_manager.borrow(cs_token).borrow_mut().set_semaphore(event_id, sem)
-        })
-    }
+pub fn set_semaphore(event_id: EventId, sem: SemaphoreId) {
+    execute_critical(|cs_token| {
+        event_manager
+            .borrow(cs_token)
+            .borrow_mut()
+            .set_semaphore(event_id, sem)
+    })
+}
 
-    pub fn set_tasks(
-        event_id: EventId,
-        tasks: u32,
-    ) {
-        execute_critical(|cs_token| {
-           event_manager.borrow(cs_token).borrow_mut().set_tasks(event_id, tasks)
-        })
-    }
+pub fn set_tasks(event_id: EventId, tasks: u32) {
+    execute_critical(|cs_token| {
+        event_manager
+            .borrow(cs_token)
+            .borrow_mut()
+            .set_tasks(event_id, tasks)
+    })
+}
 
-    pub fn set_msg(
-        event_id: EventId,
-        msg_id: usize,
-    ) {
-        execute_critical(|cs_token| {
-           event_manager.borrow(cs_token).borrow_mut().set_msg(event_id, msg_id)
-        })
-    }
+pub fn set_msg(event_id: EventId, msg_id: usize) {
+    execute_critical(|cs_token| {
+        event_manager
+            .borrow(cs_token)
+            .borrow_mut()
+            .set_msg(event_id, msg_id)
+    })
+}
 
-    pub fn set_next_event(
-        event_id: EventId,
-        next: usize,
-    ) {
-        execute_critical(|cs_token| {
-           event_manager.borrow(cs_token).borrow_mut().set_next_event(event_id, next)
-        })
-    }
+pub fn set_next_event(event_id: EventId, next: usize) {
+    execute_critical(|cs_token| {
+        event_manager
+            .borrow(cs_token)
+            .borrow_mut()
+            .set_next_event(event_id, next)
+    })
+}
