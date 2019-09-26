@@ -6,7 +6,8 @@ use crate::errors::KernelError;
 use crate::kernel::helper::generate_task_mask;
 use crate::kernel::resource_management::{ResourceId, ResourceManager};
 
-static resources_list: Mutex<RefCell<ResourceManager>> = Mutex::new(RefCell::new(ResourceManager::new()));
+static resources_list: Mutex<RefCell<ResourceManager>> =
+    Mutex::new(RefCell::new(ResourceManager::new()));
 
 pub struct Resource<T: Sized> {
     inner: RefCell<T>,
@@ -14,10 +15,10 @@ pub struct Resource<T: Sized> {
 }
 
 impl<T> Resource<T> {
-    pub fn new(val: T, id: ResourceId) -> Self{
+    pub fn new(val: T, id: ResourceId) -> Self {
         Self {
             inner: RefCell::new(val),
-            id
+            id,
         }
     }
 
@@ -27,7 +28,7 @@ impl<T> Resource<T> {
             if res {
                 return Some(&self.inner);
             }
-            return None
+            return None;
         })
     }
 
@@ -36,7 +37,7 @@ impl<T> Resource<T> {
     }
 }
 
-pub fn create <T: Sized> (resource: T,tasks: &[u32]) -> Result<Resource<T>, KernelError> {
+pub fn create<T: Sized>(resource: T, tasks: &[u32]) -> Result<Resource<T>, KernelError> {
     execute_critical(|cs_token| {
         let id = resources_list
             .borrow(cs_token)
@@ -45,4 +46,3 @@ pub fn create <T: Sized> (resource: T,tasks: &[u32]) -> Result<Resource<T>, Kern
         Ok(Resource::new(resource, id))
     })
 }
-

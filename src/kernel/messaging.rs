@@ -68,9 +68,7 @@ impl<'a> MessagingManager {
         self.copy_msg(sem_id);
         let tcb = &self.tcb_table[rt];
         match self.msg_scb_table.test_and_reset(sem_id) {
-            Ok(res) if res == true => {
-                    return Some(&tcb.dest_buffer[0..tcb.msg_size])
-                },
+            Ok(res) if res == true => return Some(&tcb.dest_buffer[0..tcb.msg_size]),
             _ => return None,
         }
     }
