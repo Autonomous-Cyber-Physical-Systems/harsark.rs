@@ -27,7 +27,7 @@ fn SysTick() {
         let mut min_flag = false;
         let mut hour_flag = false;
 
-        if *m_sec >= 1000 {
+        if *m_sec >= 100 {
             *sec += 1;
             *m_sec = 0;
             sec_flag = true;
