@@ -29,7 +29,7 @@ pub struct Event {
     threshold: u8,
     counter: u8,
     opcode: u8,
-    semaphores: u32,
+    semaphore: SemaphoreId,
     tasks: u32,
     msg_index: usize,
     next_event: usize,
@@ -48,6 +48,11 @@ pub struct EventManager {
     min_event_table: EventIndexTable,
     hr_event_table: EventIndexTable,
 }
+
+static OPCODE_SIGNAL: u8 = 1;
+static OPCODE_SEND_MSG: u8 = 1 << 1;
+static OPCODE_RELEASE: u8 = 1 << 2;
+static OPCODE_ENABLE_EVENT: u8 = 1 << 3;
 
 impl EventIndexTable {
     pub const fn new() -> Self {
@@ -72,7 +77,7 @@ impl EventManager {
                 threshold: 0,
                 counter: 0,
                 opcode: 0,
-                semaphores: 0,
+                semaphore: 0,
                 tasks: 0,
                 msg_index: 0,
                 next_event: 0,
@@ -143,21 +148,18 @@ impl EventManager {
 
     fn execute_opcode(&mut self, event_id: EventId) {
         let event = self.event_table[event_id];
-        let opcode_signal = 1;
-        let opcode_send_msg = 1 << 1;
-        let opcode_release = 1 << 2;
-        let opcode_enable_event = 1 << 3;
+        
 
-        if event.opcode & opcode_signal == opcode_signal {
-            //                sem_post(event.semaphores, &event.tasks);
+        if event.opcode & OPCODE_SIGNAL == OPCODE_SIGNAL {
+            // sem_post(event.semaphores, &event.tasks);
         }
-        if event.opcode & opcode_send_msg == opcode_send_msg {
+        if event.opcode & OPCODE_SEND_MSG == OPCODE_SEND_MSG {
             broadcast(event.msg_index);
         }
-        if event.opcode & opcode_release == opcode_release {
+        if event.opcode & OPCODE_RELEASE == OPCODE_RELEASE {
             release(&event.tasks);
         }
-        if event.opcode & opcode_enable_event == opcode_enable_event {
+        if event.opcode & OPCODE_ENABLE_EVENT == OPCODE_ENABLE_EVENT {
             self.enable_next(event_id);
         }
     }
@@ -182,22 +184,59 @@ impl EventManager {
         is_enabled: bool,
         event_type: EventType,
         threshold: u8,
-        opcode: u8,
-        semaphores: &[u32],
-        tasks: &[u32],
-        msg_index: usize,
-        next_event: usize,
-    ) {
-        self.event_table[self.curr] = Event {
+        event_counter_type: EventTableType
+    ) -> EventId {
+        let id = self.curr;
+        self.event_table[id] = Event {
             is_enabled,
             event_type,
             threshold,
             counter: 0,
-            opcode,
-            semaphores: generate_task_mask(semaphores),
-            tasks: generate_task_mask(tasks),
-            msg_index,
-            next_event,
+            opcode: 0,
+            semaphore: 0,
+            tasks: 0,
+            msg_index: 0,
+            next_event: 0,
         };
+        match event_counter_type {
+            EventTableType::Hour => self.hr_event_table.add(self.curr),
+            EventTableType::MilliSec => self.ms_event_table.add(self.curr),
+            EventTableType::Min => self.min_event_table.add(self.curr),
+            EventTableType::Sec => self.sec_event_table.add(self.curr),
+        };
+        self.curr += 1;
+        return id;
+    }
+
+    pub fn set_semaphore(
+        &mut self,
+        event_id: EventId,
+        sem: SemaphoreId,
+    ) {
+        self.event_table[event_id].semaphore = sem;
+    }
+
+    pub fn set_tasks(
+        &mut self,
+        event_id: EventId,
+        tasks: u32,
+    ) {
+        self.event_table[event_id].tasks = tasks;
+    }
+
+    pub fn set_msg(
+        &mut self,
+        event_id: EventId,
+        msg_id: usize,
+    ) {
+        self.event_table[event_id].msg_index = msg_id;
+    }
+
+    pub fn set_next_event(
+        &mut self,
+        event_id: EventId,
+        next: usize,
+    ) {
+        self.event_table[event_id].next_event = next;
     }
 }
