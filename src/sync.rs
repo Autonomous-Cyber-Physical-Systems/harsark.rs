@@ -8,7 +8,9 @@ use core::borrow::BorrowMut;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
-pub use crate::kernel::semaphores::SemaphoreId;
+pub use crate::kernel::semaphores;
+
+use crate::kernel::types::SemaphoreId;
 
 static SCB_table: Mutex<RefCell<Semaphores>> = Mutex::new(RefCell::new(Semaphores::new()));
 

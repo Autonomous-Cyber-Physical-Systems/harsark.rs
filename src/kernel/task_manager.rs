@@ -8,7 +8,7 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
 
-pub type TaskId = u32;
+use crate::kernel::types::TaskId;
 
 #[repr(C)]
 struct TaskManager {

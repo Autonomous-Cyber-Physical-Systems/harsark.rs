@@ -2,13 +2,15 @@
 //use core::alloc::
 use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, SEMAPHORE_COUNT};
 use crate::errors::KernelError;
-use crate::kernel::semaphores::{SemaphoreControlBlock, SemaphoreId, Semaphores};
+use crate::kernel::semaphores::{SemaphoreControlBlock, Semaphores};
 use crate::kernel::task_manager::{get_RT, release};
 
 use crate::kernel::helper::generate_task_mask;
 use cortex_m_semihosting::hprintln;
 
 pub type StaticBuffer = &'static [u32];
+
+use crate::kernel::types::MessageId;
 
 #[derive(Clone, Copy)]
 pub struct TCB {
@@ -39,19 +41,19 @@ impl TCB {
 }
 
 impl<'a> MessagingManager {
-    pub fn broadcast(&mut self, sem_id: SemaphoreId) -> Result<(), KernelError> {
-        if self.mcb_table.get(sem_id).is_none() {
+    pub fn broadcast(&mut self, msg_id: MessageId) -> Result<(), KernelError> {
+        if self.mcb_table.get(msg_id).is_none() {
             return Err(KernelError::NotFound);
         }
-        let mcb = self.mcb_table[sem_id];
+        let mcb = self.mcb_table[msg_id];
         self.msg_scb_table
-            .signal_and_release(sem_id, &mcb.receivers)?;
+            .signal_and_release(msg_id, &mcb.receivers)?;
         return Ok(());
     }
 
-    fn copy_msg(&mut self, sem_id: SemaphoreId) {
-        let src_msg = self.mcb_table[sem_id].src_buffer;
-        let tasks_mask = self.mcb_table[sem_id].receivers;
+    fn copy_msg(&mut self, msg_id: MessageId) {
+        let src_msg = self.mcb_table[msg_id].src_buffer;
+        let tasks_mask = self.mcb_table[msg_id].receivers;
         for tid in 1..MAX_TASKS {
             let tid_mask = (1 << tid) as u32;
             if tasks_mask & tid_mask == tid_mask {
@@ -63,11 +65,11 @@ impl<'a> MessagingManager {
         }
     }
 
-    pub fn receive(&'a mut self, sem_id: SemaphoreId) -> Option<&'a [u32]> {
+    pub fn receive(&'a mut self, msg_id: MessageId) -> Option<&'a [u32]> {
         let rt = get_RT();
-        self.copy_msg(sem_id);
+        self.copy_msg(msg_id);
         let tcb = &self.tcb_table[rt];
-        match self.msg_scb_table.test_and_reset(sem_id) {
+        match self.msg_scb_table.test_and_reset(msg_id) {
             Ok(res) if res == true => return Some(&tcb.dest_buffer[0..tcb.msg_size]),
             _ => return None,
         }
@@ -78,13 +80,13 @@ impl<'a> MessagingManager {
         tasks: &[u32],
         receivers: &[u32],
         src_buffer: StaticBuffer,
-    ) -> Result<SemaphoreId, KernelError> {
+    ) -> Result<MessageId, KernelError> {
         if MAX_BUFFER_SIZE < src_buffer.len() {
             return Err(KernelError::BufferOverflow);
         }
-        let sem_id = self.msg_scb_table.create(generate_task_mask(tasks))?;
-        self.mcb_table[sem_id].src_buffer = src_buffer;
-        self.mcb_table[sem_id].receivers |= generate_task_mask(receivers);
-        return Ok(sem_id);
+        let msg_id = self.msg_scb_table.create(generate_task_mask(tasks))?;
+        self.mcb_table[msg_id].src_buffer = src_buffer;
+        self.mcb_table[msg_id].receivers |= generate_task_mask(receivers);
+        return Ok(msg_id);
     }
 }

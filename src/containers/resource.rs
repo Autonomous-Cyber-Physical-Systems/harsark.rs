@@ -4,7 +4,9 @@ use cortex_m::interrupt::Mutex;
 
 use crate::errors::KernelError;
 use crate::kernel::helper::generate_task_mask;
-use crate::kernel::resource_management::{ResourceId, ResourceManager};
+use crate::kernel::resource_management::ResourceManager;
+
+use crate::kernel::types::ResourceId;
 
 static resources_list: Mutex<RefCell<ResourceManager>> =
     Mutex::new(RefCell::new(ResourceManager::new()));

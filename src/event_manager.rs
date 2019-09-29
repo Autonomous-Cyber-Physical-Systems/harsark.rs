@@ -7,6 +7,7 @@ use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 use cortex_m_semihosting::hprintln;
+use crate::kernel::types::{EventId,SemaphoreId,MessageId};
 
 static event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));
 

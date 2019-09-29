@@ -17,6 +17,10 @@ pub mod tasks {
     pub use crate::kernel::task_manager::*;
 }
 
+pub mod types {
+    pub use crate::kernel::types::*;
+}
+
 mod config {
     pub const MAX_TASKS: usize = 32;
     pub const MAX_RESOURCES: usize = 32;

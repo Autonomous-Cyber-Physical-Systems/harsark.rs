@@ -14,8 +14,9 @@ use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
 use hartex_rust::spawn;
-use hartex_rust::sync::{self, SemaphoreId};
+use hartex_rust::sync;
 use hartex_rust::tasks::*;
+use hartex_rust::types::*;
 
 static mut BOARD_PER: Option<stm32f407::Peripherals> = None;
 

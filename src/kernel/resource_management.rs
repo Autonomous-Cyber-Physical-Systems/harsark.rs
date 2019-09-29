@@ -6,7 +6,7 @@ use core::cmp::max;
 use core::pin::Pin;
 use cortex_m_semihosting::hprintln;
 
-pub type ResourceId = usize;
+use crate::kernel::types::ResourceId;
 
 const PI: u32 = 0;
 

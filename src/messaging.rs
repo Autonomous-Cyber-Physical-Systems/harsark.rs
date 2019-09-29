@@ -11,6 +11,8 @@ use cortex_m::interrupt::Mutex;
 
 use crate::kernel::messaging::*;
 
+use crate::kernel::types::MessageId;
+
 static default_msg: [u32; 1] = [0; 1];
 
 static Messaging: Mutex<RefCell<MessagingManager>> = Mutex::new(RefCell::new(MessagingManager {
@@ -22,11 +24,11 @@ static Messaging: Mutex<RefCell<MessagingManager>> = Mutex::new(RefCell::new(Mes
     msg_scb_table: Semaphores::new(),
 }));
 
-pub fn broadcast(sem_id: SemaphoreId) -> Result<(), KernelError> {
+pub fn broadcast(sem_id: MessageId) -> Result<(), KernelError> {
     execute_critical(|cs_token| Messaging.borrow(cs_token).borrow_mut().broadcast(sem_id))
 }
 
-pub fn receive(sem_id: SemaphoreId, buffer: &mut [u32]) -> usize {
+pub fn receive(sem_id: MessageId, buffer: &mut [u32]) -> usize {
     execute_critical(|cs_token: &CriticalSection| {
         let mut msg = Messaging.borrow(cs_token).borrow_mut();
         let msg = msg.receive(sem_id);
@@ -46,7 +48,7 @@ pub fn new(
     tasks: &[u32],
     receivers: &[u32],
     src_buffer: StaticBuffer,
-) -> Result<SemaphoreId, KernelError> {
+) -> Result<MessageId, KernelError> {
     execute_critical(|cs_token| {
         Messaging
             .borrow(cs_token)
