@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![feature(log_syntax)]
 
 extern crate panic_halt;
 use cortex_m::peripheral::syst::SystClkSource;
@@ -12,31 +13,20 @@ use stm32f4::stm32f407::interrupt;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
-use hartex_rust::spawn;
-use hartex_rust::sync::{self, SemaphoreId};
 use hartex_rust::tasks::*;
-use hartex_rust::{create_thread_with_config, init, sleep};
+use hartex_rust::spawn;
+use hartex_rust::types::*;
 
 #[entry]
 fn main() -> ! {
-    // let sem1: SemaphoreId = sync::create(&[thread2]).unwrap();
 
-    // spawn!(thread2, 2, {
-    //     for _ in 0..5 {
-    //         let _ = hprintln!("in user task 2 !!");
-    //     }
-    // });
+    spawn!(thread1, 1, app, 6, {
+        hprintln!("task 1  : {:?}", app);
+    });
 
-    // spawn!(thread1, 1, {
-    //     for _ in 0..5 {
-    //         let _ = hprintln!("in user task 1 !!");
-    //     }
-    //     sync::sem_post(0, &[thread2]);
-    // });
+    init(true);
+    release_tasks(&[1]);
+    start_kernel();
 
-    // release_tasks(&[1]);
-    // init(true);
-    // start_kernel();
-    // hartex_rust::interrupt_handlers::svc_call();
     loop {}
 }

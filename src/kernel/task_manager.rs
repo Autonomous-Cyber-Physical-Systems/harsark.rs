@@ -60,9 +60,9 @@ pub fn init(is_preemptive: bool) {
             This is the default task, that just puts the board for a power-save mode
             until any event (interrupt/exception) occurs.
         */
-        create_task(0, || loop {
+        create_task(0, |_| loop {
             cortex_m::asm::wfe();
-        })
+        }, &0)
         .unwrap();
     });
 }
@@ -92,10 +92,10 @@ pub fn release(tasks_mask: &u32) {
     });
 }
 
-pub fn create_task(priority: usize, handler_fn: fn() -> !) -> Result<(), KernelError> {
+pub fn create_task<T: Sized>(priority: usize, handler_fn: fn(&T) -> !, param: &T) -> Result<(), KernelError> {
     execute_critical(|_| {
         let mut stack = unsafe { &mut TASK_STACKS[priority] };
-        match create_tcb(stack, handler_fn) {
+        match create_tcb(stack, handler_fn, param) {
             Ok(tcb) => {
                 insert_tcb(priority, tcb)?;
                 return Ok(());
@@ -155,16 +155,19 @@ fn get_HT() -> usize {
     })
 }
 
-fn create_tcb(stack: &mut [u32], handler: fn() -> !) -> Result<TaskControlBlock, KernelError> {
+fn create_tcb<T: Sized>(stack: &mut [u32], handler: fn(&T) -> !, param: &T) -> Result<TaskControlBlock, KernelError> {
     execute_critical(|_| {
         if stack.len() < 32 {
             return Err(KernelError::StackTooSmall);
         }
 
         let idx = stack.len() - 1;
+        let args: u32 = unsafe { core::intrinsics::transmute(param) };
+        
         stack[idx] = 1 << 24; // xPSR
         let pc: usize = handler as usize;
         stack[idx - 1] = pc as u32; // PC
+        stack[idx - 7] = args; // args
 
         let sp: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
         let tcb = TaskControlBlock { sp: sp as usize };
@@ -246,11 +249,18 @@ pub fn disable_preemption() {
 
 #[macro_export]
 macro_rules! spawn {
-    ($task_name: ident, $priority: expr, $handler_fn: block) => {
-        create_task($priority,|| loop {
+    ($task_name: ident, $priority: expr, $var: ident, $param: expr, $handler_fn: block) => {
+        create_task($priority,|$var| loop {
             $handler_fn
             task_exit();
-        }).unwrap();
+        },&$param).unwrap();
         static $task_name: TaskId = $priority;
-    }
+    };
+    ($task_name: ident, $priority: expr, $handler_fn: block) => {
+        create_task($priority,|_| loop {
+            $handler_fn
+            task_exit();
+        },0).unwrap();
+        static $task_name: TaskId = $priority;
+    };
 }
