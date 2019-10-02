@@ -13,7 +13,7 @@ use crate::kernel::types::TaskId;
 
 #[repr(C)]
 pub struct TaskManager {
-    pub RT: usize,
+    pub curr_pid: usize,
     pub is_running: bool,
     pub threads: [Option<TaskControlBlock>; MAX_TASKS],
     pub BTV: u32,
@@ -37,7 +37,7 @@ impl TaskManager {
 
     pub const fn new() -> Self {
         Self {
-            RT: 0,
+            curr_pid: 0,
             is_running: false,
             threads: [None; MAX_TASKS],
             ATV: 1,
@@ -104,10 +104,6 @@ impl TaskManager {
         return Ok(());
     }
 
-    pub fn get_RT(&self) -> usize {
-        self.RT
-    }
-
     pub fn block_tasks(&mut self, tasks_mask: u32) {
         self.BTV |= tasks_mask;
     }
@@ -123,6 +119,5 @@ impl TaskManager {
 
     pub fn release(&mut self, tasks_mask: &u32) {
         self.ATV |= *tasks_mask;
-        preempt();
     }
 }

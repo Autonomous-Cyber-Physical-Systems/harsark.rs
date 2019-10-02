@@ -1,7 +1,7 @@
 use crate::config::MAX_RESOURCES;
 use crate::errors::KernelError;
 use crate::kernel::helper::get_msb;
-use crate::process::{block_tasks, preempt, unblock_tasks};
+use crate::process::{block_tasks, schedule, unblock_tasks};
 use core::cmp::max;
 use core::pin::Pin;
 use cortex_m_semihosting::hprintln;
@@ -67,7 +67,7 @@ impl ResourceManager {
                 mask &= 1 << i;
             }
             unblock_tasks(mask);
-            preempt();
+            schedule();
         }
     }
 

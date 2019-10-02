@@ -2,7 +2,7 @@
 use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, MCB_COUNT, SEMAPHORE_COUNT};
 use crate::errors::KernelError;
 use crate::kernel::semaphores::*;
-use crate::process::{get_RT, release};
+use crate::process::{get_pid, release};
 use cortex_m::interrupt::{free as execute_critical, CriticalSection};
 use cortex_m_semihosting::hprintln;
 

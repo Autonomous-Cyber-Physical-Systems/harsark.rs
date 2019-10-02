@@ -1,7 +1,7 @@
 use crate::config::SEMAPHORE_COUNT;
 use crate::errors::KernelError;
 use crate::kernel::helper::generate_task_mask;
-use crate::process::{get_RT, release};
+use crate::process::{get_pid, release};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
@@ -33,7 +33,7 @@ impl SemaphoreControlBlock {
     }
     pub fn test_and_reset(&mut self) -> Result<bool, KernelError> {
         execute_critical(|_| {
-            let rt = get_RT() as u32;
+            let rt = get_pid() as u32;
             let rt_mask = (1 << rt);
             if self.flags & rt_mask == rt_mask {
                 self.flags &= !rt_mask;

@@ -30,6 +30,13 @@ pub fn init(is_preemptive: bool) {
 
 // The below section just sets up the timer and starts it.
 pub fn start_kernel() {
+    let cp = cortex_m::Peripherals::take().unwrap();
+    let mut syst = cp.SYST;
+    syst.set_clock_source(SystClkSource::Core);
+    syst.set_reload(SYSTICK_INTERRUPT_INTERVAL);
+    syst.enable_counter();
+    syst.enable_interrupt();
+
     execute_critical(|_| unsafe { all_tasks.start_kernel() });
     preempt();
 }
@@ -42,46 +49,44 @@ pub fn create_task<T: Sized>(
     execute_critical(|_| unsafe { all_tasks.create_task(priority, handler_fn, param) })
 }
 
-pub fn preempt() {
+pub fn schedule() {
     let ctrl_reg = cortex_m::register::control::read();
     if ctrl_reg.npriv() == Npriv::Privileged {
-        preempt_call();
+        preempt();
     } else {
         svc_call();
     }
 }
 
-pub fn preempt_call() -> Result<(), KernelError> {
+fn preempt() -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
+        let HT = handler.get_HT();
         if handler.is_running {
-            let HT = handler.get_HT();
-            // schedule a thread to be run
-            if handler.RT != HT {
-                let task_rt = &handler.threads[handler.RT];
-                if handler.started {
-                    if let Some(task_rt) = task_rt {
-                        unsafe {
-                            os_curr_task = &task_rt;
-                        }
-                    }
-                } else {
-                    handler.started = true;
-                }
-                handler.RT = HT;
-                let task = &handler.threads[handler.RT];
-                if let Some(task) = task {
-                    unsafe {
-                        os_next_task = &task;
-                        cortex_m::peripheral::SCB::set_pendsv();
-                    }
-                } else {
-                    return Err(KernelError::DoesNotExist);
-                }
+            if handler.curr_pid != HT {
+                context_switch(handler.curr_pid, HT);
             }
         }
         return Ok(());
     })
+}
+
+fn context_switch(curr: usize, next: usize) {
+    let handler = unsafe { &mut all_tasks };
+    let task_curr = &handler.threads[curr];
+    if handler.started {
+        unsafe {
+            os_curr_task = task_curr.as_ref().unwrap();
+        }
+    } else {
+        handler.started = true;
+    }
+    handler.curr_pid = next;
+    let task_next = &handler.threads[next];
+    unsafe {
+        os_next_task = task_next.as_ref().unwrap();
+        cortex_m::peripheral::SCB::set_pendsv();
+    }
 }
 
 pub fn is_preemptive() -> bool {
@@ -92,10 +97,10 @@ pub fn is_preemptive() -> bool {
     })
 }
 
-pub fn get_RT() -> usize {
+pub fn get_pid() -> usize {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
-        return handler.RT;
+        return handler.curr_pid;
     })
 }
 
@@ -113,16 +118,17 @@ pub fn unblock_tasks(tasks_mask: u32) {
 
 pub fn task_exit() {
     execute_critical(|_| {
-        let rt = get_RT();
+        let rt = get_pid();
         unsafe { all_tasks.ATV &= !(1 << rt as u32) };
     });
-    preempt()
+    schedule()
 }
 
 pub fn release(tasks_mask: &u32) {
     execute_critical(|_| {
         unsafe{all_tasks.release(&tasks_mask)};
-    })
+    });
+    schedule();
 }
 
 pub fn enable_preemption() {
