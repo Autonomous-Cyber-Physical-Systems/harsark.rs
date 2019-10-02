@@ -1,6 +1,6 @@
 use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
 use crate::kernel::event_manager::*;
-use crate::kernel::task_manager::release;
+use crate::process::release;
 use crate::{messaging::*, sync::*};
 use core::borrow::BorrowMut;
 use core::cell::RefCell;

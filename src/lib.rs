@@ -9,13 +9,11 @@ pub mod event_manager;
 pub mod interrupt_handlers;
 pub mod messaging;
 pub mod sync;
+pub mod process;
 
 use crate::errors::KernelError;
 use core::fmt;
 
-pub mod tasks {
-    pub use crate::kernel::task_manager::*;
-}
 
 pub mod types {
     pub use crate::kernel::types::*;

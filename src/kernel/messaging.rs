@@ -3,7 +3,7 @@
 use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, SEMAPHORE_COUNT};
 use crate::errors::KernelError;
 use crate::kernel::semaphores::{SemaphoreControlBlock, Semaphores};
-use crate::kernel::task_manager::{get_RT, release};
+use crate::process::{get_RT, release};
 
 use crate::kernel::helper::generate_task_mask;
 use cortex_m_semihosting::hprintln;

@@ -1,7 +1,7 @@
 use crate::config::MAX_RESOURCES;
 use crate::errors::KernelError;
 use crate::kernel::helper::get_msb;
-use crate::kernel::task_manager::{block_tasks, preempt, unblock_tasks};
+use crate::process::{block_tasks, preempt, unblock_tasks};
 use core::cmp::max;
 use core::pin::Pin;
 use cortex_m_semihosting::hprintln;
