@@ -1,11 +1,11 @@
 use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
 use crate::kernel::helper::generate_task_mask;
-use crate::process::{release};
+use crate::process::release;
 use crate::{messaging::*, sync::*};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
-use crate::kernel::types::{EventId,MessageId,SemaphoreId};
+use crate::kernel::types::{EventId, MessageId, SemaphoreId};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum EventType {

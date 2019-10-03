@@ -4,10 +4,10 @@ use crate::config::{MAX_STACK_SIZE, MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
 use crate::errors::KernelError;
 use crate::interrupt_handlers::svc_call;
 use crate::kernel::helper::get_msb;
+use crate::process::*;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
-use crate::process::*;
 
 use crate::kernel::types::TaskId;
 
@@ -34,7 +34,6 @@ pub struct TaskControlBlock {
 static mut TASK_STACKS: [[u32; MAX_STACK_SIZE]; MAX_TASKS] = [[0; MAX_STACK_SIZE]; MAX_TASKS];
 
 impl TaskManager {
-
     pub const fn new() -> Self {
         Self {
             curr_pid: 0,
@@ -54,9 +53,13 @@ impl TaskManager {
             This is the default task, that just puts the board for a power-save mode
             until any event (interrupt/exception) occurs.
         */
-        self.create_task(0, |_| loop {
-            cortex_m::asm::wfe();
-        }, &0)
+        self.create_task(
+            0,
+            |_| loop {
+                cortex_m::asm::wfe();
+            },
+            &0,
+        )
         .unwrap();
     }
 
@@ -66,7 +69,12 @@ impl TaskManager {
         Ok(())
     }
 
-    pub fn create_task<T: Sized>(&mut self, priority: usize, handler_fn: fn(&T) -> !, param: &T) -> Result<(), KernelError> {
+    pub fn create_task<T: Sized>(
+        &mut self,
+        priority: usize,
+        handler_fn: fn(&T) -> !,
+        param: &T,
+    ) -> Result<(), KernelError> {
         let mut stack = unsafe { &mut TASK_STACKS[priority] };
         match self.create_tcb(stack, handler_fn, param) {
             Ok(tcb) => {
@@ -77,7 +85,12 @@ impl TaskManager {
         }
     }
 
-    fn create_tcb<T: Sized>(&self, stack: &mut [u32], handler: fn(&T) -> !, param: &T) -> Result<TaskControlBlock, KernelError> {
+    fn create_tcb<T: Sized>(
+        &self,
+        stack: &mut [u32],
+        handler: fn(&T) -> !,
+        param: &T,
+    ) -> Result<TaskControlBlock, KernelError> {
         if stack.len() < 32 {
             return Err(KernelError::StackTooSmall);
         }

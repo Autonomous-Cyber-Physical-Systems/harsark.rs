@@ -19,7 +19,6 @@ use hartex_rust::types::*;
 
 #[entry]
 fn main() -> ! {
-
     spawn!(thread1, 1, app, 6, {
         hprintln!("task 1  : {:?}", app);
     });

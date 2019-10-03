@@ -1,5 +1,6 @@
 use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
 use crate::kernel::event_manager::*;
+use crate::kernel::types::{EventId, MessageId, SemaphoreId};
 use crate::process::release;
 use crate::{messaging::*, sync::*};
 use core::borrow::BorrowMut;
@@ -7,7 +8,6 @@ use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 use cortex_m_semihosting::hprintln;
-use crate::kernel::types::{EventId,SemaphoreId,MessageId};
 
 static event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));
 

@@ -90,11 +90,7 @@ fn context_switch(curr: usize, next: usize) {
 }
 
 pub fn is_preemptive() -> bool {
-    execute_critical(|_| {
-        unsafe {
-            all_tasks.is_preemptive
-        }
-    })
+    execute_critical(|_| unsafe { all_tasks.is_preemptive })
 }
 
 pub fn get_pid() -> usize {
@@ -105,14 +101,14 @@ pub fn get_pid() -> usize {
 }
 
 pub fn block_tasks(tasks_mask: u32) {
-    execute_critical(|_| {
-        unsafe{all_tasks.blocked_tasks |= tasks_mask;}
+    execute_critical(|_| unsafe {
+        all_tasks.blocked_tasks |= tasks_mask;
     })
 }
 
 pub fn unblock_tasks(tasks_mask: u32) {
-    execute_critical(|_| {
-        unsafe{all_tasks.blocked_tasks &= !tasks_mask;}
+    execute_critical(|_| unsafe {
+        all_tasks.blocked_tasks &= !tasks_mask;
     })
 }
 
@@ -126,7 +122,7 @@ pub fn task_exit() {
 
 pub fn release(tasks_mask: &u32) {
     execute_critical(|_| {
-        unsafe{all_tasks.release(&tasks_mask)};
+        unsafe { all_tasks.release(&tasks_mask) };
     });
     schedule();
 }
@@ -138,7 +134,7 @@ pub fn enable_preemption() {
 }
 
 pub fn disable_preemption() {
-    execute_critical(|_| {
-        unsafe {all_tasks.is_preemptive = false;}
+    execute_critical(|_| unsafe {
+        all_tasks.is_preemptive = false;
     })
 }
