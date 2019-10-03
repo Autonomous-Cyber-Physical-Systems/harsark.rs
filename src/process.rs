@@ -106,20 +106,20 @@ pub fn get_pid() -> usize {
 
 pub fn block_tasks(tasks_mask: u32) {
     execute_critical(|_| {
-        unsafe{all_tasks.BTV |= tasks_mask;}
+        unsafe{all_tasks.blocked_tasks |= tasks_mask;}
     })
 }
 
 pub fn unblock_tasks(tasks_mask: u32) {
     execute_critical(|_| {
-        unsafe{all_tasks.BTV &= !tasks_mask;}
+        unsafe{all_tasks.blocked_tasks &= !tasks_mask;}
     })
 }
 
 pub fn task_exit() {
     execute_critical(|_| {
         let rt = get_pid();
-        unsafe { all_tasks.ATV &= !(1 << rt as u32) };
+        unsafe { all_tasks.active_tasks &= !(1 << rt as u32) };
     });
     schedule()
 }
@@ -141,22 +141,4 @@ pub fn disable_preemption() {
     execute_critical(|_| {
         unsafe {all_tasks.is_preemptive = false;}
     })
-}
-
-#[macro_export]
-macro_rules! spawn {
-    ($task_name: ident, $priority: expr, $var: ident, $param: expr, $handler_fn: block) => {
-        create_task($priority,|$var| loop {
-            $handler_fn
-            task_exit();
-        },&$param).unwrap();
-        static $task_name: TaskId = $priority;
-    };
-    ($task_name: ident, $priority: expr, $handler_fn: block) => {
-        create_task($priority,|_| loop {
-            $handler_fn
-            task_exit();
-        },0).unwrap();
-        static $task_name: TaskId = $priority;
-    };
 }

@@ -10,6 +10,7 @@ pub mod interrupt_handlers;
 pub mod messaging;
 pub mod sync;
 pub mod process;
+pub mod macros;
 
 use crate::errors::KernelError;
 use core::fmt;

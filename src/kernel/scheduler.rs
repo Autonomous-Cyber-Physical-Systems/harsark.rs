@@ -16,8 +16,8 @@ pub struct TaskManager {
     pub curr_pid: usize,
     pub is_running: bool,
     pub threads: [Option<TaskControlBlock>; MAX_TASKS],
-    pub BTV: u32,
-    pub ATV: u32,
+    pub blocked_tasks: u32,
+    pub active_tasks: u32,
     pub is_preemptive: bool,
     pub started: bool,
 }
@@ -40,8 +40,8 @@ impl TaskManager {
             curr_pid: 0,
             is_running: false,
             threads: [None; MAX_TASKS],
-            ATV: 1,
-            BTV: 0,
+            active_tasks: 1,
+            blocked_tasks: 0,
             is_preemptive: false,
             started: false,
         }
@@ -105,19 +105,19 @@ impl TaskManager {
     }
 
     pub fn block_tasks(&mut self, tasks_mask: u32) {
-        self.BTV |= tasks_mask;
+        self.blocked_tasks |= tasks_mask;
     }
 
     pub fn unblock_tasks(&mut self, tasks_mask: u32) {
-        self.BTV &= !tasks_mask;
+        self.blocked_tasks &= !tasks_mask;
     }
 
     pub fn get_HT(&self) -> usize {
-        let mask = self.ATV & !self.BTV;
+        let mask = self.active_tasks & !self.blocked_tasks;
         return get_msb(&mask);
     }
 
     pub fn release(&mut self, tasks_mask: &u32) {
-        self.ATV |= *tasks_mask;
+        self.active_tasks |= *tasks_mask;
     }
 }

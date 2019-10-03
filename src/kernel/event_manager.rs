@@ -48,10 +48,10 @@ pub struct EventManager {
     hr_event_table: EventIndexTable,
 }
 
-static OPCODE_SIGNAL: u8 = 1;
-static OPCODE_SEND_MSG: u8 = 1 << 1;
-static OPCODE_RELEASE: u8 = 1 << 2;
-static OPCODE_ENABLE_EVENT: u8 = 1 << 3;
+const OPCODE_SIGNAL: u8 = 1;
+const OPCODE_SEND_MSG: u8 = 1 << 1;
+const OPCODE_RELEASE: u8 = 1 << 2;
+const OPCODE_ENABLE_EVENT: u8 = 1 << 3;
 
 impl EventIndexTable {
     pub const fn new() -> Self {
