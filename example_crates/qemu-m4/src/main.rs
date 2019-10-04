@@ -27,7 +27,7 @@ fn main() -> ! {
             hprintln!("{:?}", item);
         });
     });
-    spawn!(thread2, 2, app, app, {
+    spawn!(thread2, 2, {
         // hprintln!("task 2  : {:?}", app);
     });
     spawn!(thread3, 3, app, app, {

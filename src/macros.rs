@@ -11,7 +11,7 @@ macro_rules! spawn {
         create_task($priority,|_| loop {
             $handler_fn
             task_exit();
-        },0).unwrap();
+        },&0).unwrap();
         static $task_name: TaskId = $priority;
     };
 }
