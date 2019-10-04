@@ -16,7 +16,7 @@ use core::borrow::BorrowMut;
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
 // GLOBALS:
-static mut all_tasks: TaskManager = TaskManager::new();
+static mut all_tasks: Scheduler = Scheduler::new();
 #[no_mangle]
 static mut os_curr_task: &TaskControlBlock = &empty_task;
 #[no_mangle]

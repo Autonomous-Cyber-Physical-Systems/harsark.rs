@@ -3,14 +3,15 @@
 #![feature(const_fn)]
 
 mod kernel;
+mod containers;
 
-pub mod containers;
 pub mod event_manager;
 pub mod interrupt_handlers;
 pub mod macros;
 pub mod messaging;
 pub mod process;
 pub mod sync;
+pub use containers::resource as resource;
 
 use crate::errors::KernelError;
 use core::fmt;

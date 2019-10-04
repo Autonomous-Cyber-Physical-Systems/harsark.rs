@@ -1,3 +1,4 @@
+use crate::process::get_pid;
 use crate::config::MAX_RESOURCES;
 use crate::errors::KernelError;
 use crate::kernel::helper::get_msb;
@@ -42,6 +43,7 @@ impl ResourceManager {
 
     pub fn lock(&mut self, id: ResourceId) -> bool {
         let rt_ceiling = self.resources_block[id];
+        let curr_pid = get_pid();
         if rt_ceiling > self.system_ceiling {
             self.push_stack(rt_ceiling);
 
@@ -50,7 +52,8 @@ impl ResourceManager {
             for i in 0..(rt_ceiling - 1) {
                 mask |= 1 << i;
             }
-
+            mask &= !(1<<curr_pid);
+        
             self.system_ceiling = self.resources_block[id];
             block_tasks(mask);
             return true;

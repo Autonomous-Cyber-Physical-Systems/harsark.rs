@@ -12,7 +12,7 @@ use cortex_m::register::control::Npriv;
 use crate::kernel::types::TaskId;
 
 #[repr(C)]
-pub struct TaskManager {
+pub struct Scheduler {
     pub curr_pid: usize,
     pub is_running: bool,
     pub threads: [Option<TaskControlBlock>; MAX_TASKS],
@@ -33,7 +33,7 @@ pub struct TaskControlBlock {
 #[no_mangle]
 static mut TASK_STACKS: [[u32; MAX_STACK_SIZE]; MAX_TASKS] = [[0; MAX_STACK_SIZE]; MAX_TASKS];
 
-impl TaskManager {
+impl Scheduler {
     pub const fn new() -> Self {
         Self {
             curr_pid: 0,

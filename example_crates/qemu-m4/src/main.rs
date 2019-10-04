@@ -16,17 +16,22 @@ use cortex_m::interrupt::Mutex;
 use hartex_rust::process::*;
 use hartex_rust::spawn;
 use hartex_rust::types::*;
+use hartex_rust::resource::{Resource,create};
 
 #[entry]
 fn main() -> ! {
-    spawn!(thread1, 1, app, 6, {
-        hprintln!("task 1  : {:?}", app);
+
+    let app = create(7,&[1,2,3]).unwrap();
+    spawn!(thread1, 1, app, app, {
+        app.aquire(|item| {
+            hprintln!("{:?}", item);
+        });
     });
-    spawn!(thread2, 2, app, 6, {
-        hprintln!("task 2  : {:?}", app);
+    spawn!(thread2, 2, app, app, {
+        // hprintln!("task 2  : {:?}", app);
     });
-    spawn!(thread3, 3, app, 6, {
-        hprintln!("task 3  : {:?}", app);
+    spawn!(thread3, 3, app, app, {
+        // hprintln!("task 3  : {:?}", app);
     });
 
     init(true);
