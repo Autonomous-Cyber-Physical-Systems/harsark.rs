@@ -40,6 +40,17 @@ impl TCB {
 }
 
 impl<'a> MessagingManager {
+    pub const fn new () -> Self {
+        Self {
+            tcb_table: [TCB::new(); MAX_TASKS],
+            mcb_table: [MCB {
+                receivers: 0,
+                src_buffer: &[],
+            }; SEMAPHORE_COUNT],
+            msg_scb_table: Semaphores::new(),
+        }
+    }
+
     pub fn broadcast(&mut self, msg_id: MessageId) -> Result<(), KernelError> {
         if self.mcb_table.get(msg_id).is_none() {
             return Err(KernelError::NotFound);
