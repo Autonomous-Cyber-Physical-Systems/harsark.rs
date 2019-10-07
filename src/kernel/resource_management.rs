@@ -64,6 +64,13 @@ impl ResourceManager {
         let resource = &self.resources_block[id];
         let curr_pid = get_pid();
         let rt_ceiling = resource.rt_ceiling;
+
+        let pid_mask = 1<<curr_pid;
+        
+        if resource.tasks_mask & pid_mask != pid_mask {
+            return false
+        }
+
         if rt_ceiling > self.system_ceiling {
             self.push_stack(rt_ceiling);
 
