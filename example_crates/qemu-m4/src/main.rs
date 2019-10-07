@@ -23,7 +23,7 @@ fn main() -> ! {
 
     let app = create(7,&[1,2,3]).unwrap();
     spawn!(thread1, 1, app, app, {
-        app.aquire(|item| {
+        app.acquire(|item| {
             hprintln!("{:?}", item);
         });
     });

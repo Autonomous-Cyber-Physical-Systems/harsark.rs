@@ -1,3 +1,4 @@
+use crate::config::MAX_TASKS;
 use core::cell::{RefCell, RefMut};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
@@ -41,7 +42,7 @@ impl<T> Resource<T> {
         execute_critical(|cs_token| resources_list.borrow(cs_token).borrow_mut().unlock(self.id))
     }
 
-    pub fn aquire<F>(&self, handler: F) where
+    pub fn acquire<F>(&self, handler: F) where
         F: Fn(&T) 
     {
         if let Some(res) = self.lock() {
@@ -51,12 +52,20 @@ impl<T> Resource<T> {
     }
 }
 
-pub fn create<T: Sized>(resource: T, tasks: &[u32]) -> Result<Resource<T>, KernelError> {
+pub fn create<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, KernelError> {
     execute_critical(|cs_token| {
         let id = resources_list
             .borrow(cs_token)
             .borrow_mut()
-            .create(&generate_task_mask(tasks))?;
+            .create(&tasks_mask)?;
         Ok(Resource::new(resource, id))
     })
+}
+
+pub fn init_peripherals()  -> Result<Resource<cortex_m::Peripherals>, KernelError> {
+    let mut mask = 0;
+    for i in 0..MAX_TASKS {
+        mask |= 1<<i;
+    }
+    create(cortex_m::Peripherals::take().unwrap(),mask)
 }
