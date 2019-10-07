@@ -16,12 +16,14 @@ use cortex_m::interrupt::Mutex;
 use hartex_rust::process::*;
 use hartex_rust::spawn;
 use hartex_rust::types::*;
-use hartex_rust::resource::{Resource,create};
+use hartex_rust::resource::*;
 
 #[entry]
 fn main() -> ! {
 
     let app = create(7,14).unwrap();
+    let peripherals = init_peripherals().unwrap();
+
     spawn!(thread1, 1, app, app, {
         app.acquire(|item| {
             hprintln!("{:?}", item);
@@ -36,7 +38,8 @@ fn main() -> ! {
 
     init(true);
     release(&14);
-    start_kernel();
+
+    start_kernel(&mut peripherals.access().unwrap().borrow_mut());
 
     loop {}
 }

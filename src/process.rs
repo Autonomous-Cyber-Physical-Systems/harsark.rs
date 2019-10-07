@@ -7,11 +7,13 @@ use crate::kernel::helper::get_msb;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
+use cortex_m_semihosting::hprintln;
 
 use crate::kernel::types::TaskId;
 
 use crate::kernel::scheduler::*;
 use core::borrow::BorrowMut;
+use cortex_m::Peripherals;
 
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
@@ -29,9 +31,9 @@ pub fn init(is_preemptive: bool) {
 }
 
 // The below section just sets up the timer and starts it.
-pub fn start_kernel() {
-    let cp = cortex_m::Peripherals::take().unwrap();
-    let mut syst = cp.SYST;
+pub fn start_kernel(perif: &mut Peripherals) {
+
+    let mut syst = &mut perif.SYST;
     syst.set_clock_source(SystClkSource::Core);
     syst.set_reload(SYSTICK_INTERRUPT_INTERVAL);
     syst.enable_counter();
