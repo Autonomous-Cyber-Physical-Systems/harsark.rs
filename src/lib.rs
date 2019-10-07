@@ -16,6 +16,10 @@ pub use containers::resource as resource;
 use crate::errors::KernelError;
 use core::fmt;
 
+pub mod helper {
+    pub use crate::kernel::helper::generate_task_mask;
+}
+
 pub mod types {
     pub use crate::kernel::types::*;
 }

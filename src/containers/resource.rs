@@ -5,10 +5,12 @@ use cortex_m::interrupt::Mutex;
 
 use crate::errors::KernelError;
 use crate::kernel::resource_management::ResourceManager;
-
+use crate::kernel::helper::check_priv;
 use crate::kernel::types::ResourceId;
 
 use cortex_m_semihosting::hprintln;
+
+use cortex_m::register::control::Npriv;
 
 static resources_list: Mutex<RefCell<ResourceManager>> =
     Mutex::new(RefCell::new(ResourceManager::new()));
@@ -47,7 +49,14 @@ impl<T> Resource<T> {
         if let Some(res) = self.lock() {
             handler(res);
         }
-        self.unlock();
+    }
+
+    // only Privileged.
+    pub fn access(&self) -> Option<&T> {
+        match check_priv() {
+            Npriv::Privileged => Some(&self.inner),
+            Npriv::Unprivileged => None,
+        }
     }
 }
 
@@ -61,10 +70,10 @@ pub fn create<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, Ker
     })
 }
 
-pub fn init_peripherals()  -> Result<Resource<cortex_m::Peripherals>, KernelError> {
-    let mut mask = 0;
+pub fn init_peripherals()  -> Result<Resource<RefCell<cortex_m::Peripherals>>, KernelError> {
+    let mut mask:u32 = 0;
     for i in 0..MAX_TASKS {
         mask |= 1<<i;
     }
-    create(cortex_m::Peripherals::take().unwrap(),mask)
+    create(RefCell::new(cortex_m::Peripherals::take().unwrap()),mask)
 }
