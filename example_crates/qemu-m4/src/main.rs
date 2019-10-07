@@ -21,7 +21,7 @@ use hartex_rust::resource::{Resource,create};
 #[entry]
 fn main() -> ! {
 
-    let app = create(7,&[1,2,3]).unwrap();
+    let app = create(7,14).unwrap();
     spawn!(thread1, 1, app, app, {
         app.acquire(|item| {
             hprintln!("{:?}", item);

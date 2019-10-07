@@ -5,7 +5,6 @@ use crate::errors::KernelError;
 use crate::kernel::semaphores::{SemaphoreControlBlock, Semaphores};
 use crate::process::{get_pid, release};
 
-use crate::kernel::helper::generate_task_mask;
 use cortex_m_semihosting::hprintln;
 
 pub type StaticBuffer = &'static [u32];
@@ -77,16 +76,16 @@ impl<'a> MessagingManager {
 
     pub fn create(
         &mut self,
-        tasks: &[u32],
-        receivers: &[u32],
+        tasks_mask: u32,
+        receivers_mask: u32,
         src_buffer: StaticBuffer,
     ) -> Result<MessageId, KernelError> {
         if MAX_BUFFER_SIZE < src_buffer.len() {
             return Err(KernelError::BufferOverflow);
         }
-        let msg_id = self.msg_scb_table.create(generate_task_mask(tasks))?;
+        let msg_id = self.msg_scb_table.create(tasks_mask)?;
         self.mcb_table[msg_id].src_buffer = src_buffer;
-        self.mcb_table[msg_id].receivers |= generate_task_mask(receivers);
+        self.mcb_table[msg_id].receivers |= receivers_mask;
         return Ok(msg_id);
     }
 }

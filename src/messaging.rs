@@ -45,14 +45,14 @@ pub fn receive(sem_id: MessageId, buffer: &mut [u32]) -> usize {
 
 pub fn new(
     var: usize,
-    tasks: &[u32],
-    receivers: &[u32],
+    tasks_mask: u32,
+    receivers_mask: u32,
     src_buffer: StaticBuffer,
 ) -> Result<MessageId, KernelError> {
     execute_critical(|cs_token| {
         Messaging
             .borrow(cs_token)
             .borrow_mut()
-            .create(tasks, receivers, src_buffer)
+            .create(tasks_mask, receivers_mask, src_buffer)
     })
 }
