@@ -1,6 +1,6 @@
 use core::ptr;
 
-use crate::config::{MAX_STACK_SIZE, MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
+use crate::config::{MAX_STACK_SIZE, MAX_TASKS};
 use crate::errors::KernelError;
 use crate::interrupt_handlers::svc_call;
 use crate::kernel::helper::get_msb;
@@ -33,7 +33,7 @@ pub fn init(is_preemptive: bool) {
 }
 
 // The below section just sets up the timer and starts it.
-pub fn start_kernel(perif: &mut Peripherals) -> Result<(),KernelError> {
+pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(),KernelError> {
     match check_priv() {
         Npriv::Unprivileged => {
             Err(KernelError::AccessDenied)
@@ -41,7 +41,7 @@ pub fn start_kernel(perif: &mut Peripherals) -> Result<(),KernelError> {
         Npriv::Privileged => {
             let mut syst = &mut perif.SYST;
             syst.set_clock_source(SystClkSource::Core);
-            syst.set_reload(SYSTICK_INTERRUPT_INTERVAL);
+            syst.set_reload(tick_interval);
             syst.enable_counter();
             syst.enable_interrupt();
 

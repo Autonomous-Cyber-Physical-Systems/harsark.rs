@@ -1,6 +1,6 @@
 use core::ptr;
 
-use crate::config::{MAX_STACK_SIZE, MAX_TASKS, SYSTICK_INTERRUPT_INTERVAL};
+use crate::config::{MAX_STACK_SIZE, MAX_TASKS};
 use crate::errors::KernelError;
 use crate::interrupt_handlers::svc_call;
 use crate::kernel::helper::get_msb;

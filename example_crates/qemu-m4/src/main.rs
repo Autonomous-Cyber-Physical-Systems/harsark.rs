@@ -30,16 +30,16 @@ fn main() -> ! {
         });
     });
     spawn!(thread2, 2, {
-        // hprintln!("task 2  : {:?}", app);
+         hprintln!("task 2");
     });
     spawn!(thread3, 3, app, app, {
-        // hprintln!("task 3  : {:?}", app);
+         hprintln!("task 3  : {:?}", app);
     });
 
     init(true);
     release(&14);
 
-    start_kernel(&mut peripherals.access().unwrap().borrow_mut());
+    start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);
 
     loop {}
 }

@@ -65,7 +65,7 @@ pub fn create<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, Ker
         let id = resources_list
             .borrow(cs_token)
             .borrow_mut()
-            .create(&tasks_mask)?;
+            .create(tasks_mask)?;
         Ok(Resource::new(resource, id))
     })
 }
