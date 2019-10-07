@@ -5,6 +5,8 @@ use crate::kernel::semaphores::*;
 use crate::process::{get_pid, release};
 use cortex_m::interrupt::{free as execute_critical, CriticalSection};
 use cortex_m_semihosting::hprintln;
+use crate::kernel::helper::check_priv;
+use cortex_m::register::control::Npriv;
 
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
@@ -49,10 +51,17 @@ pub fn new(
     receivers_mask: u32,
     src_buffer: StaticBuffer,
 ) -> Result<MessageId, KernelError> {
-    execute_critical(|cs_token| {
-        Messaging
-            .borrow(cs_token)
-            .borrow_mut()
-            .create(tasks_mask, receivers_mask, src_buffer)
-    })
+    match check_priv() {
+        Npriv::Unprivileged => {
+            Err(KernelError::AccessDenied)
+        },
+        Npriv::Privileged => {
+            execute_critical(|cs_token| {
+                Messaging
+                    .borrow(cs_token)
+                    .borrow_mut()
+                    .create(tasks_mask, receivers_mask, src_buffer)
+            })
+        }
+    }
 }

@@ -43,6 +43,7 @@ pub mod errors {
         StackTooSmall,
         DoesNotExist,
         LimitExceeded,
+        AccessDenied
     }
 }
 
@@ -54,6 +55,7 @@ impl fmt::Debug for KernelError {
             KernelError::NotFound => write!(f, "NotFound"),
             KernelError::StackTooSmall => write!(f, "StackTooSmall"),
             KernelError::LimitExceeded => write!(f, "LimitExceeded"),
+            KernelError::AccessDenied => write!(f, "AccessDenied"),
         }
     }
 }

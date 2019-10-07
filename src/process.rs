@@ -15,6 +15,8 @@ use crate::kernel::scheduler::*;
 use core::borrow::BorrowMut;
 use cortex_m::Peripherals;
 
+use crate::kernel::helper::check_priv;
+
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
 // GLOBALS:
@@ -31,24 +33,37 @@ pub fn init(is_preemptive: bool) {
 }
 
 // The below section just sets up the timer and starts it.
-pub fn start_kernel(perif: &mut Peripherals) {
+pub fn start_kernel(perif: &mut Peripherals) -> Result<(),KernelError> {
+    match check_priv() {
+        Npriv::Unprivileged => {
+            Err(KernelError::AccessDenied)
+        },
+        Npriv::Privileged => {
+            let mut syst = &mut perif.SYST;
+            syst.set_clock_source(SystClkSource::Core);
+            syst.set_reload(SYSTICK_INTERRUPT_INTERVAL);
+            syst.enable_counter();
+            syst.enable_interrupt();
 
-    let mut syst = &mut perif.SYST;
-    syst.set_clock_source(SystClkSource::Core);
-    syst.set_reload(SYSTICK_INTERRUPT_INTERVAL);
-    syst.enable_counter();
-    syst.enable_interrupt();
-
-    execute_critical(|_| unsafe { all_tasks.start_kernel() });
-    preempt();
+            execute_critical(|_| unsafe { all_tasks.start_kernel() });
+            preempt()
+        }
+    }
 }
 
-pub fn create_task<T: Sized>(
+pub fn create_task<T: Sized> (
     priority: usize,
     handler_fn: fn(&T) -> !,
     param: &T,
 ) -> Result<(), KernelError> {
-    execute_critical(|_| unsafe { all_tasks.create_task(priority, handler_fn, param) })
+    match check_priv() {
+        Npriv::Unprivileged => {
+            Err(KernelError::AccessDenied)
+        },
+        Npriv::Privileged => {
+            execute_critical(|_| unsafe { all_tasks.create_task(priority, handler_fn, param) })
+        }
+    }
 }
 
 pub fn schedule() {
@@ -122,11 +137,19 @@ pub fn task_exit() {
     schedule()
 }
 
-pub fn release(tasks_mask: &u32) {
-    execute_critical(|_| {
-        unsafe { all_tasks.release(&tasks_mask) };
-    });
-    schedule();
+pub fn release(tasks_mask: &u32) -> Result<(),KernelError>{
+    match check_priv() {
+        Npriv::Unprivileged => {
+            Err(KernelError::AccessDenied)
+        },
+        Npriv::Privileged => {
+            execute_critical(|_| {
+                unsafe { all_tasks.release(&tasks_mask) };
+            });
+            schedule();
+            Ok(())
+        }
+    }
 }
 
 pub fn enable_preemption() {
