@@ -29,15 +29,13 @@ static mut os_next_task: &TaskControlBlock = &empty_task;
 
 /// Initialize the switcher system
 pub fn init(is_preemptive: bool, create_idle_task: bool) {
-    execute_critical(|_| unsafe { all_tasks.init(is_preemptive,create_idle_task) })
+    execute_critical(|_| unsafe { all_tasks.init(is_preemptive, create_idle_task) })
 }
 
 // The below section just sets up the timer and starts it.
-pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(),KernelError> {
+pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(), KernelError> {
     match check_priv() {
-        Npriv::Unprivileged => {
-            Err(KernelError::AccessDenied)
-        },
+        Npriv::Unprivileged => Err(KernelError::AccessDenied),
         Npriv::Privileged => {
             let mut syst = &mut perif.SYST;
             syst.set_clock_source(SystClkSource::Core);
@@ -51,15 +49,13 @@ pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(),Ke
     }
 }
 
-pub fn create_task<T: Sized> (
+pub fn create_task<T: Sized>(
     priority: usize,
     handler_fn: fn(&T) -> !,
     param: &T,
 ) -> Result<(), KernelError> {
     match check_priv() {
-        Npriv::Unprivileged => {
-            Err(KernelError::AccessDenied)
-        },
+        Npriv::Unprivileged => Err(KernelError::AccessDenied),
         Npriv::Privileged => {
             execute_critical(|_| unsafe { all_tasks.create_task(priority, handler_fn, param) })
         }
@@ -137,11 +133,9 @@ pub fn task_exit() {
     schedule()
 }
 
-pub fn release(tasks_mask: &u32) -> Result<(),KernelError>{
+pub fn release(tasks_mask: &u32) -> Result<(), KernelError> {
     match check_priv() {
-        Npriv::Unprivileged => {
-            Err(KernelError::AccessDenied)
-        },
+        Npriv::Unprivileged => Err(KernelError::AccessDenied),
         Npriv::Privileged => {
             execute_critical(|_| {
                 unsafe { all_tasks.release(&tasks_mask) };

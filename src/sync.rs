@@ -1,14 +1,14 @@
 use crate::config::SEMAPHORE_COUNT;
 use crate::errors::KernelError;
-use crate::kernel::semaphores::*;
-use cortex_m::interrupt::free as execute_critical;
 use crate::kernel::helper::check_priv;
-use cortex_m::register::control::Npriv;
+pub use crate::kernel::semaphores;
+use crate::kernel::semaphores::*;
+use crate::process::{get_pid, release};
 use core::borrow::BorrowMut;
 use core::cell::RefCell;
+use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
-use crate::process::{get_pid, release};
-pub use crate::kernel::semaphores;
+use cortex_m::register::control::Npriv;
 
 use crate::kernel::types::SemaphoreId;
 
@@ -35,16 +35,9 @@ pub fn sem_wait(sem_id: SemaphoreId) -> Result<bool, KernelError> {
 
 pub fn create(tasks_mask: u32) -> Result<SemaphoreId, KernelError> {
     match check_priv() {
-        Npriv::Unprivileged => {
-            Err(KernelError::AccessDenied)
-        },
+        Npriv::Unprivileged => Err(KernelError::AccessDenied),
         Npriv::Privileged => {
-            execute_critical(|cs_token| {
-                SCB_table
-                    .borrow(cs_token)
-                    .borrow_mut()
-                    .create(tasks_mask)
-            })
-        },
+            execute_critical(|cs_token| SCB_table.borrow(cs_token).borrow_mut().create(tasks_mask))
+        }
     }
 }

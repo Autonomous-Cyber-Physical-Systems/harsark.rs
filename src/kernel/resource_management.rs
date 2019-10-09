@@ -5,7 +5,6 @@ use core::cmp::max;
 use core::pin::Pin;
 use cortex_m_semihosting::hprintln;
 
-
 use crate::kernel::types::ResourceId;
 
 const PI: u32 = 0;
@@ -13,7 +12,7 @@ const PI: u32 = 0;
 #[derive(Clone, Copy)]
 pub struct ResourceControlBlock {
     rt_ceiling: u32,
-    tasks_mask: u32
+    tasks_mask: u32,
 }
 
 #[derive(Clone, Copy)]
@@ -29,7 +28,7 @@ impl ResourceControlBlock {
     pub const fn new() -> Self {
         Self {
             rt_ceiling: PI,
-            tasks_mask: PI
+            tasks_mask: PI,
         }
     }
     pub fn set(&mut self, tasks_mask: u32) {
@@ -63,32 +62,32 @@ impl ResourceManager {
         let resource = &self.resources_block[id];
         let rt_ceiling = resource.rt_ceiling;
 
-        let pid_mask = 1<<curr_pid;
-        
+        let pid_mask = 1 << curr_pid;
+
         if resource.tasks_mask & pid_mask != pid_mask {
-            return None
+            return None;
         }
 
         if rt_ceiling > self.system_ceiling {
             self.push_stack(rt_ceiling);
 
-            let mut mask = 1<<(rt_ceiling+1) - 1;
-            mask &= !(1<<curr_pid);
-        
+            let mut mask = 1 << (rt_ceiling + 1) - 1;
+            mask &= !(1 << curr_pid);
+
             self.system_ceiling = self.resources_block[id].rt_ceiling;
-            return Some(mask)
+            return Some(mask);
         }
-        return None
+        return None;
     }
 
-    pub fn unlock(&mut self, id: ResourceId) -> Option<u32>{
+    pub fn unlock(&mut self, id: ResourceId) -> Option<u32> {
         let resource = self.resources_block[id];
         if resource.rt_ceiling == self.system_ceiling {
             self.pop_stack();
-            let mut mask = 1<<(resource.rt_ceiling+1) - 1;
-            return Some(mask)
+            let mut mask = 1 << (resource.rt_ceiling + 1) - 1;
+            return Some(mask);
         }
-        return None
+        return None;
     }
 
     fn pop_stack(&mut self) {
