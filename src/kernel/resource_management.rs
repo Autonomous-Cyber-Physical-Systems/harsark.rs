@@ -71,7 +71,14 @@ impl ResourceManager {
         if rt_ceiling > self.system_ceiling {
             self.push_stack(rt_ceiling);
 
-            let mut mask = 1 << (rt_ceiling + 1) - 1;
+            let mut mask = 0;
+            if rt_ceiling < 32 {
+                mask = 1 << (rt_ceiling + 1) - 1;
+            } else {
+                for i in 0..rt_ceiling {
+                    mask |= 1<<i;
+                }
+            }
             mask &= !(1 << curr_pid);
 
             self.system_ceiling = self.resources_block[id].rt_ceiling;
