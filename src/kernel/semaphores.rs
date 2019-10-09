@@ -68,7 +68,11 @@ impl Semaphores {
         self.table[sem_id].signal_and_release(tasks_mask)
     }
 
-    pub fn test_and_reset(&mut self, sem_id: SemaphoreId, curr_pid: u32) -> Result<bool, KernelError> {
+    pub fn test_and_reset(
+        &mut self,
+        sem_id: SemaphoreId,
+        curr_pid: u32,
+    ) -> Result<bool, KernelError> {
         self.table[sem_id].test_and_reset(curr_pid)
     }
 }

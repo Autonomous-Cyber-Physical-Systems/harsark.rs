@@ -39,7 +39,7 @@ impl TCB {
 }
 
 impl<'a> MessagingManager {
-    pub const fn new () -> Self {
+    pub const fn new() -> Self {
         Self {
             tcb_table: [TCB::new(); MAX_TASKS],
             mcb_table: [MCB {
@@ -55,7 +55,8 @@ impl<'a> MessagingManager {
             return Err(KernelError::NotFound);
         }
         let mcb = self.mcb_table[msg_id];
-        let mask = self.msg_scb_table
+        let mask = self
+            .msg_scb_table
             .signal_and_release(msg_id, &mcb.receivers)?;
         return Ok(mask);
     }

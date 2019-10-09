@@ -13,9 +13,9 @@ use stm32f4::stm32f407::interrupt;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
+use hartex_rust::process::*;
 use hartex_rust::spawn;
 use hartex_rust::sync;
-use hartex_rust::process::*;
 use hartex_rust::types::*;
 
 static mut BOARD_PER: Option<stm32f407::Peripherals> = None;
