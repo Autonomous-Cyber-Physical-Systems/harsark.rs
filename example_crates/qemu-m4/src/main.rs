@@ -14,7 +14,7 @@ use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
 use hartex_rust::process::*;
-use hartex_rust::spawn;
+use hartex_rust::{spawn,init};
 use hartex_rust::types::*;
 use hartex_rust::resource::*;
 use hartex_rust::helper::get_msb;
@@ -37,7 +37,9 @@ fn main() -> ! {
           hprintln!("task 3  : {:?}", app);
      });
 
-     init(true);
+     init!(true, &0, |_| loop {
+                    cortex_m::asm::wfe();
+                });
      release(&14);
 
      start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);

@@ -46,20 +46,22 @@ impl Scheduler {
     }
 
     /// Initialize the switcher system
-    pub fn init(&mut self, is_preemptive: bool) {
+    pub fn init(&mut self, is_preemptive: bool, create_idle_task: bool) {
         self.is_preemptive = is_preemptive;
         /*
             This is the default task, that just puts the board for a power-save mode
             until any event (interrupt/exception) occurs.
         */
-        self.create_task(
-            0,
-            |_| loop {
-                cortex_m::asm::wfe();
-            },
-            &0,
-        )
-        .unwrap();
+        if create_idle_task {
+            self.create_task(
+                0,
+                |_| loop {
+                    cortex_m::asm::wfe();
+                },
+                &0,
+            )
+            .unwrap();
+        }
     }
 
     // The below section just sets up the timer and starts it.
