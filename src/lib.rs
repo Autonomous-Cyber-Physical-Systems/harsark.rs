@@ -5,8 +5,8 @@
 mod containers;
 mod kernel;
 
-pub mod event_manager;
-pub mod interrupt_handlers;
+pub mod event;
+pub mod interrupts;
 pub mod macros;
 pub mod messaging;
 pub mod process;
