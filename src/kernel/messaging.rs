@@ -3,7 +3,6 @@
 use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, SEMAPHORE_COUNT};
 use crate::errors::KernelError;
 use crate::kernel::semaphores::{SemaphoreControlBlock, Semaphores};
-use crate::process::{get_pid, release};
 
 use cortex_m_semihosting::hprintln;
 
@@ -51,14 +50,14 @@ impl<'a> MessagingManager {
         }
     }
 
-    pub fn broadcast(&mut self, msg_id: MessageId) -> Result<(), KernelError> {
+    pub fn broadcast(&mut self, msg_id: MessageId) -> Result<u32, KernelError> {
         if self.mcb_table.get(msg_id).is_none() {
             return Err(KernelError::NotFound);
         }
         let mcb = self.mcb_table[msg_id];
-        self.msg_scb_table
+        let mask = self.msg_scb_table
             .signal_and_release(msg_id, &mcb.receivers)?;
-        return Ok(());
+        return Ok(mask);
     }
 
     fn copy_msg(&mut self, msg_id: MessageId) {
@@ -75,11 +74,10 @@ impl<'a> MessagingManager {
         }
     }
 
-    pub fn receive(&'a mut self, msg_id: MessageId) -> Option<&'a [u32]> {
-        let rt = get_pid();
+    pub fn receive(&'a mut self, msg_id: MessageId, curr_pid: usize) -> Option<&'a [u32]> {
         self.copy_msg(msg_id);
-        let tcb = &self.tcb_table[rt];
-        match self.msg_scb_table.test_and_reset(msg_id) {
+        let tcb = &self.tcb_table[curr_pid];
+        match self.msg_scb_table.test_and_reset(msg_id, curr_pid as u32) {
             Ok(res) if res == true => return Some(&tcb.dest_buffer[0..tcb.msg_size]),
             _ => return None,
         }

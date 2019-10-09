@@ -1,6 +1,5 @@
 use crate::config::SEMAPHORE_COUNT;
 use crate::errors::KernelError;
-use crate::process::{get_pid, release};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
@@ -23,19 +22,17 @@ pub struct Semaphores {
 }
 
 impl SemaphoreControlBlock {
-    pub fn signal_and_release(&mut self, tasks_mask: &u32) -> Result<(), KernelError> {
+    pub fn signal_and_release(&mut self, tasks_mask: &u32) -> Result<u32, KernelError> {
         execute_critical(|_| {
             self.flags |= *tasks_mask;
-            release(&self.tasks);
-            return Ok(());
+            return Ok(self.tasks);
         })
     }
-    pub fn test_and_reset(&mut self) -> Result<bool, KernelError> {
+    pub fn test_and_reset(&mut self, curr_pid: u32) -> Result<bool, KernelError> {
         execute_critical(|_| {
-            let rt = get_pid() as u32;
-            let rt_mask = (1 << rt);
-            if self.flags & rt_mask == rt_mask {
-                self.flags &= !rt_mask;
+            let curr_pid_mask = (1 << curr_pid);
+            if self.flags & curr_pid_mask == curr_pid_mask {
+                self.flags &= !curr_pid_mask;
                 return Ok(true);
             } else {
                 return Ok(false);
@@ -67,11 +64,11 @@ impl Semaphores {
         &mut self,
         sem_id: SemaphoreId,
         tasks_mask: &u32,
-    ) -> Result<(), KernelError> {
+    ) -> Result<u32, KernelError> {
         self.table[sem_id].signal_and_release(tasks_mask)
     }
 
-    pub fn test_and_reset(&mut self, sem_id: SemaphoreId) -> Result<bool, KernelError> {
-        self.table[sem_id].test_and_reset()
+    pub fn test_and_reset(&mut self, sem_id: SemaphoreId, curr_pid: u32) -> Result<bool, KernelError> {
+        self.table[sem_id].test_and_reset(curr_pid)
     }
 }
