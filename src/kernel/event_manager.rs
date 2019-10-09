@@ -148,7 +148,7 @@ impl EventManager {
         let event = self.event_table[event_id];
 
         if event.opcode & OPCODE_SIGNAL == OPCODE_SIGNAL {
-            // sem_post(event.semaphores, &event.tasks);
+             sem_post(event.semaphore, event.tasks);
         }
         if event.opcode & OPCODE_SEND_MSG == OPCODE_SEND_MSG {
             broadcast(event.msg_index);

@@ -18,6 +18,7 @@ use core::fmt;
 
 pub mod helper {
     pub use crate::kernel::helper::generate_task_mask;
+    pub use crate::kernel::helper::get_msb;
 }
 
 pub mod types {

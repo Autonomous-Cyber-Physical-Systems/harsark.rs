@@ -9,15 +9,21 @@ use cortex_m::register::control;
      task_mask
  }
 
-pub fn get_msb(val: &u32) -> usize {
-    for i in (0..MAX_TASKS).rev() {
-        let mut mask = 1 << i;
-        if val & mask == mask {
-            return i;
-        }
+pub fn get_msb(val: u32) -> usize {
+    let mut res = 0;
+    unsafe{
+       asm!("clz $1, $0"
+             : "=r"(res)
+             : "0"(val)
+             );
     }
-    return 0;
+    res = 32 - res;
+    if res > 0 {
+        res -= 1;
+    }
+    return res;
 }
+
 
 pub fn check_priv() -> control::Npriv {
     let ctrl_reg = control::read();
