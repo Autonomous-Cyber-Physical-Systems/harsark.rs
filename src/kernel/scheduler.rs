@@ -4,7 +4,6 @@ use crate::config::{MAX_STACK_SIZE, MAX_TASKS};
 use crate::errors::KernelError;
 use crate::interrupt_handlers::svc_call;
 use crate::kernel::helper::get_msb;
-use crate::process::*;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;

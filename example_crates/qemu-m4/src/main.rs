@@ -18,12 +18,13 @@ use hartex_rust::spawn;
 use hartex_rust::types::*;
 use hartex_rust::resource::*;
 use hartex_rust::helper::get_msb;
+use hartex_rust::messaging;
 
 #[entry]
 fn main() -> ! {
      let app = create(7,14).unwrap();
      let peripherals = init_peripherals().unwrap();
-
+     
      spawn!(thread1, 1, app, app, {
          app.acquire(|item| {
              hprintln!("{:?}", item);

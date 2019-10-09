@@ -8,6 +8,7 @@ use cortex_m_semihosting::hprintln;
 use crate::kernel::helper::check_priv;
 use cortex_m::register::control::Npriv;
 
+
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
@@ -20,13 +21,16 @@ static default_msg: [u32; 1] = [0; 1];
 static Messaging: Mutex<RefCell<MessagingManager>> = Mutex::new(RefCell::new(MessagingManager::new()));
 
 pub fn broadcast(sem_id: MessageId) -> Result<(), KernelError> {
-    execute_critical(|cs_token| Messaging.borrow(cs_token).borrow_mut().broadcast(sem_id))
+    execute_critical(|cs_token| {
+        let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(sem_id)?;
+        release(&mask)
+    })
 }
 
 pub fn receive(sem_id: MessageId, buffer: &mut [u32]) -> usize {
     execute_critical(|cs_token: &CriticalSection| {
         let mut msg = Messaging.borrow(cs_token).borrow_mut();
-        let msg = msg.receive(sem_id);
+        let msg = msg.receive(sem_id, get_pid());
         if let Some(msg) = msg {
             for i in 0..msg.len() {
                 buffer[i] = msg[i];
@@ -38,9 +42,9 @@ pub fn receive(sem_id: MessageId, buffer: &mut [u32]) -> usize {
     })
 }
 
-pub fn new(
-    var: usize,
-    tasks_mask: u32,
+pub fn create(
+//    var: usize,
+    notify_tasks_mask: u32,
     receivers_mask: u32,
     src_buffer: StaticBuffer,
 ) -> Result<MessageId, KernelError> {
@@ -53,7 +57,7 @@ pub fn new(
                 Messaging
                     .borrow(cs_token)
                     .borrow_mut()
-                    .create(tasks_mask, receivers_mask, src_buffer)
+                    .create(notify_tasks_mask, receivers_mask, src_buffer)
             })
         }
     }

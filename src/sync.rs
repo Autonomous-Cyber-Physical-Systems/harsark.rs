@@ -7,7 +7,7 @@ use cortex_m::register::control::Npriv;
 use core::borrow::BorrowMut;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
-
+use crate::process::{get_pid, release};
 pub use crate::kernel::semaphores;
 
 use crate::kernel::types::SemaphoreId;
@@ -16,10 +16,11 @@ static SCB_table: Mutex<RefCell<Semaphores>> = Mutex::new(RefCell::new(Semaphore
 
 pub fn sem_post(sem_id: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError> {
     execute_critical(|cs_token| {
-        SCB_table
+        let mask = SCB_table
             .borrow(cs_token)
             .borrow_mut()
-            .signal_and_release(sem_id, &tasks_mask)
+            .signal_and_release(sem_id, &tasks_mask)?;
+        release(&mask)
     })
 }
 
@@ -28,7 +29,7 @@ pub fn sem_wait(sem_id: SemaphoreId) -> Result<bool, KernelError> {
         SCB_table
             .borrow(cs_token)
             .borrow_mut()
-            .test_and_reset(sem_id)
+            .test_and_reset(sem_id, get_pid() as u32)
     })
 }
 
