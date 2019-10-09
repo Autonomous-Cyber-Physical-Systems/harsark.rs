@@ -8,6 +8,8 @@ use crate::kernel::resource_management::ResourceManager;
 use crate::kernel::helper::check_priv;
 use crate::kernel::types::ResourceId;
 
+use crate::process::{get_pid, block_tasks, schedule, unblock_tasks};
+
 use cortex_m_semihosting::hprintln;
 
 use cortex_m::register::control::Npriv;
@@ -31,8 +33,9 @@ impl<T> Resource<T> {
 
     fn lock(&self) -> Option<&T> {
         execute_critical(|cs_token| {
-            let res = resources_list.borrow(cs_token).borrow_mut().lock(self.id);
-            if res {
+            let res = resources_list.borrow(cs_token).borrow_mut().lock(self.id, get_pid() as u32);
+            if let Some(mask) = res {
+                block_tasks(mask);
                 return Some(&self.inner);
             }
             return None;
@@ -40,7 +43,12 @@ impl<T> Resource<T> {
     }
 
     fn unlock(&self) {
-        execute_critical(|cs_token| resources_list.borrow(cs_token).borrow_mut().unlock(self.id))
+        execute_critical(|cs_token| {
+            if let Some(mask) = resources_list.borrow(cs_token).borrow_mut().unlock(self.id) {
+                unblock_tasks(mask);
+                schedule();
+            }
+        })
     }
 
     pub fn acquire<F>(&self, handler: F) where

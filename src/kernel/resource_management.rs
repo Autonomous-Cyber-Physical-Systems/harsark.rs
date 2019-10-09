@@ -1,11 +1,10 @@
-use crate::process::get_pid;
 use crate::config::MAX_RESOURCES;
 use crate::errors::KernelError;
 use crate::kernel::helper::get_msb;
-use crate::process::{block_tasks, schedule, unblock_tasks};
 use core::cmp::max;
 use core::pin::Pin;
 use cortex_m_semihosting::hprintln;
+
 
 use crate::kernel::types::ResourceId;
 
@@ -60,15 +59,14 @@ impl ResourceManager {
         Ok(id)
     }
 
-    pub fn lock(&mut self, id: ResourceId) -> bool {
+    pub fn lock(&mut self, id: ResourceId, curr_pid: u32) -> Option<u32> {
         let resource = &self.resources_block[id];
-        let curr_pid = get_pid();
         let rt_ceiling = resource.rt_ceiling;
 
         let pid_mask = 1<<curr_pid;
         
         if resource.tasks_mask & pid_mask != pid_mask {
-            return false
+            return None
         }
 
         if rt_ceiling > self.system_ceiling {
@@ -78,20 +76,19 @@ impl ResourceManager {
             mask &= !(1<<curr_pid);
         
             self.system_ceiling = self.resources_block[id].rt_ceiling;
-            block_tasks(mask);
-            return true;
+            return Some(mask)
         }
-        return false;
+        return None
     }
 
-    pub fn unlock(&mut self, id: ResourceId) {
+    pub fn unlock(&mut self, id: ResourceId) -> Option<u32>{
         let resource = self.resources_block[id];
         if resource.rt_ceiling == self.system_ceiling {
             self.pop_stack();
             let mut mask = 1<<(resource.rt_ceiling+1) - 1;
-            unblock_tasks(mask);
-            schedule();
+            return Some(mask)
         }
+        return None
     }
 
     fn pop_stack(&mut self) {
