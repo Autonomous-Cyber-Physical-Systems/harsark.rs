@@ -127,7 +127,7 @@ impl Scheduler {
 
     pub fn get_HT(&self) -> usize {
         let mask = self.active_tasks & !self.blocked_tasks;
-        return get_msb(&mask);
+        return get_msb(mask);
     }
 
     pub fn release(&mut self, tasks_mask: &u32) {

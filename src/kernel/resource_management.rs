@@ -35,7 +35,7 @@ impl ResourceControlBlock {
     }
     pub fn set(&mut self, tasks_mask: u32) {
         self.tasks_mask = tasks_mask;
-        self.rt_ceiling = get_msb(&tasks_mask) as u32;
+        self.rt_ceiling = get_msb(tasks_mask) as u32;
     }
 }
 

@@ -17,29 +17,28 @@ use hartex_rust::process::*;
 use hartex_rust::spawn;
 use hartex_rust::types::*;
 use hartex_rust::resource::*;
+use hartex_rust::helper::get_msb;
 
 #[entry]
 fn main() -> ! {
+     let app = create(7,14).unwrap();
+     let peripherals = init_peripherals().unwrap();
 
-    let app = create(7,14).unwrap();
-    let peripherals = init_peripherals().unwrap();
+     spawn!(thread1, 1, app, app, {
+         app.acquire(|item| {
+             hprintln!("{:?}", item);
+         });
+     });
+     spawn!(thread2, 2, {
+          hprintln!("task 2");
+     });
+     spawn!(thread3, 3, app, app, {
+          hprintln!("task 3  : {:?}", app);
+     });
 
-    spawn!(thread1, 1, app, app, {
-        app.acquire(|item| {
-            hprintln!("{:?}", item);
-        });
-    });
-    spawn!(thread2, 2, {
-         hprintln!("task 2");
-    });
-    spawn!(thread3, 3, app, app, {
-         hprintln!("task 3  : {:?}", app);
-    });
+     init(true);
+     release(&14);
 
-    init(true);
-    release(&14);
-
-    start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);
-
+     start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);
     loop {}
 }
