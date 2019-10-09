@@ -1,4 +1,4 @@
-use crate::event_manager::sweep_event_table;
+use crate::event::sweep_event_table;
 use crate::kernel::event_manager::EventTableType;
 use crate::process::{is_preemptive, schedule};
 use cortex_m::interrupt::free as execute_critical;
