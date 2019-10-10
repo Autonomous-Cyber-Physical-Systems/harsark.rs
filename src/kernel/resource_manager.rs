@@ -11,7 +11,7 @@ const PI: u32 = 0;
 
 #[derive(Clone, Copy)]
 pub struct ResourceControlBlock {
-    rt_ceiling: u32,
+    ceiling: u32,
     tasks_mask: u32,
 }
 
@@ -27,13 +27,13 @@ pub struct ResourceManager {
 impl ResourceControlBlock {
     pub const fn new() -> Self {
         Self {
-            rt_ceiling: PI,
+            ceiling: PI,
             tasks_mask: PI,
         }
     }
     pub fn set(&mut self, tasks_mask: u32) {
         self.tasks_mask = tasks_mask;
-        self.rt_ceiling = get_msb(tasks_mask) as u32;
+        self.ceiling = get_msb(tasks_mask) as u32;
     }
 }
 
@@ -60,7 +60,7 @@ impl ResourceManager {
 
     pub fn lock(&mut self, id: ResourceId, curr_pid: u32) -> Option<u32> {
         let resource = &self.resources_block[id];
-        let rt_ceiling = resource.rt_ceiling;
+        let ceiling = resource.ceiling;
 
         let pid_mask = 1 << curr_pid;
 
@@ -68,30 +68,35 @@ impl ResourceManager {
             return None;
         }
 
-        if rt_ceiling > self.system_ceiling {
-            self.push_stack(rt_ceiling);
+        if ceiling > self.system_ceiling {
+            self.push_stack(ceiling);
 
-            let mut mask = 0;
-            if rt_ceiling < 32 {
-                mask = 1 << (rt_ceiling + 1) - 1;
-            } else {
-                for i in 0..rt_ceiling {
-                    mask |= 1<<i;
-                }
-            }
-            mask &= !(1 << curr_pid);
+            let mask = self.get_pi_mask(ceiling, curr_pid);
 
-            self.system_ceiling = self.resources_block[id].rt_ceiling;
+            self.system_ceiling = self.resources_block[id].ceiling;
             return Some(mask);
         }
         return None;
     }
 
+    fn get_pi_mask(&self, ceiling: u32, curr_pid: u32) -> u32 {
+        let mut mask = 0;
+        if ceiling < 32 {
+            mask = 1 << (ceiling + 1) - 1;
+        } else {
+            for i in 0..ceiling {
+                mask |= 1<<i;
+            }
+        }
+        mask &= !(1 << curr_pid);
+        mask
+    }
+
     pub fn unlock(&mut self, id: ResourceId) -> Option<u32> {
         let resource = self.resources_block[id];
-        if resource.rt_ceiling == self.system_ceiling {
+        if resource.ceiling == self.system_ceiling {
             self.pop_stack();
-            let mut mask = 1 << (resource.rt_ceiling + 1) - 1;
+            let mut mask = 1 << (resource.ceiling + 1) - 1;
             return Some(mask);
         }
         return None;
