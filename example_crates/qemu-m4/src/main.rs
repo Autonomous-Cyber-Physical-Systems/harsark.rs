@@ -24,23 +24,27 @@ use hartex_rust::{init, spawn};
 fn main() -> ! {
     let app = create(7, 14).unwrap();
     let peripherals = init_peripherals().unwrap();
+    let msg1 = messaging::create(7,7,"hello").unwrap();
 
-    spawn!(thread1, 1, app, app, {
-        app.acquire(|item| {
-            hprintln!("{:?}", item);
-        });
+    spawn!(thread1, 1, msg1, msg1, {
+        hprintln!("task 1");
+        msg1.broadcast();
     });
-    spawn!(thread2, 2, {
+    spawn!(thread2, 2, msg1, msg1, {
         hprintln!("task 2");
+        if let Some(x) = msg1.receive() {
+            hprintln!("{:?}", x);
+        }
     });
     spawn!(thread3, 3, app, app, {
-        hprintln!("task 3  : {:?}", app);
+        hprintln!("task 3");
     });
 
     init!(true, &0, |_| loop {
         cortex_m::asm::wfe();
     });
-    release(&14);
+
+    release(&6);
 
     start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);
     loop {}
