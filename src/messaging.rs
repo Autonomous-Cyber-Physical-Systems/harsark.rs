@@ -20,42 +20,53 @@ static default_msg: [u32; 1] = [0; 1];
 static Messaging: Mutex<RefCell<MessagingManager>> =
     Mutex::new(RefCell::new(MessagingManager::new()));
 
-pub fn broadcast(sem_id: MessageId) -> Result<(), KernelError> {
-    execute_critical(|cs_token| {
-        let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(sem_id)?;
-        release(&mask)
-    })
+#[derive(Debug)]
+pub struct Message<T: Sized> {
+    inner: T,
+    id: MessageId,
 }
 
-pub fn receive(sem_id: MessageId, buffer: &mut [u32]) -> usize {
-    execute_critical(|cs_token: &CriticalSection| {
-        let mut msg = Messaging.borrow(cs_token).borrow_mut();
-        let msg = msg.receive(sem_id, get_pid());
-        if let Some(msg) = msg {
-            for i in 0..msg.len() {
-                buffer[i] = msg[i];
-            }
-            msg.len()
-        } else {
-            0
+impl<T:Sized> Message<T> {
+    pub fn new(val: T, id: MessageId) -> Self {
+        Self {
+            inner: val,
+            id
         }
-    })
+    }
+
+    pub fn broadcast(&self) -> Result<(), KernelError> {
+        execute_critical(|cs_token| {
+            let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(self.id)?;
+            release(&mask)
+        })
+    }
+
+    pub fn receive(&self) -> Option<&T> {
+        execute_critical(|cs_token: &CriticalSection| {
+            let mut msg = Messaging.borrow(cs_token).borrow_mut();
+            if msg.receive(self.id, get_pid()) {
+                return Some(&self.inner)
+            }
+            return None
+        })
+    }
+
 }
 
-pub fn create(
-    //    var: usize,
+pub fn create<T> (
     notify_tasks_mask: u32,
     receivers_mask: u32,
-    src_buffer: StaticBuffer,
-) -> Result<MessageId, KernelError> {
+    msg: T
+) -> Result<Message<T>, KernelError> 
+where T: Sized {
     match check_priv() {
         Npriv::Unprivileged => Err(KernelError::AccessDenied),
         Npriv::Privileged => execute_critical(|cs_token| {
-            Messaging.borrow(cs_token).borrow_mut().create(
+            let msg_id = Messaging.borrow(cs_token).borrow_mut().create(
                 notify_tasks_mask,
                 receivers_mask,
-                src_buffer,
-            )
+            )?;
+            Ok(Message::new(msg, msg_id))
         }),
     }
 }
