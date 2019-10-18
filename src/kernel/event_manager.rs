@@ -1,7 +1,7 @@
 use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
 use crate::process::release;
 use crate::sync::sem_post;
-use crate::messaging::broadcast;
+use crate::containers::messaging::broadcast;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
