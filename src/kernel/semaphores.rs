@@ -16,7 +16,7 @@ pub struct SemaphoreControlBlock {
 }
 
 #[derive(Clone, Copy)]
-pub struct Semaphores {
+pub struct SemaphoresTable {
     table: [SemaphoreControlBlock; SEMAPHORE_COUNT],
     curr: usize,
 }
@@ -41,7 +41,7 @@ impl SemaphoreControlBlock {
     }
 }
 
-impl Semaphores {
+impl SemaphoresTable {
     pub const fn new() -> Self {
         Self {
             table: [SemaphoreControlBlock { flags: 0, tasks: 0 }; SEMAPHORE_COUNT],

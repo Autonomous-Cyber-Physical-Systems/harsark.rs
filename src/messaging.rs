@@ -53,6 +53,13 @@ impl<T:Sized> Message<T> {
 
 }
 
+pub fn broadcast(msg_id: MessageId)  -> Result<(), KernelError> {
+    execute_critical(|cs_token| {
+        let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(msg_id)?;
+        release(&mask)
+    })
+}
+
 pub fn create<T> (
     notify_tasks_mask: u32,
     receivers_mask: u32,
