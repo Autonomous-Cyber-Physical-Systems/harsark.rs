@@ -90,7 +90,6 @@ impl EventManager {
     }
 
     pub fn sweep(&mut self, event_type: EventTableType) {
-//        hprintln!("{:?}", self.sec_event_table.table);
         match event_type {
             EventTableType::MilliSec => {
                 self.ms_event_table
