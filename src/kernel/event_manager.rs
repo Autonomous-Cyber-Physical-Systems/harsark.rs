@@ -4,7 +4,12 @@ use crate::sync::sem_post;
 use crate::containers::messaging::broadcast;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
-
+use crate::config::{
+    OPCODE_ENABLE_EVENT,
+    OPCODE_RELEASE,
+    OPCODE_SEND_MSG,
+    OPCODE_SIGNAL
+};
 use crate::kernel::types::{EventId, MessageId, SemaphoreId};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -35,7 +40,7 @@ pub struct Event {
 }
 
 pub struct EventIndexTable {
-    table: [usize; EVENT_INDEX_TABLE_COUNT],
+    table: [Option<usize>; EVENT_INDEX_TABLE_COUNT],
     curr: usize,
 }
 
@@ -48,21 +53,16 @@ pub struct EventManager {
     hr_event_table: EventIndexTable,
 }
 
-const OPCODE_SIGNAL: u8 = 1;
-const OPCODE_SEND_MSG: u8 = 1 << 1;
-const OPCODE_RELEASE: u8 = 1 << 2;
-const OPCODE_ENABLE_EVENT: u8 = 1 << 3;
-
 impl EventIndexTable {
     pub const fn new() -> Self {
         Self {
-            table: [0; EVENT_INDEX_TABLE_COUNT],
+            table: [None; EVENT_INDEX_TABLE_COUNT],
             curr: 0,
         }
     }
 
     pub fn add(&mut self, id: EventId) {
-        self.table[self.curr] = id;
+        self.table[self.curr] = Some(id);
         self.curr += 1;
     }
 }
@@ -90,6 +90,7 @@ impl EventManager {
     }
 
     pub fn sweep(&mut self, event_type: EventTableType) {
+//        hprintln!("{:?}", self.sec_event_table.table);
         match event_type {
             EventTableType::MilliSec => {
                 self.ms_event_table
@@ -97,7 +98,9 @@ impl EventManager {
                     .clone()
                     .iter()
                     .for_each(|event_id| {
-                        self.execute_event(*event_id);
+                        if let Some(event_id) = event_id {
+                            self.execute_event(*event_id);
+                        }
                     });
             }
             EventTableType::Sec => {
@@ -106,7 +109,9 @@ impl EventManager {
                     .clone()
                     .iter()
                     .for_each(|event_id| {
-                        self.execute_event(*event_id);
+                        if let Some(event_id) = event_id {
+                            self.execute_event(*event_id);
+                        }
                     });
             }
             EventTableType::Min => {
@@ -115,7 +120,9 @@ impl EventManager {
                     .clone()
                     .iter()
                     .for_each(|event_id| {
-                        self.execute_event(*event_id);
+                        if let Some(event_id) = event_id {
+                            self.execute_event(*event_id);
+                        }
                     });
             }
             EventTableType::Hour => {
@@ -124,7 +131,9 @@ impl EventManager {
                     .clone()
                     .iter()
                     .for_each(|event_id| {
-                        self.execute_event(*event_id);
+                        if let Some(event_id) = event_id {
+                            self.execute_event(*event_id);
+                        }
                     });
             }
         }
@@ -207,18 +216,22 @@ impl EventManager {
     }
 
     pub fn set_semaphore(&mut self, event_id: EventId, sem: SemaphoreId) {
+        self.event_table[event_id].opcode |= OPCODE_SIGNAL;
         self.event_table[event_id].semaphore = sem;
     }
 
     pub fn set_tasks(&mut self, event_id: EventId, tasks: u32) {
+        self.event_table[event_id].opcode |= OPCODE_RELEASE;
         self.event_table[event_id].tasks = tasks;
     }
 
     pub fn set_msg(&mut self, event_id: EventId, msg_id: usize) {
+        self.event_table[event_id].opcode |= OPCODE_SEND_MSG;
         self.event_table[event_id].msg_index = msg_id;
     }
 
-    pub fn set_next_event(&mut self, event_id: EventId, next: usize) {
+    pub fn set_next_event(&mut self, event_id: EventId, next: EventId) {
+        self.event_table[event_id].opcode |= OPCODE_ENABLE_EVENT;
         self.event_table[event_id].next_event = next;
     }
 }

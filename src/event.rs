@@ -11,6 +11,8 @@ use cortex_m::interrupt::Mutex;
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
 
+pub use crate::kernel::event_manager::{EventType, EventTableType};
+
 static event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));
 
 pub fn sweep_event_table(event_type: EventTableType) {
@@ -95,7 +97,7 @@ pub fn set_msg(event_id: EventId, msg_id: usize) -> Result<(), KernelError> {
     }
 }
 
-pub fn set_next_event(event_id: EventId, next: usize) -> Result<(), KernelError> {
+pub fn set_next_event(event_id: EventId, next: EventId) -> Result<(), KernelError> {
     match check_priv() {
         Npriv::Unprivileged => Err(KernelError::AccessDenied),
         Npriv::Privileged => {
