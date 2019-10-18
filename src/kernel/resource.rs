@@ -4,9 +4,9 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
 use crate::errors::KernelError;
-use crate::kernel::helper::check_priv;
-use crate::kernel::resource_manager::ResourceManager;
-use crate::kernel::types::ResourceId;
+use crate::internals::helper::check_priv;
+use crate::internals::resource_manager::ResourceManager;
+use crate::internals::types::ResourceId;
 
 use crate::process::{block_tasks, get_pid, schedule, unblock_tasks};
 

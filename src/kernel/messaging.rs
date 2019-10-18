@@ -1,60 +1,79 @@
-#![feature(const_fn)]
 //use core::alloc::
-use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, SEMAPHORE_COUNT};
+use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, MCB_COUNT, SEMAPHORE_COUNT};
 use crate::errors::KernelError;
-use crate::kernel::semaphores::{SemaphoreControlBlock, SemaphoresTable};
-
+use crate::internals::helper::check_priv;
+use crate::internals::semaphores::*;
+use crate::process::{get_pid, release};
+use cortex_m::interrupt::{free as execute_critical, CriticalSection};
+use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
 
-use crate::kernel::types::MessageId;
+use core::cell::RefCell;
+use cortex_m::interrupt::Mutex;
 
+use crate::internals::messaging::*;
 
-#[derive(Clone, Copy)]
-pub struct MCB {
-    pub receivers: u32,
+use crate::internals::types::MessageId;
+
+static default_msg: [u32; 1] = [0; 1];
+
+static Messaging: Mutex<RefCell<MessagingManager>> =
+    Mutex::new(RefCell::new(MessagingManager::new()));
+
+#[derive(Debug)]
+pub struct Message<T: Sized> {
+    inner: T,
+    id: MessageId,
 }
 
-#[derive(Clone, Copy)]
-pub struct MessagingManager {
-    pub mcb_table: [MCB; SEMAPHORE_COUNT],
-    pub msg_scb_table: SemaphoresTable,
-}
-
-impl<'a> MessagingManager {
-    pub const fn new() -> Self {
+impl<T:Sized> Message<T> {
+    pub fn new(val: T, id: MessageId) -> Self {
         Self {
-            mcb_table: [MCB {
-                receivers: 0,
-            }; SEMAPHORE_COUNT],
-            msg_scb_table: SemaphoresTable::new(),
+            inner: val,
+            id
         }
     }
 
-    pub fn broadcast(&mut self, msg_id: MessageId) -> Result<u32, KernelError> {
-        if self.mcb_table.get(msg_id).is_none() {
-            return Err(KernelError::NotFound);
-        }
-        let mcb = self.mcb_table[msg_id];
-        let mask = self
-            .msg_scb_table
-            .signal_and_release(msg_id, &mcb.receivers)?;
-        return Ok(mask);
+    pub fn broadcast(&self) -> Result<(), KernelError> {
+        execute_critical(|cs_token| {
+            let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(self.id)?;
+            release(&mask)
+        })
     }
 
-    pub fn receive(&'a mut self, msg_id: MessageId, curr_pid: usize) -> bool {
-        match self.msg_scb_table.test_and_reset(msg_id, curr_pid as u32) {
-            Ok(res) if res == true => true,
-            _ => false,
-        }
+    pub fn receive(&self) -> Option<&T> {
+        execute_critical(|cs_token: &CriticalSection| {
+            let mut msg = Messaging.borrow(cs_token).borrow_mut();
+            if msg.receive(self.id, get_pid()) {
+                return Some(&self.inner)
+            }
+            return None
+        })
     }
 
-    pub fn create(
-        &mut self,
-        tasks_mask: u32,
-        receivers_mask: u32,
-    ) -> Result<MessageId, KernelError> {
-        let msg_id = self.msg_scb_table.create(tasks_mask)?;
-        self.mcb_table[msg_id].receivers |= receivers_mask;
-        return Ok(msg_id);
+}
+
+pub fn broadcast(msg_id: MessageId)  -> Result<(), KernelError> {
+    execute_critical(|cs_token| {
+        let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(msg_id)?;
+        release(&mask)
+    })
+}
+
+pub fn create<T> (
+    notify_tasks_mask: u32,
+    receivers_mask: u32,
+    msg: T
+) -> Result<Message<T>, KernelError> 
+where T: Sized {
+    match check_priv() {
+        Npriv::Unprivileged => Err(KernelError::AccessDenied),
+        Npriv::Privileged => execute_critical(|cs_token| {
+            let msg_id = Messaging.borrow(cs_token).borrow_mut().create(
+                notify_tasks_mask,
+                receivers_mask,
+            )?;
+            Ok(Message::new(msg, msg_id))
+        }),
     }
 }

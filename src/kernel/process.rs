@@ -3,19 +3,19 @@ use core::ptr;
 use crate::config::{MAX_STACK_SIZE, MAX_TASKS};
 use crate::errors::KernelError;
 use crate::interrupts::svc_call;
-use crate::kernel::helper::get_msb;
+use crate::internals::helper::get_msb;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
 
-use crate::kernel::types::TaskId;
+use crate::internals::types::TaskId;
 
-use crate::kernel::scheduler::*;
+use crate::internals::scheduler::*;
 use core::borrow::BorrowMut;
 use cortex_m::Peripherals;
 
-use crate::kernel::helper::check_priv;
+use crate::internals::helper::check_priv;
 
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
@@ -134,16 +134,11 @@ pub fn task_exit() {
 }
 
 pub fn release(tasks_mask: &u32) -> Result<(), KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => {
             execute_critical(|_| {
                 unsafe { all_tasks.release(&tasks_mask) };
             });
             schedule();
             Ok(())
-        }
-    }
 }
 
 pub fn enable_preemption() {

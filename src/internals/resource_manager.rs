@@ -1,11 +1,11 @@
 use crate::config::MAX_RESOURCES;
 use crate::errors::KernelError;
-use crate::kernel::helper::get_msb;
+use crate::internals::helper::get_msb;
 use core::cmp::max;
 use core::pin::Pin;
 use cortex_m_semihosting::hprintln;
 
-use crate::kernel::types::ResourceId;
+use crate::internals::types::ResourceId;
 
 const PI: u32 = 0;
 

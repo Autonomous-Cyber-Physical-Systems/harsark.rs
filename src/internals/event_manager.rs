@@ -1,7 +1,7 @@
 use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
 use crate::process::release;
 use crate::sync::sem_post;
-use crate::containers::messaging::broadcast;
+use crate::messaging::broadcast;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 use crate::config::{
@@ -10,7 +10,7 @@ use crate::config::{
     OPCODE_SEND_MSG,
     OPCODE_SIGNAL
 };
-use crate::kernel::types::{EventId, MessageId, SemaphoreId};
+use crate::internals::types::{EventId, MessageId, SemaphoreId};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum EventType {
