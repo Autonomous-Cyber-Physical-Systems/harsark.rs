@@ -4,7 +4,6 @@ use crate::kernel::helper::check_priv;
 use crate::kernel::types::{EventId, MessageId, SemaphoreId};
 use crate::process::release;
 use crate::KernelError;
-use crate::{messaging::*, sync::*};
 use core::borrow::BorrowMut;
 use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;

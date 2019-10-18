@@ -8,10 +8,9 @@ mod kernel;
 pub mod event;
 pub mod interrupts;
 pub mod macros;
-pub mod messaging;
 pub mod process;
 pub mod sync;
-pub use containers::resource;
+pub use containers::*;
 
 use crate::errors::KernelError;
 use core::fmt;
