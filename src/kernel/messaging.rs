@@ -2,7 +2,7 @@
 //use core::alloc::
 use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, SEMAPHORE_COUNT};
 use crate::errors::KernelError;
-use crate::kernel::semaphores::{SemaphoreControlBlock, Semaphores};
+use crate::kernel::semaphores::{SemaphoreControlBlock, SemaphoresTable};
 
 use cortex_m_semihosting::hprintln;
 
@@ -17,7 +17,7 @@ pub struct MCB {
 #[derive(Clone, Copy)]
 pub struct MessagingManager {
     pub mcb_table: [MCB; SEMAPHORE_COUNT],
-    pub msg_scb_table: Semaphores,
+    pub msg_scb_table: SemaphoresTable,
 }
 
 impl<'a> MessagingManager {
@@ -26,7 +26,7 @@ impl<'a> MessagingManager {
             mcb_table: [MCB {
                 receivers: 0,
             }; SEMAPHORE_COUNT],
-            msg_scb_table: Semaphores::new(),
+            msg_scb_table: SemaphoresTable::new(),
         }
     }
 

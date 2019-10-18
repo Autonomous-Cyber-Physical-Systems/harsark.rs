@@ -1,6 +1,7 @@
 use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
 use crate::process::release;
-use crate::{sync::*};
+use crate::sync::sem_post;
+use crate::messaging::broadcast;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
@@ -151,7 +152,7 @@ impl EventManager {
             sem_post(event.semaphore, event.tasks);
         }
         if event.opcode & OPCODE_SEND_MSG == OPCODE_SEND_MSG {
-            // broadcast(event.msg_index);
+            broadcast(event.msg_index);
         }
         if event.opcode & OPCODE_RELEASE == OPCODE_RELEASE {
             release(&event.tasks);
