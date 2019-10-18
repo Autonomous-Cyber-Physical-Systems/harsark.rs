@@ -2,8 +2,8 @@ use core::ptr;
 
 use crate::config::{MAX_STACK_SIZE, MAX_TASKS};
 use crate::errors::KernelError;
-use crate::interrupts::svc_call;
 use crate::internals::helper::get_msb;
+use crate::interrupts::svc_call;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;

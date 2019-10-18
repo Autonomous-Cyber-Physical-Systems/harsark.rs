@@ -2,10 +2,10 @@
 #![feature(asm)]
 #![feature(const_fn)]
 
-mod kernel;
-mod internals;
-mod errors;
 mod config;
+mod errors;
+mod internals;
+mod kernel;
 
 pub mod interrupts;
 pub mod macros;

@@ -1,13 +1,13 @@
 use core::fmt;
 
 pub enum KernelError {
-        BufferOverflow,
-        NotFound,
-        StackTooSmall,
-        DoesNotExist,
-        LimitExceeded,
-        AccessDenied,
-    }
+    BufferOverflow,
+    NotFound,
+    StackTooSmall,
+    DoesNotExist,
+    LimitExceeded,
+    AccessDenied,
+}
 
 impl fmt::Debug for KernelError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
