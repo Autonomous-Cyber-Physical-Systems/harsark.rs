@@ -7,7 +7,7 @@ use core::borrow::BorrowMut;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
-use crate::kernel::types::SemaphoreId;
+use crate::internals::types::SemaphoreId;
 
 #[derive(Clone, Copy)]
 pub struct SemaphoreControlBlock {

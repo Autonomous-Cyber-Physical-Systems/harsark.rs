@@ -1,5 +1,5 @@
 use crate::event::sweep_event_table;
-use crate::kernel::event_manager::EventTableType;
+use crate::internals::event_manager::EventTableType;
 use crate::process::{is_preemptive, schedule};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_rt::exception;

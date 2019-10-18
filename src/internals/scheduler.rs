@@ -3,12 +3,12 @@ use core::ptr;
 use crate::config::{MAX_STACK_SIZE, MAX_TASKS};
 use crate::errors::KernelError;
 use crate::interrupts::svc_call;
-use crate::kernel::helper::get_msb;
+use crate::internals::helper::get_msb;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
 
-use crate::kernel::types::TaskId;
+use crate::internals::types::TaskId;
 
 #[repr(C)]
 pub struct Scheduler {

@@ -1,7 +1,7 @@
 use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
-use crate::kernel::event_manager::*;
-use crate::kernel::helper::check_priv;
-use crate::kernel::types::{EventId, MessageId, SemaphoreId};
+use crate::internals::event_manager::*;
+use crate::internals::helper::check_priv;
+use crate::internals::types::{EventId, MessageId, SemaphoreId};
 use crate::process::release;
 use crate::KernelError;
 use core::borrow::BorrowMut;
@@ -11,7 +11,7 @@ use cortex_m::interrupt::Mutex;
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
 
-pub use crate::kernel::event_manager::{EventType, EventTableType};
+pub use crate::internals::event_manager::{EventType, EventTableType};
 
 static event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));
 

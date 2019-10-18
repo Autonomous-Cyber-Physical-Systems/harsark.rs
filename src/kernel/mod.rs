@@ -1,7 +1,5 @@
-pub mod event_manager;
-pub mod helper;
+pub mod event;
 pub mod messaging;
-pub mod resource_manager;
-pub mod scheduler;
-pub mod semaphores;
-pub mod types;
+pub mod process;
+pub mod resource;
+pub mod sync;
