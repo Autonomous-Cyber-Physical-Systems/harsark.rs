@@ -30,8 +30,7 @@ fn main() -> ! {
     let msg1 = messaging::create(7,7,"hello").unwrap();
     let sm1 = sync::create(8).unwrap();
 
-//    let e1 = event::create(true, EventType::FreeRunning,10, EventTableType::Sec).unwrap();
-    let e2 = event::create(true, EventType::FreeRunning,10, EventTableType::Sec).unwrap();
+    let e2 = event::create(true, EventType::FreeRunning,1, EventTableType::Sec).unwrap();
     event::set_msg(e2,0);
 
     spawn!(thread1, 1, msg1, msg1, {
