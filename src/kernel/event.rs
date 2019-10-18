@@ -11,7 +11,7 @@ use cortex_m::interrupt::Mutex;
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
 
-pub use crate::internals::event_manager::{EventType, EventTableType};
+pub use crate::internals::event_manager::{EventTableType, EventType};
 
 static event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));
 

@@ -26,12 +26,9 @@ pub struct Message<T: Sized> {
     id: MessageId,
 }
 
-impl<T:Sized> Message<T> {
+impl<T: Sized> Message<T> {
     pub fn new(val: T, id: MessageId) -> Self {
-        Self {
-            inner: val,
-            id
-        }
+        Self { inner: val, id }
     }
 
     pub fn broadcast(&self) -> Result<(), KernelError> {
@@ -45,34 +42,35 @@ impl<T:Sized> Message<T> {
         execute_critical(|cs_token: &CriticalSection| {
             let mut msg = Messaging.borrow(cs_token).borrow_mut();
             if msg.receive(self.id, get_pid()) {
-                return Some(&self.inner)
+                return Some(&self.inner);
             }
-            return None
+            return None;
         })
     }
-
 }
 
-pub fn broadcast(msg_id: MessageId)  -> Result<(), KernelError> {
+pub fn broadcast(msg_id: MessageId) -> Result<(), KernelError> {
     execute_critical(|cs_token| {
         let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(msg_id)?;
         release(&mask)
     })
 }
 
-pub fn create<T> (
+pub fn create<T>(
     notify_tasks_mask: u32,
     receivers_mask: u32,
-    msg: T
-) -> Result<Message<T>, KernelError> 
-where T: Sized {
+    msg: T,
+) -> Result<Message<T>, KernelError>
+where
+    T: Sized,
+{
     match check_priv() {
         Npriv::Unprivileged => Err(KernelError::AccessDenied),
         Npriv::Privileged => execute_critical(|cs_token| {
-            let msg_id = Messaging.borrow(cs_token).borrow_mut().create(
-                notify_tasks_mask,
-                receivers_mask,
-            )?;
+            let msg_id = Messaging
+                .borrow(cs_token)
+                .borrow_mut()
+                .create(notify_tasks_mask, receivers_mask)?;
             Ok(Message::new(msg, msg_id))
         }),
     }

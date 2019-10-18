@@ -8,7 +8,6 @@ use cortex_m_semihosting::hprintln;
 
 use crate::internals::types::MessageId;
 
-
 #[derive(Clone, Copy)]
 pub struct MCB {
     pub receivers: u32,
@@ -23,9 +22,7 @@ pub struct MessagingManager {
 impl<'a> MessagingManager {
     pub const fn new() -> Self {
         Self {
-            mcb_table: [MCB {
-                receivers: 0,
-            }; SEMAPHORE_COUNT],
+            mcb_table: [MCB { receivers: 0 }; SEMAPHORE_COUNT],
             msg_scb_table: SemaphoresTable::new(),
         }
     }

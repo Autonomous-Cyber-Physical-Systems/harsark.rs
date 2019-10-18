@@ -85,7 +85,7 @@ impl ResourceManager {
             mask = 1 << (ceiling + 1) - 1;
         } else {
             for i in 0..ceiling {
-                mask |= 1<<i;
+                mask |= 1 << i;
             }
         }
         mask &= !(1 << curr_pid);

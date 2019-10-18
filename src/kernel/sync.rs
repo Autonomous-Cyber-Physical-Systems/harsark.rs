@@ -12,7 +12,8 @@ use cortex_m::register::control::Npriv;
 
 use crate::internals::types::SemaphoreId;
 
-static SCB_table: Mutex<RefCell<SemaphoresTable>> = Mutex::new(RefCell::new(SemaphoresTable::new()));
+static SCB_table: Mutex<RefCell<SemaphoresTable>> =
+    Mutex::new(RefCell::new(SemaphoresTable::new()));
 
 pub fn sem_post(sem_id: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError> {
     execute_critical(|cs_token| {
