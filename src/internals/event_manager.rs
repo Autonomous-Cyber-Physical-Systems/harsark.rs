@@ -158,7 +158,7 @@ impl EventManager {
             broadcast(event.msg_index);
         }
         if event.opcode & OPCODE_RELEASE == OPCODE_RELEASE {
-            release(&event.tasks);
+            release(event.tasks);
         }
         if event.opcode & OPCODE_ENABLE_EVENT == OPCODE_ENABLE_EVENT {
             self.enable_next(event_id);

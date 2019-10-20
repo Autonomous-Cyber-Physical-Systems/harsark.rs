@@ -133,9 +133,9 @@ pub fn task_exit() {
     schedule()
 }
 
-pub fn release(tasks_mask: &u32) -> Result<(), KernelError> {
+pub fn release(tasks_mask: u32) -> Result<(), KernelError> {
     execute_critical(|_| {
-        unsafe { all_tasks.release(&tasks_mask) };
+        unsafe { all_tasks.release(tasks_mask) };
     });
     schedule();
     Ok(())

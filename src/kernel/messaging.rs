@@ -34,7 +34,7 @@ impl<T: Sized> Message<T> {
     pub fn broadcast(&self) -> Result<(), KernelError> {
         execute_critical(|cs_token| {
             let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(self.id)?;
-            release(&mask)
+            release(mask)
         })
     }
 
@@ -52,7 +52,7 @@ impl<T: Sized> Message<T> {
 pub fn broadcast(msg_id: MessageId) -> Result<(), KernelError> {
     execute_critical(|cs_token| {
         let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(msg_id)?;
-        release(&mask)
+        release(mask)
     })
 }
 
