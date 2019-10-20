@@ -21,7 +21,7 @@ pub fn sem_post(sem_id: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError>
             .borrow(cs_token)
             .borrow_mut()
             .signal_and_release(sem_id, &tasks_mask)?;
-        release(&mask)
+        release(mask)
     })
 }
 

@@ -131,7 +131,7 @@ impl Scheduler {
         return get_msb(mask);
     }
 
-    pub fn release(&mut self, tasks_mask: &u32) {
-        self.active_tasks |= *tasks_mask;
+    pub fn release(&mut self, tasks_mask: u32) {
+        self.active_tasks |= tasks_mask;
     }
 }
