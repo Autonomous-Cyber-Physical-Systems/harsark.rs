@@ -15,7 +15,7 @@ use crate::internals::types::SemaphoreId;
 static SCB_table: Mutex<RefCell<SemaphoresTable>> =
     Mutex::new(RefCell::new(SemaphoresTable::new()));
 
-pub fn sem_post(sem_id: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError> {
+pub fn sem_set(sem_id: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError> {
     execute_critical(|cs_token| {
         let mask = SCB_table
             .borrow(cs_token)
@@ -25,7 +25,7 @@ pub fn sem_post(sem_id: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError>
     })
 }
 
-pub fn sem_wait(sem_id: SemaphoreId) -> Result<bool, KernelError> {
+pub fn sem_test(sem_id: SemaphoreId) -> Result<bool, KernelError> {
     execute_critical(|cs_token| {
         SCB_table
             .borrow(cs_token)
