@@ -3,7 +3,7 @@ use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE
 use crate::internals::types::{EventId, MessageId, SemaphoreId};
 use crate::messaging::broadcast;
 use crate::process::release;
-use crate::sync::sem_post;
+use crate::sync::sem_set;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_semihosting::hprintln;
 
@@ -152,7 +152,7 @@ impl EventManager {
         let event = self.event_table[event_id];
 
         if event.opcode & OPCODE_SIGNAL == OPCODE_SIGNAL {
-            sem_post(event.semaphore, event.tasks);
+            sem_set(event.semaphore, event.tasks);
         }
         if event.opcode & OPCODE_SEND_MSG == OPCODE_SEND_MSG {
             broadcast(event.msg_index);
