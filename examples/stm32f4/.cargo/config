@@ -1,6 +1,6 @@
 [target.thumbv7em-none-eabi]
-# runner = "qemu-system-arm -cpu cortex-m4 -machine lm3s6965evb -gdb tcp::3333 -S -nographic -semihosting-config enable=on,target=native -internals"
-runner = "qemu-system-gnuarmeclipse -cpu cortex-m4 -machine STM32F4-Discovery -nographic -semihosting-config enable=on,target=native -internals"
+# runner = "qemu-system-arm -cpu cortex-m4 -machine lm3s6965evb -gdb tcp::3333 -S -nographic -semihosting-config enable=on,target=native -kernel"
+runner = "qemu-system-gnuarmeclipse -cpu cortex-m4 -machine STM32F4-Discovery -nographic -semihosting-config enable=on,target=native -kernel"
 
 rustflags = [
   "-C", "link-arg=-Tlink.x",
