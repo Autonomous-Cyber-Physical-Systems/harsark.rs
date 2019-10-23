@@ -59,7 +59,8 @@ impl ResourceManager {
     }
 
     pub fn lock(&mut self, id: ResourceId, curr_pid: u32) -> Option<u32> {
-        let resource = &self.resources_block[id];
+
+        let resource = self.resources_block[id];
         let ceiling = resource.ceiling;
 
         let pid_mask = 1 << curr_pid;
@@ -72,7 +73,6 @@ impl ResourceManager {
             self.push_stack(ceiling);
 
             let mask = self.get_pi_mask(ceiling, curr_pid);
-
             self.system_ceiling = self.resources_block[id].ceiling;
             return Some(mask);
         }
@@ -82,7 +82,7 @@ impl ResourceManager {
     fn get_pi_mask(&self, ceiling: u32, curr_pid: u32) -> u32 {
         let mut mask = 0;
         if ceiling < 32 {
-            mask = 1 << (ceiling + 1) - 1;
+            mask = (1 << (ceiling + 1)) - 1;
         } else {
             for i in 0..ceiling {
                 mask |= 1 << i;
@@ -96,7 +96,7 @@ impl ResourceManager {
         let resource = self.resources_block[id];
         if resource.ceiling == self.system_ceiling {
             self.pop_stack();
-            let mut mask = 1 << (resource.ceiling + 1) - 1;
+            let mut mask = (1 << (resource.ceiling + 1)) - 1;
             return Some(mask);
         }
         return None;

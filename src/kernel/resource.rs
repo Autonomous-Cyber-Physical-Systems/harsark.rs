@@ -28,27 +28,27 @@ impl<T> Resource<T> {
         Self { inner: val, id }
     }
 
-    fn lock(&self) -> Option<&T> {
-        execute_critical(|cs_token| {
-            let res = resources_list
+    pub fn lock(&self) -> Option<&T> {
+        let res = execute_critical(|cs_token| {
+            resources_list
                 .borrow(cs_token)
                 .borrow_mut()
-                .lock(self.id, get_pid() as u32);
+                .lock(self.id, get_pid() as u32)
+        });
             if let Some(mask) = res {
                 block_tasks(mask);
                 return Some(&self.inner);
             }
             return None;
-        })
     }
 
-    fn unlock(&self) {
-        execute_critical(|cs_token| {
-            if let Some(mask) = resources_list.borrow(cs_token).borrow_mut().unlock(self.id) {
+    pub fn unlock(&self) {
+
+            if let Some(mask) = execute_critical(|cs_token| {resources_list.borrow(cs_token).borrow_mut().unlock(self.id) }){
                 unblock_tasks(mask);
                 schedule();
             }
-        })
+
     }
 
     pub fn acquire<F>(&self, handler: F)
@@ -58,6 +58,7 @@ impl<T> Resource<T> {
         if let Some(res) = self.lock() {
             handler(res);
         }
+        self.unlock();
     }
 
     // only Privileged.
