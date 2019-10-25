@@ -17,41 +17,57 @@ use hartex_rust::{init, spawn};
 use hartex_rust::helper::generate_task_mask;
 
 struct app {
-    sem1: SemaphoreId,
-    sem2: SemaphoreId,
-    res1: Resource<u32>,
+    sem3: SemaphoreId,
+    sem4: SemaphoreId,
+    res1: Resource<[u32;3]>,
+    res2: Resource<[u32;3]>,
 }
 
 #[entry]
 fn main() -> ! {
     let peripherals = resource::init_peripherals().unwrap();
+
     let app_inst = app {
-        sem1 : sync::create(generate_task_mask(&[1])).unwrap(),
-        sem2 : sync::create(generate_task_mask(&[2])).unwrap(),
-        res1 : resource::create(9, generate_task_mask(&[1,2,3])).unwrap()
+        sem3 : sync::create(generate_task_mask(&[3])).unwrap(),
+        sem4 : sync::create(generate_task_mask(&[4])).unwrap(),
+        res1 : resource::create([1,2,3], generate_task_mask(&[1,2,3])).unwrap(),
+        res2 : resource::create([4,5,6], generate_task_mask(&[4])).unwrap()
     };
 
     spawn!(thread1, 1, params, app_inst, {
-        if let Some(x) = params.res1.lock() {
-            hprintln!("task 1 {:?}", x);
-            params.res1.unlock();
-        }
+        hprintln!("TASK 1: Enter");
+        params.res1.acquire(|res| {
+            hprintln!("TASK 1 : res1 : {:?}", res);
+        });
+        hprintln!("TASK 1: End");
     });
     spawn!(thread2, 2, params, app_inst, {
-        if let Some(x) = params.res1.lock() {
-            hprintln!("task 2 {:?}", x);
-            params.res1.unlock();
-        }
+        hprintln!("TASK 2: Enter");
+        params.res1.acquire(|res| {
+            hprintln!("TASK 2 : res1 : {:?}", res);
+            sync::sem_set(params.sem3, 0);
+            sync::sem_set(params.sem4, 0);
+            hprintln!("TASK 2 : task 3 and 4 dispatched");
+        });
+        hprintln!("TASK 2: End");
     });
     spawn!(thread3, 3, params, app_inst, {
-        if let Some(x) = params.res1.lock() {
-            hprintln!("task 3 {:?}", x);
-            params.res1.unlock();
-        }
+        hprintln!("TASK 3: Enter");
+        params.res1.acquire(|res| {
+            hprintln!("TASK 3 : res1 : {:?}", res);
+        });
+        hprintln!("TASK 3: End");
+    });
+    spawn!(thread4, 4, params, app_inst, {
+        hprintln!("TASK 4: Enter");
+        params.res2.acquire(|res| {
+            hprintln!("TASK 4 : res2 :  {:?}", res);
+        });
+        hprintln!("TASK 4: End");
     });
 
     init!(true);
-    release(generate_task_mask(&[1,2,3]));
+    release(generate_task_mask(&[1,2]));
     start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);
 
     loop {}
