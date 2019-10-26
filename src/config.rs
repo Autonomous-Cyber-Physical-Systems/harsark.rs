@@ -70,14 +70,47 @@ mod message_config {
     compile_error!("Features 'message_32','message_18' and 'message_64' are mutually exclusive.");
 }
 
-pub use semaphores_config::SEMAPHORE_COUNT;
+mod event_config {
+    #[cfg(all(any(feature = "event_32",feature = "default"), not(any(feature = "event_16",feature = "event_64"))))]
+    pub const EVENT_COUNT: usize = 32;
+
+    #[cfg(feature = "event_16")]
+    pub const EVENT_COUNT: usize = 16;
+
+    #[cfg(feature = "event_64")]
+    pub const EVENT_COUNT: usize = 64;
+
+    #[cfg(any(
+    all(feature = "event_32", any(feature = "event_16", feature = "event_64")),
+    all(feature = "event_16", any(feature = "event_32", feature = "event_64")),
+    all(feature = "event_64", any(feature = "event_32", feature = "event_16")),
+    ))]
+    compile_error!("Features 'event_32','event_18' and 'event_64' are mutually exclusive.");
+}
+
+mod event_index_table_config {
+    #[cfg(all(any(feature = "event_index_8",feature = "default"), not(feature = "event_index_16")))]
+    pub const EVENT_INDEX_TABLE_COUNT: usize = 8;
+
+    #[cfg(feature = "event_16")]
+    pub const EVENT_INDEX_TABLE_COUNT: usize = 16;
+
+    #[cfg(any(
+    all(feature = "event_index_8", feature = "event_index_16"),
+    ))]
+    compile_error!("Features 'event_index_8' and 'event_index_16' are mutually exclusive.");
+}
+
 pub use tasks_config::MAX_TASKS;
 pub use resources_config::MAX_RESOURCES;
+pub use semaphores_config::SEMAPHORE_COUNT;
 pub use message_config::MESSAGE_COUNT;
 
+pub use event_config::EVENT_COUNT;
+pub use event_index_table_config::EVENT_INDEX_TABLE_COUNT;
+
 pub const MAX_BUFFER_SIZE: usize = 32;
-pub const EVENT_NO: usize = 32;
-pub const EVENT_INDEX_TABLE_COUNT: usize = 8;
+
 pub const MAX_STACK_SIZE: usize = 300;
 
 pub const OPCODE_SIGNAL: u8 = 1;

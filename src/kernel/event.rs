@@ -1,4 +1,3 @@
-use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
 use crate::internals::event_manager::*;
 use crate::internals::helper::check_priv;
 use crate::internals::types::{EventId, MessageId, SemaphoreId};
