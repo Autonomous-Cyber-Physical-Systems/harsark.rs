@@ -29,12 +29,16 @@ fn main() -> ! {
         sem2 : sync::create(generate_task_mask(&[2])).unwrap()
     };
 
-    spawn!(thread1, 1, params, app_inst, {
+    static mut stack1 : [u32;300] = [0;300];
+    static mut stack2 : [u32;300] = [0;300];
+    static mut stack3 : [u32;300] = [0;300];
+
+    spawn!(thread1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
         sync::sem_set(params.sem2,generate_task_mask(&[2]));
         hprintln!("TASK 1: End");
     });
-    spawn!(thread2, 2, params, app_inst, {
+    spawn!(thread2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
         if sync::sem_test(params.sem2).unwrap() {
             hprintln!("TASK 2: sem2 enabled");
@@ -43,7 +47,7 @@ fn main() -> ! {
         }
         hprintln!("TASK 2: End");
     });
-    spawn!(thread3, 3, params, app_inst, {
+    spawn!(thread3, 3, stack3, params, app_inst, {
         hprintln!("TASK 3: Enter");
         sync::sem_set(params.sem1,0);
         hprintln!("TASK 3: End");

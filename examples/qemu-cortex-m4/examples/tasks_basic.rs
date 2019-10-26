@@ -18,13 +18,17 @@ use hartex_rust::helper::generate_task_mask;
 fn main() -> ! {
     let peripherals = init_peripherals().unwrap();
 
-    spawn!(thread1, 1, {
+    static mut stack1 : [u32;300] = [0;300];
+    static mut stack2 : [u32;300] = [0;300];
+    static mut stack3 : [u32;300] = [0;300];
+
+    spawn!(thread1, 1, stack1, {
         hprintln!("TASK 1");
     });
-    spawn!(thread2, 2, {
+    spawn!(thread2, 2, stack2, {
         hprintln!("TASK 2");
     });
-    spawn!(thread3, 3, {
+    spawn!(thread3, 3, stack3, {
         hprintln!("TASK 3");
     });
 

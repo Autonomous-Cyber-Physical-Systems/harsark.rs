@@ -30,8 +30,7 @@ pub struct TaskControlBlock {
     pub sp: usize, // current stack pointer of this thread
 }
 
-#[no_mangle]
-static mut TASK_STACKS: [[u32; MAX_STACK_SIZE]; MAX_TASKS] = [[0; MAX_STACK_SIZE]; MAX_TASKS];
+static mut stack0: [u32;64] = [0;64];
 
 impl Scheduler {
     pub const fn new() -> Self {
@@ -56,6 +55,7 @@ impl Scheduler {
         if create_idle_task {
             self.create_task(
                 0,
+                unsafe{ &mut stack0 },
                 |_| loop {
 //                    hprintln!("waiting");
                     cortex_m::asm::wfe();
@@ -75,10 +75,10 @@ impl Scheduler {
     pub fn create_task<T: Sized>(
         &mut self,
         priority: usize,
+        stack: &mut [u32],
         handler_fn: fn(&T) -> !,
         param: &T,
     ) -> Result<(), KernelError> {
-        let mut stack = unsafe { &mut TASK_STACKS[priority] };
         match self.create_tcb(stack, handler_fn, param) {
             Ok(tcb) => {
                 self.insert_tcb(priority, tcb)?;

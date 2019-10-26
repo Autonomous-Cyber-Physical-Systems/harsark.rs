@@ -31,20 +31,24 @@ fn main() -> ! {
         msg1 : message::create(generate_task_mask(&[2]),generate_task_mask(&[2,3]),[9,10]).unwrap(),
     };
 
-    spawn!(thread1, 1, params, app_inst, {
+    static mut stack1 : [u32;300] = [0;300];
+    static mut stack2 : [u32;300] = [0;300];
+    static mut stack3 : [u32;300] = [0;300];
+
+    spawn!(thread1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
         params.msg1.broadcast(Some([4,5]));
         sync::sem_set(params.sem3, 0);
         hprintln!("TASK 1: END");
     });
-    spawn!(thread2, 2, params, app_inst, {
+    spawn!(thread2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
         if let Some(msg) = params.msg1.receive() {
             hprintln!("TASK 2: msg received : {:?}", msg);
         }
         hprintln!("TASK 2: END");
     });
-    spawn!(thread3, 3, params, app_inst, {
+    spawn!(thread3, 3, stack3, params, app_inst, {
         hprintln!("TASK 3: Enter");
         if let Some(msg) = params.msg1.receive() {
             hprintln!("TASK 3: msg received : {:?}", msg);

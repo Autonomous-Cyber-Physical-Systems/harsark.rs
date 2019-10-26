@@ -34,14 +34,19 @@ fn main() -> ! {
         res2 : resource::create([4,5,6], generate_task_mask(&[4])).unwrap()
     };
 
-    spawn!(thread1, 1, params, app_inst, {
+    static mut stack1 : [u32;300] = [0;300];
+    static mut stack2 : [u32;300] = [0;300];
+    static mut stack3 : [u32;300] = [0;300];
+    static mut stack4 : [u32;300] = [0;300];
+
+    spawn!(thread1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
         params.res1.acquire(|res| {
             hprintln!("TASK 1 : res1 : {:?}", res);
         });
         hprintln!("TASK 1: End");
     });
-    spawn!(thread2, 2, params, app_inst, {
+    spawn!(thread2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
         params.res1.acquire(|res| {
             hprintln!("TASK 2 : res1 : {:?}", res);
@@ -51,14 +56,14 @@ fn main() -> ! {
         });
         hprintln!("TASK 2: End");
     });
-    spawn!(thread3, 3, params, app_inst, {
+    spawn!(thread3, 3, stack3, params, app_inst, {
         hprintln!("TASK 3: Enter");
         params.res1.acquire(|res| {
             hprintln!("TASK 3 : res1 : {:?}", res);
         });
         hprintln!("TASK 3: End");
     });
-    spawn!(thread4, 4, params, app_inst, {
+    spawn!(thread4, 4, stack4, params, app_inst, {
         hprintln!("TASK 4: Enter");
         params.res2.acquire(|res| {
             hprintln!("TASK 4 : res2 :  {:?}", res);

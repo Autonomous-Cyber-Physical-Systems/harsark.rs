@@ -44,7 +44,11 @@ fn main() -> ! {
     let e4 = event::create(true, EventType::OnOff, 6, EventTableType::MilliSec).unwrap();
     event::set_next_event(e4,e3);
 
-    spawn!(thread1, 1, params, app_inst, {
+    static mut stack1 : [u32;300] = [0;300];
+    static mut stack2 : [u32;300] = [0;300];
+    static mut stack3 : [u32;300] = [0;300];
+
+    spawn!(thread1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
         if let Ok(x) = sync::sem_test(params.sem2) {
             if (x) {
@@ -53,14 +57,14 @@ fn main() -> ! {
         }
         hprintln!("TASK 1: End");
     });
-    spawn!(thread2, 2, params, app_inst, {
+    spawn!(thread2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
         if let Ok(x) = sync::sem_test(params.sem2) {
             hprintln!("TASK 2: sem2 enabled");
         }
         hprintln!("TASK 2: End");
     });
-    spawn!(thread3, 3, params, app_inst, {
+    spawn!(thread3, 3, stack3, params, app_inst, {
         hprintln!("TASK 3: Enter");
         if let Some(msg) = params.msg1.receive() {
             hprintln!("TASK 3: msg received : {:?}", msg);

@@ -51,13 +51,14 @@ pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(), K
 
 pub fn create_task<T: Sized>(
     priority: usize,
+    stack: &mut [u32],
     handler_fn: fn(&T) -> !,
     param: &T,
 ) -> Result<(), KernelError> {
     match check_priv() {
         Npriv::Unprivileged => Err(KernelError::AccessDenied),
         Npriv::Privileged => {
-            execute_critical(|_| unsafe { all_tasks.create_task(priority, handler_fn, param) })
+            execute_critical(|_| unsafe { all_tasks.create_task(priority,stack, handler_fn, param) })
         }
     }
 }

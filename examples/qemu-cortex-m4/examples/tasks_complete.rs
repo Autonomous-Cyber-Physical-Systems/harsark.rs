@@ -21,19 +21,24 @@ fn main() -> ! {
     let task1_param = "Hello from task 1 !";
     let task2_param = "Hello from task 2 !";
     let task3_param = "Hello from task 3 !";
-    let task_init_param = "Waiting ...";
+    let task_idle_param = "Waiting ...";
 
-    spawn!(thread1, 1, param, task1_param, {
+    static mut stack_idle : [u32;300] = [0;300];
+    static mut stack1 : [u32;300] = [0;300];
+    static mut stack2 : [u32;300] = [0;300];
+    static mut stack3 : [u32;300] = [0;300];
+
+    spawn!(thread1, 1, stack1, param, task1_param, {
         hprintln!("{}",param);
     });
-    spawn!(thread2, 2, param, task2_param,  {
+    spawn!(thread2, 2, stack2, param, task2_param,  {
         hprintln!("{}",param);
     });
-    spawn!(thread3, 3, param, task3_param,  {
+    spawn!(thread3, 3, stack3, param, task3_param,  {
         hprintln!("{}",param);
     });
 
-    init!(true, task_init_param, |param| {
+    init!(true, stack_idle, task_idle_param, |param| {
         hprintln!("{}",param);
         loop {}
     });
