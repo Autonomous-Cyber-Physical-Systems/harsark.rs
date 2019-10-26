@@ -22,9 +22,9 @@ pub struct SemaphoresTable {
 }
 
 impl SemaphoreControlBlock {
-    pub fn signal_and_release(&mut self, tasks_mask: &u32) -> Result<u32, KernelError> {
+    pub fn signal_and_release(&mut self, tasks_mask: u32) -> Result<u32, KernelError> {
         execute_critical(|_| {
-            self.flags |= *tasks_mask;
+            self.flags |= tasks_mask;
             return Ok(self.tasks);
         })
     }
@@ -32,7 +32,7 @@ impl SemaphoreControlBlock {
         execute_critical(|_| {
             let curr_pid_mask = (1 << curr_pid);
             if self.flags & curr_pid_mask == curr_pid_mask {
-                self.flags &= !curr_pid_mask;
+                self.flags &= (!curr_pid_mask);
                 return Ok(true);
             } else {
                 return Ok(false);
@@ -63,7 +63,7 @@ impl SemaphoresTable {
     pub fn signal_and_release(
         &mut self,
         sem_id: SemaphoreId,
-        tasks_mask: &u32,
+        tasks_mask: u32,
     ) -> Result<u32, KernelError> {
         self.table[sem_id].signal_and_release(tasks_mask)
     }

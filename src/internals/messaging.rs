@@ -34,7 +34,7 @@ impl<'a> MessagingManager {
         let mcb = self.mcb_table[msg_id];
         let mask = self
             .msg_scb_table
-            .signal_and_release(msg_id, &mcb.receivers)?;
+            .signal_and_release(msg_id, mcb.receivers)?;
         return Ok(mask);
     }
 

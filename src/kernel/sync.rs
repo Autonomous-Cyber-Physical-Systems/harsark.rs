@@ -20,7 +20,7 @@ pub fn sem_set(sem_id: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError> 
         let mask = SCB_table
             .borrow(cs_token)
             .borrow_mut()
-            .signal_and_release(sem_id, &tasks_mask)?;
+            .signal_and_release(sem_id, tasks_mask)?;
         release(mask)
     })
 }
