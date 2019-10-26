@@ -11,11 +11,10 @@ use crate::internals::types::SemaphoreId;
 
 #[derive(Clone, Copy)]
 pub struct SemaphoreControlBlock {
-    flags: u32,
-    tasks: u32,
+    pub flags: u32,
+    pub tasks: u32,
 }
 
-#[derive(Clone, Copy)]
 pub struct SemaphoresTable {
     table: [SemaphoreControlBlock; SEMAPHORE_COUNT],
     curr: usize,

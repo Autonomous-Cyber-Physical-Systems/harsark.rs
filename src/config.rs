@@ -24,7 +24,7 @@ pub const MAX_RESOURCES: usize = 32;
 pub const MAX_RESOURCES: usize = 16;
 
 #[cfg(feature = "resources_64")]
-pub const MAX_RESOURCES: usize = 8;
+pub const MAX_RESOURCES: usize = 64;
 
 #[cfg(any(
     all(feature = "resources_32", any(feature = "resources_16", feature = "resources_64")),
@@ -42,7 +42,7 @@ mod semaphores_config {
     pub const SEMAPHORE_COUNT: usize = 16;
 
     #[cfg(feature = "semahpores_64")]
-    pub const SEMAPHORE_COUNT: usize = 8;
+    pub const SEMAPHORE_COUNT: usize = 64;
 
     #[cfg(any(
     all(feature = "semahpores_32", any(feature = "semahpores_16", feature = "semahpores_64")),
@@ -52,9 +52,28 @@ mod semaphores_config {
     compile_error!("Features 'semahpores_32','semahpores_18' and 'semahpores_64' are mutually exclusive.");
 }
 
+mod message_config {
+    #[cfg(all(any(feature = "message_32",feature = "default"), not(any(feature = "message_16",feature = "message_64"))))]
+    pub const MESSAGE_COUNT: usize = 32;
+
+    #[cfg(feature = "message_16")]
+    pub const MESSAGE_COUNT: usize = 16;
+
+    #[cfg(feature = "message_64")]
+    pub const MESSAGE_COUNT: usize = 64;
+
+    #[cfg(any(
+    all(feature = "message_32", any(feature = "message_16", feature = "message_64")),
+    all(feature = "message_16", any(feature = "message_32", feature = "message_64")),
+    all(feature = "message_64", any(feature = "message_32", feature = "message_16")),
+    ))]
+    compile_error!("Features 'message_32','message_18' and 'message_64' are mutually exclusive.");
+}
+
 pub use semaphores_config::SEMAPHORE_COUNT;
 pub use tasks_config::MAX_TASKS;
 pub use resources_config::MAX_RESOURCES;
+pub use message_config::MESSAGE_COUNT;
 
 pub const MAX_BUFFER_SIZE: usize = 32;
 pub const EVENT_NO: usize = 32;
