@@ -1,4 +1,4 @@
-use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_NO};
+use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_COUNT};
 use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE_SIGNAL};
 use crate::internals::types::{EventId, MessageId, SemaphoreId};
 use crate::message::broadcast;
@@ -40,7 +40,7 @@ pub struct EventIndexTable {
 }
 
 pub struct EventManager {
-    event_table: [Event; EVENT_NO],
+    event_table: [Event; EVENT_COUNT],
     curr: usize,
     ms_event_table: EventIndexTable,
     sec_event_table: EventIndexTable,
@@ -75,7 +75,7 @@ impl EventManager {
                 tasks: 0,
                 msg_index: 0,
                 next_event: 0,
-            }; EVENT_NO],
+            }; EVENT_COUNT],
             curr: 0,
             ms_event_table: EventIndexTable::new(),
             sec_event_table: EventIndexTable::new(),
