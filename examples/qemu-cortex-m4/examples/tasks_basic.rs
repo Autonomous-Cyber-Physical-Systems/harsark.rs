@@ -19,13 +19,13 @@ fn main() -> ! {
     let peripherals = init_peripherals().unwrap();
 
     spawn!(thread1, 1, {
-        hprintln!("task 1");
+        hprintln!("TASK 1");
     });
     spawn!(thread2, 2, {
-        hprintln!("task 2");
+        hprintln!("TASK 2");
     });
     spawn!(thread3, 3, {
-        hprintln!("task 3");
+        hprintln!("TASK 3");
     });
 
     init!(true);
