@@ -1,5 +1,5 @@
 //use core::alloc::
-use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, MCB_COUNT, SEMAPHORE_COUNT};
+use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, SEMAPHORE_COUNT};
 use crate::errors::KernelError;
 use crate::internals::helper::check_priv;
 use crate::internals::semaphores::*;

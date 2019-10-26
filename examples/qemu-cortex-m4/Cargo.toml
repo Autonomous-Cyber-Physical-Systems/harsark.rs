@@ -5,7 +5,7 @@ authors = ["kanishkarj"]
 edition = "2018"
 
 [dependencies]
-hartex-rust = { path = "../.." }
+hartex-rust = { path = "../..", features=["tasks_8"] }
 cortex-m = {version="0.5.8", features=["inline-asm"]}
 cortex-m-rt = "*"
 panic-halt = "0.2.0"
