@@ -48,6 +48,10 @@ impl<T: Sized> Message<T> {
             return None;
         })
     }
+
+    pub fn get_id(&self) -> MessageId {
+        self.id
+    }
 }
 
 pub fn broadcast(msg_id: MessageId) -> Result<(), KernelError> {

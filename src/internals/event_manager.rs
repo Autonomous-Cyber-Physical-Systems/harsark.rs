@@ -10,7 +10,7 @@ use cortex_m_semihosting::hprintln;
 #[derive(Clone, Copy, PartialEq)]
 pub enum EventType {
     FreeRunning,
-    OnOFF,
+    OnOff,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -143,8 +143,9 @@ impl EventManager {
                     self.disable_event(event_id);
                 }
                 self.execute_opcode(event_id);
+            } else {
+                self.event_table[event_id].counter -= 1;
             }
-            self.event_table[event_id].counter -= 1;
         }
     }
 
@@ -171,8 +172,7 @@ impl EventManager {
     }
 
     pub fn disable_event(&mut self, event_id: EventId) {
-        let mut event = self.event_table[event_id];
-        event.is_enabled = false;
+        self.event_table[event_id].is_enabled = false;
     }
 
     pub fn enable_next(&mut self, event_id: EventId) {
