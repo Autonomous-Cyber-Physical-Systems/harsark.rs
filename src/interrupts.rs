@@ -13,6 +13,7 @@ static mut MIN: u32 = 0;
 #[exception]
 fn SysTick() {
     execute_critical(|_| {
+//        hprintln!("hello");
         if is_preemptive() {
             schedule();
         }

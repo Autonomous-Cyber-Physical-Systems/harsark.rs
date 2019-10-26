@@ -7,6 +7,7 @@ use crate::interrupts::svc_call;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
+use cortex_m_semihosting::hprintln;
 
 use crate::internals::types::TaskId;
 
@@ -56,6 +57,7 @@ impl Scheduler {
             self.create_task(
                 0,
                 |_| loop {
+//                    hprintln!("waiting");
                     cortex_m::asm::wfe();
                 },
                 &0,
