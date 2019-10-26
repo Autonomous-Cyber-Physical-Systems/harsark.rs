@@ -30,8 +30,8 @@ pub struct Event {
     opcode: u8,
     semaphore: SemaphoreId,
     tasks: u32,
-    msg_index: usize,
-    next_event: usize,
+    msg_index: MessageId,
+    next_event: EventId,
 }
 
 pub struct EventIndexTable {
@@ -209,14 +209,15 @@ impl EventManager {
         return id;
     }
 
-    pub fn set_semaphore(&mut self, event_id: EventId, sem: SemaphoreId) {
+    pub fn set_semaphore(&mut self, event_id: EventId, sem: SemaphoreId, tasks_mask: u32) {
         self.event_table[event_id].opcode |= OPCODE_SIGNAL;
         self.event_table[event_id].semaphore = sem;
+        self.event_table[event_id].tasks |= tasks_mask;
     }
 
-    pub fn set_tasks(&mut self, event_id: EventId, tasks: u32) {
+    pub fn set_tasks(&mut self, event_id: EventId, tasks_mask: u32) {
         self.event_table[event_id].opcode |= OPCODE_RELEASE;
-        self.event_table[event_id].tasks = tasks;
+        self.event_table[event_id].tasks = tasks_mask;
     }
 
     pub fn set_msg(&mut self, event_id: EventId, msg_id: usize) {

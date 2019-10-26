@@ -52,7 +52,7 @@ pub fn create(
     }
 }
 
-pub fn set_semaphore(event_id: EventId, sem: SemaphoreId) -> Result<(), KernelError> {
+pub fn set_semaphore(event_id: EventId, sem: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError> {
     match check_priv() {
         Npriv::Unprivileged => Err(KernelError::AccessDenied),
         Npriv::Privileged => {
@@ -60,7 +60,7 @@ pub fn set_semaphore(event_id: EventId, sem: SemaphoreId) -> Result<(), KernelEr
                 event_manager
                     .borrow(cs_token)
                     .borrow_mut()
-                    .set_semaphore(event_id, sem)
+                    .set_semaphore(event_id, sem, tasks_mask)
             });
             Ok(())
         }
