@@ -15,34 +15,35 @@ use crate::internals::messaging::*;
 
 use crate::internals::types::MessageId;
 
-static default_msg: [u32; 1] = [0; 1];
-
 static Messaging: Mutex<RefCell<MessagingManager>> =
     Mutex::new(RefCell::new(MessagingManager::new()));
 
 #[derive(Debug)]
 pub struct Message<T: Sized> {
-    inner: T,
+    inner: RefCell<T>,
     id: MessageId,
 }
 
 impl<T: Sized> Message<T> {
     pub fn new(val: T, id: MessageId) -> Self {
-        Self { inner: val, id }
+        Self { inner: RefCell::new(val), id }
     }
 
-    pub fn broadcast(&self) -> Result<(), KernelError> {
+    pub fn broadcast(&self, msg: Option<T>) -> Result<(), KernelError> {
         execute_critical(|cs_token| {
+            if let Some(msg) = msg {
+                self.inner.replace(msg);
+            }
             let mask = Messaging.borrow(cs_token).borrow_mut().broadcast(self.id)?;
             release(mask)
         })
     }
 
-    pub fn receive(&self) -> Option<&T> {
+    pub fn receive(&self) -> Option<core::cell::Ref<'_, T>> {
         execute_critical(|cs_token: &CriticalSection| {
             let mut msg = Messaging.borrow(cs_token).borrow_mut();
             if msg.receive(self.id, get_pid()) {
-                return Some(&self.inner);
+                return Some(self.inner.borrow());
             }
             return None;
         })
