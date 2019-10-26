@@ -30,20 +30,23 @@ fn main() -> ! {
     };
 
     spawn!(thread1, 1, params, app_inst, {
-        hprintln!("task 1");
+        hprintln!("TASK 1: Enter");
         sync::sem_set(params.sem2,generate_task_mask(&[2]));
+        hprintln!("TASK 1: End");
     });
     spawn!(thread2, 2, params, app_inst, {
-        hprintln!("task 2");
+        hprintln!("TASK 2: Enter");
         if sync::sem_test(params.sem2).unwrap() {
-            hprintln!("sem2 enabled");
+            hprintln!("TASK 2: sem2 enabled");
         } else {
-            hprintln!("sem2 disabled");
+            hprintln!("TASK 2: sem2 disabled");
         }
+        hprintln!("TASK 2: End");
     });
     spawn!(thread3, 3, params, app_inst, {
-        hprintln!("task 3");
+        hprintln!("TASK 3: Enter");
         sync::sem_set(params.sem1,0);
+        hprintln!("TASK 3: End");
     });
 
     init!(true);
