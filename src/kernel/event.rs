@@ -32,6 +32,15 @@ pub fn dispatch_event(event_id: EventId) {
     })
 }
 
+pub fn enable_event(event_id: EventId) {
+    execute_critical(|cs_token| {
+        event_manager
+            .borrow(cs_token)
+            .borrow_mut()
+            .enable_event(event_id);
+    })
+}
+
 pub fn create(
     is_enabled: bool,
     event_type: EventType,
