@@ -44,6 +44,7 @@ fn SysTick() {
             hour_flag = true;
         }
 
+        sweep_event_table(EventTableType::OnOff);
         if m_sec_flag {
             sweep_event_table(EventTableType::MilliSec);
         }

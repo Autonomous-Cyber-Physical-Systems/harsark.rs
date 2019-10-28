@@ -41,9 +41,8 @@ pub fn enable_event(event_id: EventId) {
     })
 }
 
-pub fn create(
+pub fn create_FreeRunning(
     is_enabled: bool,
-    event_type: EventType,
     threshold: u8,
     event_counter_type: EventTableType,
 ) -> Result<EventId, KernelError> {
@@ -52,9 +51,25 @@ pub fn create(
         Npriv::Privileged => execute_critical(|cs_token| {
             Ok(event_manager.borrow(cs_token).borrow_mut().create(
                 is_enabled,
-                event_type,
+                EventType::FreeRunning,
                 threshold,
                 event_counter_type,
+            ))
+        }),
+    }
+}
+
+pub fn create_OnOff(
+    is_enabled: bool,
+) -> Result<EventId, KernelError> {
+    match check_priv() {
+        Npriv::Unprivileged => Err(KernelError::AccessDenied),
+        Npriv::Privileged => execute_critical(|cs_token| {
+            Ok(event_manager.borrow(cs_token).borrow_mut().create(
+                is_enabled,
+                EventType::OnOff,
+                10,
+                EventTableType::OnOff,
             ))
         }),
     }

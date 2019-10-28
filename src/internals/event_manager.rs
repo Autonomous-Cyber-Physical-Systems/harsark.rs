@@ -19,6 +19,7 @@ pub enum EventTableType {
     Sec,
     Min,
     Hour,
+    OnOff
 }
 
 #[derive(Clone, Copy)]
@@ -46,6 +47,7 @@ pub struct EventManager {
     sec_event_table: EventIndexTable,
     min_event_table: EventIndexTable,
     hr_event_table: EventIndexTable,
+    onoff_event_table: EventIndexTable,
 }
 
 impl EventIndexTable {
@@ -81,6 +83,7 @@ impl EventManager {
             sec_event_table: EventIndexTable::new(),
             min_event_table: EventIndexTable::new(),
             hr_event_table: EventIndexTable::new(),
+            onoff_event_table: EventIndexTable::new(),
         }
     }
 
@@ -121,6 +124,17 @@ impl EventManager {
             }
             EventTableType::Hour => {
                 self.hr_event_table
+                    .table
+                    .clone()
+                    .iter()
+                    .for_each(|event_id| {
+                        if let Some(event_id) = event_id {
+                            self.execute_event(*event_id);
+                        }
+                    });
+            }
+            EventTableType::OnOff => {
+                self.onoff_event_table
                     .table
                     .clone()
                     .iter()
@@ -204,6 +218,7 @@ impl EventManager {
             EventTableType::MilliSec => self.ms_event_table.add(self.curr),
             EventTableType::Min => self.min_event_table.add(self.curr),
             EventTableType::Sec => self.sec_event_table.add(self.curr),
+            EventTableType::OnOff => self.onoff_event_table.add(self.curr),
         };
         self.curr += 1;
         return id;
