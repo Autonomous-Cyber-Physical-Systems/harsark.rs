@@ -1,6 +1,7 @@
 use crate::event::sweep_event_table;
 use crate::internals::event_manager::EventTableType;
 use crate::process::{is_preemptive, schedule};
+use crate::kernel::config::PREEMPT_WAIT;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m_rt::exception;
 use cortex_m_semihosting::hprintln;
@@ -13,13 +14,13 @@ static mut MIN: u32 = 0;
 #[exception]
 fn SysTick() {
     execute_critical(|_| {
-        if is_preemptive() {
-            schedule();
-        }
         let mut m_sec = unsafe { &mut M_SEC };
         let mut sec = unsafe { &mut SEC };
         let mut min = unsafe { &mut MIN };
 
+        if *m_sec == PREEMPT_WAIT && is_preemptive() {
+            schedule();
+        }
         *m_sec += 1;
 
         let mut m_sec_flag = true;
