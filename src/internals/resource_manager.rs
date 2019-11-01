@@ -1,9 +1,6 @@
 use crate::config::MAX_RESOURCES;
 use crate::errors::KernelError;
 use crate::internals::helper::get_msb;
-use core::cmp::max;
-use core::pin::Pin;
-use cortex_m_semihosting::hprintln;
 
 use crate::internals::types::ResourceId;
 
@@ -95,7 +92,7 @@ impl ResourceManager {
         let resource = self.resources_block[id];
         if resource.ceiling == self.system_ceiling {
             self.pop_stack();
-            let mut mask = (1 << (resource.ceiling + 1)) - 1;
+            let mask = (1 << (resource.ceiling + 1)) - 1;
             return Some(mask);
         }
         return None;
@@ -106,7 +103,7 @@ impl ResourceManager {
         self.top -= 1;
     }
 
-    fn push_stack(&mut self, ceiling: u32) {
+    fn push_stack(&mut self, _ceiling: u32) {
         self.pi_stack[self.top] = self.system_ceiling;
         self.top += 1;
     }

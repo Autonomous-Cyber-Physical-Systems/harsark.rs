@@ -1,15 +1,15 @@
 //use core::alloc::
-use crate::config::{MAX_TASKS, SEMAPHORE_COUNT};
+
 use crate::errors::KernelError;
 use crate::internals::helper::check_priv;
-use crate::internals::semaphores::*;
+
 use crate::priv_execute;
 use crate::process::{get_pid, release};
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 use cortex_m::interrupt::{free as execute_critical, CriticalSection};
 use cortex_m::register::control::Npriv;
-use cortex_m_semihosting::hprintln;
+
 
 use crate::internals::messaging::*;
 

@@ -4,9 +4,7 @@ use crate::internals::event_manager::EventTableType;
 use crate::internals::time::TickType;
 use crate::kernel::time::{get_msec_10, tick};
 use crate::process::{is_preemptive, schedule};
-use cortex_m::interrupt::free as execute_critical;
 use cortex_m_rt::exception;
-use cortex_m_semihosting::hprintln;
 
 static mut M_SEC: u32 = 0;
 static mut SEC: u32 = 0;

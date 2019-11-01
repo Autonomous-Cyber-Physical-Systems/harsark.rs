@@ -4,8 +4,6 @@ use crate::internals::types::{EventId, MessageId, SemaphoreId};
 use crate::message::broadcast;
 use crate::process::release;
 use crate::sync::sem_set;
-use cortex_m::interrupt::free as execute_critical;
-use cortex_m_semihosting::hprintln;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum EventType {
