@@ -9,6 +9,7 @@ use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 use cortex_m::register::control::Npriv;
+use crate::priv_execute;
 
 use crate::internals::types::SemaphoreId;
 
@@ -35,10 +36,7 @@ pub fn sem_test(sem_id: SemaphoreId) -> Result<bool, KernelError> {
 }
 
 pub fn create(tasks_mask: u32) -> Result<SemaphoreId, KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => {
-            execute_critical(|cs_token| SCB_table.borrow(cs_token).borrow_mut().create(tasks_mask))
-        }
-    }
+    priv_execute!({
+        execute_critical(|cs_token| SCB_table.borrow(cs_token).borrow_mut().create(tasks_mask))
+    })
 }

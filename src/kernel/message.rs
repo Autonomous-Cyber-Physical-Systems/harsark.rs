@@ -1,5 +1,5 @@
 //use core::alloc::
-use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, SEMAPHORE_COUNT};
+use crate::config::{MAX_TASKS, SEMAPHORE_COUNT};
 use crate::errors::KernelError;
 use crate::internals::helper::check_priv;
 use crate::internals::semaphores::*;
@@ -7,7 +7,7 @@ use crate::process::{get_pid, release};
 use cortex_m::interrupt::{free as execute_critical, CriticalSection};
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
-
+use crate::priv_execute;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
@@ -69,14 +69,11 @@ pub fn create<T>(
 where
     T: Sized,
 {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => execute_critical(|cs_token| {
+    priv_execute!({execute_critical(|cs_token| {
             let msg_id = Messaging
                 .borrow(cs_token)
                 .borrow_mut()
                 .create(notify_tasks_mask, receivers_mask)?;
             Ok(Message::new(msg, msg_id))
-        }),
-    }
+        })})
 }

@@ -32,3 +32,14 @@ macro_rules! init {
         init($preemptive, true);
     };
 }
+
+// Ensure that check_priv has been imported into scope
+#[macro_export]
+macro_rules! priv_execute {
+    ($handler: block) => {
+        match check_priv() {
+            Npriv::Unprivileged => Err(KernelError::AccessDenied),
+            Npriv::Privileged => $handler,
+        }
+    };
+}

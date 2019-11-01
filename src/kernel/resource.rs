@@ -7,6 +7,7 @@ use crate::errors::KernelError;
 use crate::internals::helper::check_priv;
 use crate::internals::resource_manager::ResourceManager;
 use crate::internals::types::ResourceId;
+use crate::priv_execute;
 
 use crate::process::{block_tasks, get_pid, schedule, unblock_tasks};
 
@@ -62,21 +63,22 @@ impl<T> Resource<T> {
     }
 
     // only Privileged.
-    pub fn access(&self) -> Option<&T> {
-        match check_priv() {
-            Npriv::Privileged => Some(&self.inner),
-            Npriv::Unprivileged => None,
-        }
+    pub fn access(&self) -> Result<&T,KernelError> {
+        priv_execute!({
+            Ok(&self.inner)
+        })
     }
 }
 
 pub fn create<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, KernelError> {
-    execute_critical(|cs_token| {
-        let id = resources_list
-            .borrow(cs_token)
-            .borrow_mut()
-            .create(tasks_mask)?;
-        Ok(Resource::new(resource, id))
+    priv_execute!({
+        execute_critical(|cs_token| {
+            let id = resources_list
+                .borrow(cs_token)
+                .borrow_mut()
+                .create(tasks_mask)?;
+            Ok(Resource::new(resource, id))
+        })
     })
 }
 
