@@ -1,14 +1,14 @@
 use core::ptr;
 
-use crate::config::{MAX_TASKS};
+use crate::config::MAX_TASKS;
 use crate::errors::KernelError;
 use crate::internals::helper::get_msb;
 use crate::interrupts::svc_call;
+use crate::priv_execute;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
-use crate::priv_execute;
 
 use crate::internals::types::TaskId;
 
@@ -37,13 +37,13 @@ pub fn init(is_preemptive: bool, create_idle_task: bool) {
 pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(), KernelError> {
     priv_execute!({
         let mut syst = &mut perif.SYST;
-            syst.set_clock_source(SystClkSource::Core);
-            syst.set_reload(tick_interval);
-            syst.enable_counter();
-            syst.enable_interrupt();
+        syst.set_clock_source(SystClkSource::Core);
+        syst.set_reload(tick_interval);
+        syst.enable_counter();
+        syst.enable_interrupt();
 
-            execute_critical(|_| unsafe { all_tasks.start_kernel() });
-            preempt()
+        execute_critical(|_| unsafe { all_tasks.start_kernel() });
+        preempt()
     })
 }
 
@@ -54,7 +54,7 @@ pub fn create_task<T: Sized>(
     param: &T,
 ) -> Result<(), KernelError> {
     priv_execute!({
-            execute_critical(|_| unsafe { all_tasks.create_task(priority,stack, handler_fn, param) })
+        execute_critical(|_| unsafe { all_tasks.create_task(priority, stack, handler_fn, param) })
     })
 }
 

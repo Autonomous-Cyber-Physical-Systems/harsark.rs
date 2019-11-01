@@ -22,17 +22,17 @@ pub struct SemaphoresTable {
 
 impl SemaphoreControlBlock {
     pub fn signal_and_release(&mut self, tasks_mask: u32) -> Result<u32, KernelError> {
-            self.flags |= tasks_mask;
-            return Ok(self.tasks);
+        self.flags |= tasks_mask;
+        return Ok(self.tasks);
     }
     pub fn test_and_reset(&mut self, curr_pid: u32) -> Result<bool, KernelError> {
-            let curr_pid_mask = (1 << curr_pid);
-            if self.flags & curr_pid_mask == curr_pid_mask {
-                self.flags &= (!curr_pid_mask);
-                return Ok(true);
-            } else {
-                return Ok(false);
-            }
+        let curr_pid_mask = (1 << curr_pid);
+        if self.flags & curr_pid_mask == curr_pid_mask {
+            self.flags &= (!curr_pid_mask);
+            return Ok(true);
+        } else {
+            return Ok(false);
+        }
     }
 }
 
@@ -44,13 +44,13 @@ impl SemaphoresTable {
         }
     }
     pub fn create(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
-            if self.curr >= SEMAPHORE_COUNT {
-                return Err(KernelError::LimitExceeded);
-            }
-            let id = self.curr;
-            self.curr += 1;
-            self.table[id].tasks = task_mask;
-            Ok(id)
+        if self.curr >= SEMAPHORE_COUNT {
+            return Err(KernelError::LimitExceeded);
+        }
+        let id = self.curr;
+        self.curr += 1;
+        self.table[id].tasks = task_mask;
+        Ok(id)
     }
 
     pub fn signal_and_release(

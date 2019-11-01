@@ -53,8 +53,8 @@ impl<T> Resource<T> {
     }
 
     pub fn acquire<F>(&self, handler: F)
-        where
-            F: Fn(&T),
+    where
+        F: Fn(&T),
     {
         if let Some(res) = self.lock() {
             handler(res);
@@ -63,10 +63,8 @@ impl<T> Resource<T> {
     }
 
     // only Privileged.
-    pub fn access(&self) -> Result<&T,KernelError> {
-        priv_execute!({
-            Ok(&self.inner)
-        })
+    pub fn access(&self) -> Result<&T, KernelError> {
+        priv_execute!({ Ok(&self.inner) })
     }
 }
 

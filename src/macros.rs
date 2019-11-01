@@ -26,7 +26,7 @@ macro_rules! spawn {
 macro_rules! init {
     ($preemptive: expr, $stack: expr, $param: expr, $handler_fn: expr) => {
         init($preemptive, false);
-        create_task(0, unsafe{ &mut $stack },$handler_fn, &$param).unwrap();
+        create_task(0, unsafe { &mut $stack }, $handler_fn, &$param).unwrap();
     };
     ($preemptive: expr) => {
         init($preemptive, true);
