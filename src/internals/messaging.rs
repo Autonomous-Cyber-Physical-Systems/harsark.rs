@@ -2,7 +2,7 @@
 //use core::alloc::
 use crate::config::{MAX_TASKS, MESSAGE_COUNT};
 use crate::errors::KernelError;
-use crate::internals::semaphores::{SemaphoreControlBlock};
+use crate::internals::semaphores::SemaphoreControlBlock;
 
 use cortex_m_semihosting::hprintln;
 

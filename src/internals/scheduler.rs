@@ -1,6 +1,6 @@
 use core::ptr;
 
-use crate::config::{MAX_TASKS};
+use crate::config::MAX_TASKS;
 use crate::errors::KernelError;
 use crate::internals::helper::get_msb;
 use crate::interrupts::svc_call;
@@ -30,7 +30,7 @@ pub struct TaskControlBlock {
     pub sp: usize, // current stack pointer of this thread
 }
 
-static mut stack0: [u32;64] = [0;64];
+static mut stack0: [u32; 64] = [0; 64];
 
 impl Scheduler {
     pub const fn new() -> Self {
@@ -55,9 +55,9 @@ impl Scheduler {
         if create_idle_task {
             self.create_task(
                 0,
-                unsafe{ &mut stack0 },
+                unsafe { &mut stack0 },
                 |_| loop {
-//                    hprintln!("waiting");
+                    //                    hprintln!("waiting");
                     cortex_m::asm::wfe();
                 },
                 &0,

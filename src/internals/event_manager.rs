@@ -1,4 +1,4 @@
-use crate::config::{EVENT_INDEX_TABLE_COUNT, EVENT_COUNT};
+use crate::config::{EVENT_COUNT, EVENT_INDEX_TABLE_COUNT};
 use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE_SIGNAL};
 use crate::internals::types::{EventId, MessageId, SemaphoreId};
 use crate::message::broadcast;
@@ -19,7 +19,7 @@ pub enum EventTableType {
     Sec,
     Min,
     Hour,
-    OnOff
+    OnOff,
 }
 
 #[derive(Clone, Copy)]

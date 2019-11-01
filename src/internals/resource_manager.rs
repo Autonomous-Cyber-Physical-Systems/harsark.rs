@@ -59,7 +59,6 @@ impl ResourceManager {
     }
 
     pub fn lock(&mut self, id: ResourceId, curr_pid: u32) -> Option<u32> {
-
         let resource = self.resources_block[id];
         let ceiling = resource.ceiling;
 
