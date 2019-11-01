@@ -1,6 +1,6 @@
 #![feature(const_fn)]
 //use core::alloc::
-use crate::config::{MAX_BUFFER_SIZE, MAX_TASKS, MESSAGE_COUNT};
+use crate::config::{MAX_TASKS, MESSAGE_COUNT};
 use crate::errors::KernelError;
 use crate::internals::semaphores::{SemaphoreControlBlock};
 

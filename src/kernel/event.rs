@@ -9,6 +9,7 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
+use crate::priv_execute;
 
 pub use crate::internals::event_manager::{EventTableType, EventType};
 
@@ -46,91 +47,64 @@ pub fn create_FreeRunning(
     threshold: u8,
     event_counter_type: EventTableType,
 ) -> Result<EventId, KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => execute_critical(|cs_token| {
+    priv_execute!({execute_critical(|cs_token| {
             Ok(event_manager.borrow(cs_token).borrow_mut().create(
                 is_enabled,
                 EventType::FreeRunning,
                 threshold,
                 event_counter_type,
             ))
-        }),
-    }
+        })})
 }
 
 pub fn create_OnOff(
     is_enabled: bool,
 ) -> Result<EventId, KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => execute_critical(|cs_token| {
-            Ok(event_manager.borrow(cs_token).borrow_mut().create(
+    priv_execute!({execute_critical(|cs_token| {Ok(event_manager.borrow(cs_token).borrow_mut().create(
                 is_enabled,
                 EventType::OnOff,
                 10,
                 EventTableType::OnOff,
-            ))
-        }),
-    }
+            ))})})
 }
 
 pub fn set_semaphore(event_id: EventId, sem: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => {
-            execute_critical(|cs_token| {
+    priv_execute!({execute_critical(|cs_token| {
                 event_manager
                     .borrow(cs_token)
                     .borrow_mut()
                     .set_semaphore(event_id, sem, tasks_mask)
             });
-            Ok(())
-        }
-    }
+            Ok(())})
+
 }
 
 pub fn set_tasks(event_id: EventId, tasks: u32) -> Result<(), KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => {
-            execute_critical(|cs_token| {
+    priv_execute!({execute_critical(|cs_token| {
                 event_manager
                     .borrow(cs_token)
                     .borrow_mut()
                     .set_tasks(event_id, tasks)
             });
-            Ok(())
-        }
-    }
+            Ok(())})
 }
 
 pub fn set_msg(event_id: EventId, msg_id: usize) -> Result<(), KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => {
-            execute_critical(|cs_token| {
+    priv_execute!({execute_critical(|cs_token| {
                 event_manager
                     .borrow(cs_token)
                     .borrow_mut()
                     .set_msg(event_id, msg_id)
             });
-            Ok(())
-        }
-    }
+            Ok(())})
 }
 
 pub fn set_next_event(event_id: EventId, next: EventId) -> Result<(), KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => {
-            execute_critical(|cs_token| {
+    priv_execute!({execute_critical(|cs_token| {
                 event_manager
                     .borrow(cs_token)
                     .borrow_mut()
                     .set_next_event(event_id, next)
             });
-            Ok(())
-        }
-    }
+            Ok(())})
 }

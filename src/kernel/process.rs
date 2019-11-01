@@ -1,6 +1,6 @@
 use core::ptr;
 
-use crate::config::{MAX_STACK_SIZE, MAX_TASKS};
+use crate::config::{MAX_TASKS};
 use crate::errors::KernelError;
 use crate::internals::helper::get_msb;
 use crate::interrupts::svc_call;
@@ -8,6 +8,7 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
+use crate::priv_execute;
 
 use crate::internals::types::TaskId;
 
@@ -34,10 +35,8 @@ pub fn init(is_preemptive: bool, create_idle_task: bool) {
 
 // The below section just sets up the timer and starts it.
 pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(), KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => {
-            let mut syst = &mut perif.SYST;
+    priv_execute!({
+        let mut syst = &mut perif.SYST;
             syst.set_clock_source(SystClkSource::Core);
             syst.set_reload(tick_interval);
             syst.enable_counter();
@@ -45,8 +44,7 @@ pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(), K
 
             execute_critical(|_| unsafe { all_tasks.start_kernel() });
             preempt()
-        }
-    }
+    })
 }
 
 pub fn create_task<T: Sized>(
@@ -55,12 +53,9 @@ pub fn create_task<T: Sized>(
     handler_fn: fn(&T) -> !,
     param: &T,
 ) -> Result<(), KernelError> {
-    match check_priv() {
-        Npriv::Unprivileged => Err(KernelError::AccessDenied),
-        Npriv::Privileged => {
+    priv_execute!({
             execute_critical(|_| unsafe { all_tasks.create_task(priority,stack, handler_fn, param) })
-        }
-    }
+    })
 }
 
 pub fn schedule() {
