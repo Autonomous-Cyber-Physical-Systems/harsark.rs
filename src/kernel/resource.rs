@@ -1,5 +1,5 @@
 use crate::config::MAX_TASKS;
-use core::cell::{RefCell, RefMut};
+use core::cell::{RefCell};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
@@ -11,7 +11,7 @@ use crate::priv_execute;
 
 use crate::process::{block_tasks, get_pid, schedule, unblock_tasks};
 
-use cortex_m_semihosting::hprintln;
+
 
 use cortex_m::register::control::Npriv;
 

@@ -1,4 +1,3 @@
-use crate::config::SEMAPHORE_COUNT;
 use crate::errors::KernelError;
 use crate::internals::helper::check_priv;
 pub use crate::internals::semaphores;

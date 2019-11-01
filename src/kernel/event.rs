@@ -1,15 +1,14 @@
 use crate::internals::event_manager::*;
 use crate::internals::helper::check_priv;
-use crate::internals::types::{EventId, MessageId, SemaphoreId};
+use crate::internals::types::{EventId, SemaphoreId};
 use crate::priv_execute;
-use crate::process::release;
+
 use crate::KernelError;
-use core::borrow::BorrowMut;
 use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 use cortex_m::register::control::Npriv;
-use cortex_m_semihosting::hprintln;
+
 
 pub use crate::internals::event_manager::{EventTableType, EventType};
 

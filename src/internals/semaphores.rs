@@ -1,12 +1,5 @@
 use crate::config::SEMAPHORE_COUNT;
 use crate::errors::KernelError;
-use cortex_m::interrupt::free as execute_critical;
-use cortex_m_semihosting::hprintln;
-
-use core::borrow::BorrowMut;
-use core::cell::RefCell;
-use cortex_m::interrupt::Mutex;
-
 use crate::internals::types::SemaphoreId;
 
 #[derive(Clone, Copy)]
@@ -26,9 +19,9 @@ impl SemaphoreControlBlock {
         return Ok(self.tasks);
     }
     pub fn test_and_reset(&mut self, curr_pid: u32) -> Result<bool, KernelError> {
-        let curr_pid_mask = (1 << curr_pid);
+        let curr_pid_mask = 1 << curr_pid;
         if self.flags & curr_pid_mask == curr_pid_mask {
-            self.flags &= (!curr_pid_mask);
+            self.flags &= !curr_pid_mask;
             return Ok(true);
         } else {
             return Ok(false);

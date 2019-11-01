@@ -1,10 +1,8 @@
 #![feature(const_fn)]
-//use core::alloc::
-use crate::config::{MAX_TASKS, MESSAGE_COUNT};
+
+use crate::config::{MESSAGE_COUNT};
 use crate::errors::KernelError;
 use crate::internals::semaphores::SemaphoreControlBlock;
-
-use cortex_m_semihosting::hprintln;
 
 use crate::internals::types::{MessageId, SemaphoreId};
 

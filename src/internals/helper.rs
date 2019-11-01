@@ -1,4 +1,3 @@
-use crate::config::MAX_TASKS;
 use cortex_m::register::control;
 
 pub fn generate_task_mask(tasks: &[u32]) -> u32 {
