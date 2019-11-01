@@ -41,7 +41,7 @@ pub struct EventIndexTable {
 }
 
 pub struct EventManager {
-    event_table: [Event; EVENT_COUNT],
+    event_table: [Option<Event>; EVENT_COUNT],
     curr: usize,
     ms_event_table: EventIndexTable,
     sec_event_table: EventIndexTable,
@@ -67,17 +67,7 @@ impl EventIndexTable {
 impl EventManager {
     pub const fn new() -> Self {
         Self {
-            event_table: [Event {
-                is_enabled: false,
-                event_type: EventType::FreeRunning,
-                threshold: 0,
-                counter: 0,
-                opcode: 0,
-                semaphore: 0,
-                tasks: 0,
-                msg_index: 0,
-                next_event: 0,
-            }; EVENT_COUNT],
+            event_table: [None; EVENT_COUNT],
             curr: 0,
             ms_event_table: EventIndexTable::new(),
             sec_event_table: EventIndexTable::new(),
@@ -148,23 +138,23 @@ impl EventManager {
     }
 
     pub fn execute_event(&mut self, event_id: EventId) {
-        let event = &self.event_table[event_id];
+        let event = &mut self.event_table[event_id].as_mut().unwrap();
         if event.is_enabled {
             if event.counter == 0 {
                 if event.event_type == EventType::FreeRunning {
-                    self.event_table[event_id].counter = event.threshold;
+                    event.counter = event.threshold;
                 } else {
                     self.disable_event(event_id);
                 }
                 self.execute_opcode(event_id);
             } else {
-                self.event_table[event_id].counter -= 1;
+                event.counter -= 1;
             }
         }
     }
 
     fn execute_opcode(&mut self, event_id: EventId) {
-        let event = self.event_table[event_id];
+        let event = self.event_table[event_id].as_ref().unwrap();
 
         if event.opcode & OPCODE_SIGNAL == OPCODE_SIGNAL {
             sem_set(event.semaphore, event.tasks);
@@ -176,22 +166,18 @@ impl EventManager {
             release(event.tasks);
         }
         if event.opcode & OPCODE_ENABLE_EVENT == OPCODE_ENABLE_EVENT {
-            self.enable_next(event_id);
+            self.enable_event(event_id);
         }
     }
 
     pub fn enable_event(&mut self, event_id: EventId) {
-        let mut event = self.event_table[event_id];
+        let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.is_enabled = true;
     }
 
     pub fn disable_event(&mut self, event_id: EventId) {
-        self.event_table[event_id].is_enabled = false;
-    }
-
-    pub fn enable_next(&mut self, event_id: EventId) {
-        let mut event = self.event_table[event_id];
-        self.event_table[event.next_event].is_enabled = true;
+        let event = &mut self.event_table[event_id].as_mut().unwrap();
+        event.is_enabled = false;
     }
 
     pub fn create(
@@ -202,7 +188,7 @@ impl EventManager {
         event_counter_type: EventTableType,
     ) -> EventId {
         let id = self.curr;
-        self.event_table[id] = Event {
+        self.event_table[id] = Some(Event {
             is_enabled,
             event_type,
             threshold,
@@ -212,7 +198,7 @@ impl EventManager {
             tasks: 0,
             msg_index: 0,
             next_event: 0,
-        };
+        });
         match event_counter_type {
             EventTableType::Hour => self.hr_event_table.add(self.curr),
             EventTableType::MilliSec => self.ms_event_table.add(self.curr),
@@ -225,23 +211,27 @@ impl EventManager {
     }
 
     pub fn set_semaphore(&mut self, event_id: EventId, sem: SemaphoreId, tasks_mask: u32) {
-        self.event_table[event_id].opcode |= OPCODE_SIGNAL;
-        self.event_table[event_id].semaphore = sem;
-        self.event_table[event_id].tasks |= tasks_mask;
+        let event = &mut self.event_table[event_id].as_mut().unwrap();
+        event.opcode |= OPCODE_SIGNAL;
+        event.semaphore = sem;
+        event.tasks |= tasks_mask;
     }
 
     pub fn set_tasks(&mut self, event_id: EventId, tasks_mask: u32) {
-        self.event_table[event_id].opcode |= OPCODE_RELEASE;
-        self.event_table[event_id].tasks = tasks_mask;
+        let event = &mut self.event_table[event_id].as_mut().unwrap();
+        event.opcode |= OPCODE_RELEASE;
+        event.tasks = tasks_mask;
     }
 
     pub fn set_msg(&mut self, event_id: EventId, msg_id: usize) {
-        self.event_table[event_id].opcode |= OPCODE_SEND_MSG;
-        self.event_table[event_id].msg_index = msg_id;
+        let event = &mut self.event_table[event_id].as_mut().unwrap();
+        event.opcode |= OPCODE_SEND_MSG;
+        event.msg_index = msg_id;
     }
 
     pub fn set_next_event(&mut self, event_id: EventId, next: EventId) {
-        self.event_table[event_id].opcode |= OPCODE_ENABLE_EVENT;
-        self.event_table[event_id].next_event = next;
+        let event = &mut self.event_table[event_id].as_mut().unwrap();
+        event.opcode |= OPCODE_ENABLE_EVENT;
+        event.next_event = next;
     }
 }
