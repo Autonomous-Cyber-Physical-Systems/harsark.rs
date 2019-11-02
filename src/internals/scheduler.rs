@@ -102,7 +102,7 @@ impl Scheduler {
 
     fn insert_tcb(&mut self, idx: usize, tcb: TaskControlBlock) -> Result<(), KernelError> {
         if idx >= MAX_TASKS {
-            return Err(KernelError::DoesNotExist);
+            return Err(KernelError::NotFound);
         }
         self.task_control_blocks[idx] = Some(tcb);
         return Ok(());
