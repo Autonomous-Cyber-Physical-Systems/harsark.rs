@@ -1,5 +1,5 @@
 use crate::errors::KernelError;
-use crate::internals::helper::check_priv;
+use crate::internals::helper::is_privileged;
 pub use crate::internals::semaphores;
 use crate::internals::semaphores::*;
 use crate::priv_execute;

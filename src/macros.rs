@@ -22,13 +22,13 @@ macro_rules! spawn {
     };
 }
 
-// Ensure that check_priv has been imported into scope
+// Ensure that is_privileged has been imported into scope
 #[macro_export]
 macro_rules! priv_execute {
     ($handler: block) => {
-        match check_priv() {
-            Npriv::Unprivileged => Err(KernelError::AccessDenied),
-            Npriv::Privileged => $handler,
+        match is_privileged() {
+            false => Err(KernelError::AccessDenied),
+            true => $handler,
         }
     };
 }

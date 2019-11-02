@@ -1,7 +1,7 @@
 //use core::alloc::
 
 use crate::errors::KernelError;
-use crate::internals::helper::check_priv;
+use crate::internals::helper::is_privileged;
 
 use crate::priv_execute;
 use crate::process::{get_curr_tid, release};

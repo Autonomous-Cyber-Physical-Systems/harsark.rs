@@ -1,5 +1,5 @@
 use crate::internals::event_manager::*;
-use crate::internals::helper::check_priv;
+use crate::internals::helper::is_privileged;
 use crate::internals::types::{EventId, SemaphoreId};
 use crate::priv_execute;
 

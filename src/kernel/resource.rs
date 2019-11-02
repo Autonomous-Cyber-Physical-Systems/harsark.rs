@@ -4,14 +4,12 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
 use crate::errors::KernelError;
-use crate::internals::helper::check_priv;
+use crate::internals::helper::is_privileged;
 use crate::internals::resource_manager::ResourceManager;
 use crate::internals::types::ResourceId;
 use crate::priv_execute;
 
 use crate::process::{block_tasks, get_curr_tid, schedule, unblock_tasks};
-
-
 
 use cortex_m::register::control::Npriv;
 
@@ -31,7 +29,11 @@ impl<T> Resource<T> {
 
     fn lock(&self) -> Option<&T> {
         execute_critical(|cs_token| {
-            let pid = get_curr_tid() as u32;
+            let pid = if is_privileged() {
+                1
+            } else {
+                get_curr_tid() as u32
+            };
             let res = resources_list
                 .borrow(cs_token)
                 .borrow_mut()
