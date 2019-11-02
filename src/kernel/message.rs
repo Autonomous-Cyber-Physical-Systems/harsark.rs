@@ -10,7 +10,6 @@ use cortex_m::interrupt::Mutex;
 use cortex_m::interrupt::{free as execute_critical, CriticalSection};
 use cortex_m::register::control::Npriv;
 
-
 use crate::internals::messaging::*;
 
 use crate::internals::types::MessageId;

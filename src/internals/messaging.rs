@@ -43,7 +43,7 @@ impl SemaphoresTable {
         sem_id: SemaphoreId,
         tasks_mask: u32,
     ) -> Result<u32, KernelError> {
-        if let Some(mut sem) = self.table[sem_id] {
+        if let Some(sem) = &mut self.table[sem_id] {
             sem.signal_and_release(tasks_mask)
         } else {
             Err(KernelError::NotFound)
@@ -55,7 +55,7 @@ impl SemaphoresTable {
         sem_id: SemaphoreId,
         curr_pid: u32,
     ) -> Result<bool, KernelError> {
-        if let Some(mut sem) = self.table[sem_id] {
+        if let Some(sem) = &mut self.table[sem_id] {
             sem.test_and_reset(curr_pid)
         } else {
             Err(KernelError::NotFound)
