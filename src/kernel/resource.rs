@@ -31,10 +31,14 @@ impl<T> Resource<T> {
 
     fn lock(&self) -> Option<&T> {
         execute_critical(|cs_token| {
+            let pid = match check_priv() {
+                Npriv::Privileged => 1,
+                Npriv::Unprivileged => get_pid() as u32
+            };
             let res = resources_list
                 .borrow(cs_token)
                 .borrow_mut()
-                .lock(self.id, get_pid() as u32);
+                .lock(self.id, pid);
             if let Some(mask) = res {
                 block_tasks(mask);
                 return Some(&self.inner);
@@ -63,12 +67,14 @@ impl<T> Resource<T> {
     }
 
     // only Privileged.
-    pub fn access(&self) -> Result<&T, KernelError> {
+    pub unsafe fn access(&self) -> Result<&T, KernelError> {
         priv_execute!({ Ok(&self.inner) })
     }
 }
 
 pub fn create<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, KernelError> {
+    // External interrupts and Privileged tasks have a priority of 0
+    let tasks_mask = tasks_mask | 1<<0;
     priv_execute!({
         execute_critical(|cs_token| {
             let id = resources_list

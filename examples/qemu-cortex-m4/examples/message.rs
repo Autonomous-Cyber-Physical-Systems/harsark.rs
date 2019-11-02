@@ -63,7 +63,5 @@ fn main() -> ! {
 
     init(true);
     release(generate_task_mask(&[1]));
-    start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);
-
-    loop {}
+    start_kernel(unsafe{&mut peripherals.access().unwrap().borrow_mut()}, 150_000);loop {}
 }
