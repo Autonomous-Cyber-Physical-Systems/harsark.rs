@@ -9,11 +9,17 @@ pub struct SemaphoreControlBlock {
 }
 
 pub struct SemaphoresTable {
-    table: [SemaphoreControlBlock; SEMAPHORE_COUNT],
+    table: [Option<SemaphoreControlBlock>; SEMAPHORE_COUNT],
     curr: usize,
 }
 
 impl SemaphoreControlBlock {
+    pub fn new(tasks: u32) -> Self {
+        Self {
+            flags: 0,
+            tasks
+        }
+    }
     pub fn signal_and_release(&mut self, tasks_mask: u32) -> Result<u32, KernelError> {
         self.flags |= tasks_mask;
         return Ok(self.tasks);
@@ -32,17 +38,17 @@ impl SemaphoreControlBlock {
 impl SemaphoresTable {
     pub const fn new() -> Self {
         Self {
-            table: [SemaphoreControlBlock { flags: 0, tasks: 0 }; SEMAPHORE_COUNT],
+            table: [None; SEMAPHORE_COUNT],
             curr: 0,
         }
     }
-    pub fn create(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
+    pub fn add_semaphore(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
         if self.curr >= SEMAPHORE_COUNT {
             return Err(KernelError::LimitExceeded);
         }
         let id = self.curr;
         self.curr += 1;
-        self.table[id].tasks = task_mask;
+        self.table[id].replace(SemaphoreControlBlock::new(task_mask));
         Ok(id)
     }
 
@@ -51,7 +57,11 @@ impl SemaphoresTable {
         sem_id: SemaphoreId,
         tasks_mask: u32,
     ) -> Result<u32, KernelError> {
-        self.table[sem_id].signal_and_release(tasks_mask)
+        if let Some(mut sem) = self.table[sem_id] {
+            sem.signal_and_release(tasks_mask)
+        } else {
+            Err(KernelError::DoesNotExist)
+        }
     }
 
     pub fn test_and_reset(
@@ -59,6 +69,10 @@ impl SemaphoresTable {
         sem_id: SemaphoreId,
         curr_pid: u32,
     ) -> Result<bool, KernelError> {
-        self.table[sem_id].test_and_reset(curr_pid)
+        if let Some(mut sem) = self.table[sem_id] {
+            sem.test_and_reset(curr_pid)
+        } else {
+            Err(KernelError::DoesNotExist)
+        }
     }
 }

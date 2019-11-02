@@ -36,6 +36,6 @@ pub fn sem_test(sem_id: SemaphoreId) -> Result<bool, KernelError> {
 
 pub fn create(tasks_mask: u32) -> Result<SemaphoreId, KernelError> {
     priv_execute!({
-        execute_critical(|cs_token| SCB_table.borrow(cs_token).borrow_mut().create(tasks_mask))
+        execute_critical(|cs_token| SCB_table.borrow(cs_token).borrow_mut().add_semaphore(tasks_mask))
     })
 }

@@ -12,29 +12,29 @@ pub struct MCB {
 }
 
 pub struct MessagingManager {
-    pub mcb_table: [MCB; MESSAGE_COUNT],
-    pub msg_scb_table: SemaphoresTable,
+    pub mcb_table: [Option<MCB>; MESSAGE_COUNT],
+    pub scb_table: SemaphoresTable,
 }
 
 pub struct SemaphoresTable {
-    table: [SemaphoreControlBlock; MESSAGE_COUNT],
+    table: [Option<SemaphoreControlBlock>; MESSAGE_COUNT],
     curr: usize,
 }
 
 impl SemaphoresTable {
     pub const fn new() -> Self {
         Self {
-            table: [SemaphoreControlBlock { flags: 0, tasks: 0 }; MESSAGE_COUNT],
+            table: [None; MESSAGE_COUNT],
             curr: 0,
         }
     }
-    pub fn create(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
+    pub fn add_semaphore(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
         if self.curr >= MESSAGE_COUNT {
             return Err(KernelError::LimitExceeded);
         }
         let id = self.curr;
         self.curr += 1;
-        self.table[id].tasks = task_mask;
+        self.table[id].replace(SemaphoreControlBlock::new(task_mask));
         Ok(id)
     }
 
@@ -43,7 +43,11 @@ impl SemaphoresTable {
         sem_id: SemaphoreId,
         tasks_mask: u32,
     ) -> Result<u32, KernelError> {
-        self.table[sem_id].signal_and_release(tasks_mask)
+        if let Some(mut sem) = self.table[sem_id] {
+            sem.signal_and_release(tasks_mask)
+        } else {
+            Err(KernelError::DoesNotExist)
+        }
     }
 
     pub fn test_and_reset(
@@ -51,15 +55,19 @@ impl SemaphoresTable {
         sem_id: SemaphoreId,
         curr_pid: u32,
     ) -> Result<bool, KernelError> {
-        self.table[sem_id].test_and_reset(curr_pid)
+        if let Some(mut sem) = self.table[sem_id] {
+            sem.test_and_reset(curr_pid)
+        } else {
+            Err(KernelError::DoesNotExist)
+        }
     }
 }
 
 impl<'a> MessagingManager {
     pub const fn new() -> Self {
         Self {
-            mcb_table: [MCB { receivers: 0 }; MESSAGE_COUNT],
-            msg_scb_table: SemaphoresTable::new(),
+            mcb_table: [None; MESSAGE_COUNT],
+            scb_table: SemaphoresTable::new(),
         }
     }
 
@@ -67,15 +75,15 @@ impl<'a> MessagingManager {
         if self.mcb_table.get(msg_id).is_none() {
             return Err(KernelError::NotFound);
         }
-        let mcb = self.mcb_table[msg_id];
+        let mcb = self.mcb_table[msg_id].unwrap();
         let mask = self
-            .msg_scb_table
+            .scb_table
             .signal_and_release(msg_id, mcb.receivers)?;
         return Ok(mask);
     }
 
     pub fn receive(&'a mut self, msg_id: MessageId, curr_pid: usize) -> bool {
-        match self.msg_scb_table.test_and_reset(msg_id, curr_pid as u32) {
+        match self.scb_table.test_and_reset(msg_id, curr_pid as u32) {
             Ok(res) if res == true => true,
             _ => false,
         }
@@ -86,8 +94,10 @@ impl<'a> MessagingManager {
         tasks_mask: u32,
         receivers_mask: u32,
     ) -> Result<MessageId, KernelError> {
-        let msg_id = self.msg_scb_table.create(tasks_mask)?;
-        self.mcb_table[msg_id].receivers |= receivers_mask;
+        let msg_id = self.scb_table.add_semaphore(tasks_mask)?;
+        self.mcb_table[msg_id].replace(MCB{
+            receivers: receivers_mask,
+        });
         return Ok(msg_id);
     }
 }
