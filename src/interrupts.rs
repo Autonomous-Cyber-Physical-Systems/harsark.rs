@@ -1,4 +1,3 @@
-use crate::config::PREEMPT_WAIT;
 use crate::event::sweep_event_table;
 use crate::internals::event_manager::EventTableType;
 use crate::internals::time::TickType;
