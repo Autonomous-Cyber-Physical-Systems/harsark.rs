@@ -13,7 +13,7 @@ static mut MIN: u32 = 0;
 // SysTick Exception handler
 #[exception]
 fn SysTick() {
-    if get_msec_10() == PREEMPT_WAIT && is_preemptive() {
+    if is_preemptive() {
         schedule();
     }
 

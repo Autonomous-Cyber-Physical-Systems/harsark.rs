@@ -56,7 +56,10 @@ fn main() -> ! {
         peripherals: resource::create(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap()
     };
 
-    peripherals_init(&mut app_inst.peripherals.access().unwrap().borrow_mut());
+    app_inst.peripherals.acquire(|peripherals| {
+        let peripherals = &mut peripherals.borrow_mut();
+        peripherals_init(peripherals);
+    });
 
     let e1 = event::create_FreeRunning(true, 2, EventTableType::Sec).unwrap();
     event::set_tasks(e1, generate_task_mask(&[1]));

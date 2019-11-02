@@ -156,8 +156,6 @@ pub use tasks_config::MAX_TASKS;
 pub use event_config::EVENT_COUNT;
 pub use event_index_table_config::EVENT_INDEX_TABLE_COUNT;
 
-pub const PREEMPT_WAIT: u32 = 10;
-
 pub const OPCODE_SIGNAL: u8 = 1;
 pub const OPCODE_SEND_MSG: u8 = 1 << 1;
 pub const OPCODE_RELEASE: u8 = 1 << 2;

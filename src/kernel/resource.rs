@@ -93,3 +93,5 @@ pub fn init_peripherals() -> Result<Resource<RefCell<cortex_m::Peripherals>>, Ke
     }
     create(RefCell::new(cortex_m::Peripherals::take().unwrap()), mask)
 }
+
+unsafe impl<T> Sync for Resource<T> {}
