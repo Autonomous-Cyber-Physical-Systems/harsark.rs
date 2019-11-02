@@ -5,12 +5,12 @@ use crate::priv_execute;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
-
+use cortex_m_semihosting::hprintln;
 use crate::internals::scheduler::*;
 
 use cortex_m::Peripherals;
 
-use crate::internals::helper::check_priv;
+use crate::internals::helper::is_privileged;
 
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
@@ -53,14 +53,14 @@ pub fn create_task<T: Sized>(
 }
 
 pub fn schedule() {
-    if check_priv() == Npriv::Privileged {
+    if is_privileged() == true {
         preempt();
     } else {
         svc_call();
     }
 }
 
-fn preempt() -> Result<(), KernelError> {
+pub fn preempt() -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
         let next_tid = handler.get_next_tid();

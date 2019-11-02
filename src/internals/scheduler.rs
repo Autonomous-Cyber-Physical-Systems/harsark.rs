@@ -1,6 +1,7 @@
 use crate::config::MAX_TASKS;
 use crate::errors::KernelError;
 use crate::internals::helper::get_msb;
+use cortex_m_semihosting::hprintln;
 
 #[repr(C)]
 pub struct Scheduler {
@@ -47,7 +48,6 @@ impl Scheduler {
                 0,
                 unsafe { &mut stack0 },
                 |_| loop {
-                    //                    hprintln!("waiting");
                     cortex_m::asm::wfe();
                 },
                 &0,

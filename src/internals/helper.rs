@@ -1,4 +1,5 @@
 use cortex_m::register::control;
+use cortex_m_semihosting::hprintln;
 
 pub fn generate_task_mask(tasks: &[u32]) -> u32 {
     let mut task_mask: u32 = 0;
@@ -23,7 +24,12 @@ pub fn get_msb(val: u32) -> usize {
     return res;
 }
 
-pub fn check_priv() -> control::Npriv {
-    let ctrl_reg = control::read();
-    ctrl_reg.npriv()
+pub fn is_privileged() -> bool {
+    let mut val = 9;
+    unsafe {
+            asm!("mrs $0, CONTROL"
+            : "=r"(val)
+            : 
+        )};
+    !((val&1) == 1)
 }
