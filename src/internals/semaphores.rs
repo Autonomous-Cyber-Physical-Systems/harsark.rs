@@ -60,7 +60,7 @@ impl SemaphoresTable {
         if let Some(mut sem) = self.table[sem_id] {
             sem.signal_and_release(tasks_mask)
         } else {
-            Err(KernelError::DoesNotExist)
+            Err(KernelError::NotFound)
         }
     }
 
@@ -72,7 +72,7 @@ impl SemaphoresTable {
         if let Some(mut sem) = self.table[sem_id] {
             sem.test_and_reset(curr_pid)
         } else {
-            Err(KernelError::DoesNotExist)
+            Err(KernelError::NotFound)
         }
     }
 }
