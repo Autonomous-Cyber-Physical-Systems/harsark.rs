@@ -4,9 +4,9 @@ use crate::internals::helper::get_msb;
 
 #[repr(C)]
 pub struct Scheduler {
-    pub curr_pid: usize,
+    pub curr_tid: usize,
     pub is_running: bool,
-    pub threads: [Option<TaskControlBlock>; MAX_TASKS],
+    pub task_control_blocks: [Option<TaskControlBlock>; MAX_TASKS],
     pub blocked_tasks: u32,
     pub active_tasks: u32,
     pub is_preemptive: bool,
@@ -26,9 +26,9 @@ static mut stack0: [u32; 64] = [0; 64];
 impl Scheduler {
     pub const fn new() -> Self {
         Self {
-            curr_pid: 0,
+            curr_tid: 0,
             is_running: false,
-            threads: [None; MAX_TASKS],
+            task_control_blocks: [None; MAX_TASKS],
             active_tasks: 1,
             blocked_tasks: 0,
             is_preemptive: false,
@@ -104,7 +104,7 @@ impl Scheduler {
         if idx >= MAX_TASKS {
             return Err(KernelError::DoesNotExist);
         }
-        self.threads[idx] = Some(tcb);
+        self.task_control_blocks[idx] = Some(tcb);
         return Ok(());
     }
 
@@ -116,7 +116,7 @@ impl Scheduler {
         self.blocked_tasks &= !tasks_mask;
     }
 
-    pub fn get_HT(&self) -> usize {
+    pub fn get_next_tid(&self) -> usize {
         let mask = self.active_tasks & !self.blocked_tasks;
         return get_msb(mask);
     }

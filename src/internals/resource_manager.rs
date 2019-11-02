@@ -4,7 +4,7 @@ use crate::internals::helper::get_msb;
 
 use crate::internals::types::ResourceId;
 
-const PI: u32 = 0;
+const PI: i32 = -1;
 
 #[derive(Clone, Copy)]
 pub struct ResourceControlBlock {
@@ -14,32 +14,28 @@ pub struct ResourceControlBlock {
 
 #[derive(Clone, Copy)]
 pub struct ResourceManager {
-    resources_block: [ResourceControlBlock; MAX_RESOURCES], // Resource Control Block, holds u32 expressing which tasks have access to it.
+    resource_control_blocks: [Option<ResourceControlBlock>; MAX_RESOURCES], // Resource Control Block, holds u32 expressing which tasks have access to it.
     top: usize,
-    pi_stack: [u32; MAX_RESOURCES],
+    pi_stack: [i32; MAX_RESOURCES],
     curr: usize, // used to track current no. of resources initialized
-    system_ceiling: u32,
+    system_ceiling: i32,
 }
 
 impl ResourceControlBlock {
-    pub const fn new() -> Self {
+    pub fn new(tasks_mask: u32) -> Self {
         Self {
-            ceiling: PI,
-            tasks_mask: PI,
+            ceiling: get_msb(tasks_mask) as u32,
+            tasks_mask: tasks_mask,
         }
-    }
-    pub fn set(&mut self, tasks_mask: u32) {
-        self.tasks_mask = tasks_mask;
-        self.ceiling = get_msb(tasks_mask) as u32;
     }
 }
 
 impl ResourceManager {
     pub const fn new() -> Self {
         ResourceManager {
-            resources_block: [ResourceControlBlock::new(); MAX_RESOURCES],
+            resource_control_blocks: [None; MAX_RESOURCES],
             top: 0,
-            pi_stack: [0; MAX_RESOURCES],
+            pi_stack: [PI; MAX_RESOURCES],
             curr: 0,
             system_ceiling: PI,
         }
@@ -50,13 +46,13 @@ impl ResourceManager {
         if id >= MAX_RESOURCES {
             return Err(KernelError::LimitExceeded);
         }
-        self.resources_block[id].set(tasks_mask);
+        self.resource_control_blocks[id].replace(ResourceControlBlock::new(tasks_mask));
         self.curr += 1;
         Ok(id)
     }
 
     pub fn lock(&mut self, id: ResourceId, curr_pid: u32) -> Option<u32> {
-        let resource = self.resources_block[id];
+        let resource = self.resource_control_blocks[id].unwrap();
         let ceiling = resource.ceiling;
 
         let pid_mask = 1 << curr_pid;
@@ -65,11 +61,11 @@ impl ResourceManager {
             return None;
         }
 
-        if ceiling > self.system_ceiling {
+        if ceiling as i32 > self.system_ceiling {
             self.push_stack(ceiling);
 
             let mask = self.get_pi_mask(ceiling, curr_pid);
-            self.system_ceiling = self.resources_block[id].ceiling;
+            self.system_ceiling = self.resource_control_blocks[id].unwrap().ceiling as i32;
             return Some(mask);
         }
         return None;
@@ -89,8 +85,8 @@ impl ResourceManager {
     }
 
     pub fn unlock(&mut self, id: ResourceId) -> Option<u32> {
-        let resource = self.resources_block[id];
-        if resource.ceiling == self.system_ceiling {
+        let resource = self.resource_control_blocks[id].unwrap();
+        if resource.ceiling as i32 == self.system_ceiling {
             self.pop_stack();
             let mask = (1 << (resource.ceiling + 1)) - 1;
             return Some(mask);

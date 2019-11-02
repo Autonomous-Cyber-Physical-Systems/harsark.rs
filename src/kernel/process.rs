@@ -64,10 +64,10 @@ pub fn schedule() {
 fn preempt() -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
-        let HT = handler.get_HT();
+        let HT = handler.get_next_tid();
         if handler.is_running {
-            if handler.curr_pid != HT {
-                context_switch(handler.curr_pid, HT);
+            if handler.curr_tid != HT {
+                context_switch(handler.curr_tid, HT);
             }
         }
         return Ok(());
@@ -76,7 +76,7 @@ fn preempt() -> Result<(), KernelError> {
 
 fn context_switch(curr: usize, next: usize) {
     let handler = unsafe { &mut all_tasks };
-    let task_curr = &handler.threads[curr];
+    let task_curr = &handler.task_control_blocks[curr];
     if handler.started {
         unsafe {
             os_curr_task = task_curr.as_ref().unwrap();
@@ -84,8 +84,8 @@ fn context_switch(curr: usize, next: usize) {
     } else {
         handler.started = true;
     }
-    handler.curr_pid = next;
-    let task_next = &handler.threads[next];
+    handler.curr_tid = next;
+    let task_next = &handler.task_control_blocks[next];
     unsafe {
         os_next_task = task_next.as_ref().unwrap();
         cortex_m::peripheral::SCB::set_pendsv();
@@ -99,7 +99,7 @@ pub fn is_preemptive() -> bool {
 pub fn get_pid() -> usize {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
-        return handler.curr_pid;
+        return handler.curr_tid;
     })
 }
 
