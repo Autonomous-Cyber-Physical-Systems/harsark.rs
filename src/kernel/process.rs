@@ -110,7 +110,7 @@ pub fn block_tasks(tasks_mask: u32) {
 
 pub fn unblock_tasks(tasks_mask: u32) {
     execute_critical(|_| unsafe {
-        all_tasks.unblock_tasks(!tasks_mask);
+        all_tasks.unblock_tasks(tasks_mask);
     })
 }
 
