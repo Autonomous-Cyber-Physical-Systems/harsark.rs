@@ -28,20 +28,20 @@ fn main() -> ! {
     let peripherals = resource::init_peripherals().unwrap();
 
     let app_inst = app {
-        sem2: sync::create(generate_task_mask(&[2])).unwrap(),
+        sem2: sync::new(generate_task_mask(&[2])).unwrap(),
         msg1: message::create(generate_task_mask(&[3]), generate_task_mask(&[3]), [9, 10]).unwrap(),
     };
 
-    let e1 = event::create_FreeRunning(true, 1, EventTableType::Sec).unwrap();
+    let e1 = event::new_FreeRunning(true, 1, EventTableType::Sec).unwrap();
     event::set_tasks(e1, generate_task_mask(&[1]));
 
-    let e2 = event::create_FreeRunning(true, 2, EventTableType::Sec).unwrap();
+    let e2 = event::new_FreeRunning(true, 2, EventTableType::Sec).unwrap();
     event::set_semaphore(e2, app_inst.sem2, generate_task_mask(&[1, 2]));
 
-    let e3 = event::create_FreeRunning(false, 3, EventTableType::Sec).unwrap();
+    let e3 = event::new_FreeRunning(false, 3, EventTableType::Sec).unwrap();
     event::set_msg(e3, app_inst.msg1.get_id());
 
-    let e4 = event::create_OnOff(true).unwrap();
+    let e4 = event::new_OnOff(true).unwrap();
     event::set_next_event(e4, e3);
 
     static mut stack1: [u32; 300] = [0; 300];
@@ -50,7 +50,7 @@ fn main() -> ! {
 
     spawn!(thread1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
-        if let Ok(x) = sync::sem_test(params.sem2) {
+        if let Ok(x) = sync::test_and_reset(params.sem2) {
             if (x) {
                 hprintln!("TASK 1: sem2 enabled");
             }
@@ -59,7 +59,7 @@ fn main() -> ! {
     });
     spawn!(thread2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
-        if let Ok(x) = sync::sem_test(params.sem2) {
+        if let Ok(x) = sync::test_and_reset(params.sem2) {
             hprintln!("TASK 2: sem2 enabled");
         }
         hprintln!("TASK 2: End");

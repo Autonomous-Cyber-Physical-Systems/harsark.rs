@@ -3,7 +3,7 @@ use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE
 use crate::internals::types::{EventId, MessageId, SemaphoreId};
 use crate::message::broadcast;
 use crate::process::release;
-use crate::sync::sem_set;
+use crate::sync::signal_and_release;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum EventType {
@@ -155,7 +155,7 @@ impl EventManager {
         let event = self.event_table[event_id].as_ref().unwrap();
 
         if event.opcode & OPCODE_SIGNAL == OPCODE_SIGNAL {
-            sem_set(event.semaphore, event.tasks);
+            signal_and_release(event.semaphore, event.tasks);
         }
         if event.opcode & OPCODE_SEND_MSG == OPCODE_SEND_MSG {
             broadcast(event.msg_index);

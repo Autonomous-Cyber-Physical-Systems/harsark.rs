@@ -9,7 +9,7 @@ use crate::internals::resource_manager::ResourceManager;
 use crate::internals::types::ResourceId;
 use crate::priv_execute;
 
-use crate::process::{block_tasks, get_pid, schedule, unblock_tasks};
+use crate::process::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 
 
 
@@ -33,7 +33,7 @@ impl<T> Resource<T> {
         execute_critical(|cs_token| {
             let pid = match check_priv() {
                 Npriv::Privileged => 1,
-                Npriv::Unprivileged => get_pid() as u32
+                Npriv::Unprivileged => get_curr_tid() as u32
             };
             let res = resources_list
                 .borrow(cs_token)
@@ -72,7 +72,7 @@ impl<T> Resource<T> {
     }
 }
 
-pub fn create<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, KernelError> {
+pub fn new<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, KernelError> {
     // External interrupts and Privileged tasks have a priority of 0
     let tasks_mask = tasks_mask | 1<<0;
     priv_execute!({
@@ -91,7 +91,7 @@ pub fn init_peripherals() -> Result<Resource<RefCell<cortex_m::Peripherals>>, Ke
     for i in 0..MAX_TASKS {
         mask |= 1 << i;
     }
-    create(RefCell::new(cortex_m::Peripherals::take().unwrap()), mask)
+    new(RefCell::new(cortex_m::Peripherals::take().unwrap()), mask)
 }
 
 unsafe impl<T> Sync for Resource<T> {}

@@ -41,7 +41,7 @@ pub fn enable_event(event_id: EventId) {
     })
 }
 
-pub fn create_FreeRunning(
+pub fn new_FreeRunning (
     is_enabled: bool,
     threshold: u8,
     event_counter_type: EventTableType,
@@ -58,7 +58,7 @@ pub fn create_FreeRunning(
     })
 }
 
-pub fn create_OnOff(is_enabled: bool) -> Result<EventId, KernelError> {
+pub fn new_OnOff(is_enabled: bool) -> Result<EventId, KernelError> {
     priv_execute!({
         execute_critical(|cs_token| {
             Ok(event_manager.borrow(cs_token).borrow_mut().create(
