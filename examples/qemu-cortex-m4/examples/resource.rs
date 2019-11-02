@@ -28,10 +28,10 @@ fn main() -> ! {
     let peripherals = resource::init_peripherals().unwrap();
 
     let app_inst = app {
-        sem3: sync::create(generate_task_mask(&[3])).unwrap(),
-        sem4: sync::create(generate_task_mask(&[4])).unwrap(),
-        res1: resource::create([1, 2, 3], generate_task_mask(&[1, 2, 3])).unwrap(),
-        res2: resource::create([4, 5, 6], generate_task_mask(&[4])).unwrap(),
+        sem3: sync::new(generate_task_mask(&[3])).unwrap(),
+        sem4: sync::new(generate_task_mask(&[4])).unwrap(),
+        res1: resource::new([1, 2, 3], generate_task_mask(&[1, 2, 3])).unwrap(),
+        res2: resource::new([4, 5, 6], generate_task_mask(&[4])).unwrap(),
     };
 
     static mut stack1: [u32; 300] = [0; 300];
@@ -50,8 +50,8 @@ fn main() -> ! {
         hprintln!("TASK 2: Enter");
         params.res1.acquire(|res| {
             hprintln!("TASK 2 : res1 : {:?}", res);
-            sync::sem_set(params.sem3, 0);
-            sync::sem_set(params.sem4, 0);
+            sync::signal_and_release(params.sem3, 0);
+            sync::signal_and_release(params.sem4, 0);
             hprintln!("TASK 2 : task 3 and 4 dispatched");
         });
         hprintln!("TASK 2: End");

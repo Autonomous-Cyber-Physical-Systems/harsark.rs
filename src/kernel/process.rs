@@ -53,8 +53,7 @@ pub fn create_task<T: Sized>(
 }
 
 pub fn schedule() {
-    let ctrl_reg = cortex_m::register::control::read();
-    if ctrl_reg.npriv() == Npriv::Privileged {
+    if check_priv() == Npriv::Privileged {
         preempt();
     } else {
         svc_call();
@@ -64,10 +63,10 @@ pub fn schedule() {
 fn preempt() -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
-        let HT = handler.get_next_tid();
+        let next_tid = handler.get_next_tid();
         if handler.is_running {
-            if handler.curr_tid != HT {
-                context_switch(handler.curr_tid, HT);
+            if handler.curr_tid != next_tid {
+                context_switch(handler.curr_tid, next_tid);
             }
         }
         return Ok(());
@@ -96,7 +95,7 @@ pub fn is_preemptive() -> bool {
     execute_critical(|_| unsafe { all_tasks.is_preemptive })
 }
 
-pub fn get_pid() -> usize {
+pub fn get_curr_tid() -> usize {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
         return handler.curr_tid;
@@ -105,35 +104,34 @@ pub fn get_pid() -> usize {
 
 pub fn block_tasks(tasks_mask: u32) {
     execute_critical(|_| unsafe {
-        all_tasks.blocked_tasks |= tasks_mask;
+        all_tasks.block_tasks(tasks_mask);
     })
 }
 
 pub fn unblock_tasks(tasks_mask: u32) {
     execute_critical(|_| unsafe {
-        all_tasks.blocked_tasks &= !tasks_mask;
+        all_tasks.unblock_tasks(!tasks_mask);
     })
 }
 
 pub fn task_exit() {
+    let rt = get_curr_tid();
     execute_critical(|_| {
-        let rt = get_pid();
         unsafe { all_tasks.active_tasks &= !(1 << rt as u32) };
     });
     schedule()
 }
 
-pub fn release(tasks_mask: u32) -> Result<(), KernelError> {
-    execute_critical(|_| {
-        unsafe { all_tasks.release(tasks_mask) };
-    });
-    Ok(())
+pub fn release(tasks_mask: u32) {
+    execute_critical(|_|
+        unsafe { all_tasks.release(tasks_mask) }
+    );
 }
 
 pub fn enable_preemption() {
-    execute_critical(|_| {
-        unsafe { all_tasks.is_preemptive = true };
-    })
+    execute_critical(|_|
+        unsafe { all_tasks.is_preemptive = true }
+    )
 }
 
 pub fn disable_preemption() {

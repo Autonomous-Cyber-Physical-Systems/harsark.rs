@@ -27,7 +27,7 @@ fn main() -> ! {
     let peripherals = resource::init_peripherals().unwrap();
 
     let app_inst = app {
-        sem3: sync::create(generate_task_mask(&[3])).unwrap(),
+        sem3: sync::new(generate_task_mask(&[3])).unwrap(),
         msg1: message::create(
             generate_task_mask(&[2]),
             generate_task_mask(&[2, 3]),
@@ -43,7 +43,7 @@ fn main() -> ! {
     spawn!(thread1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
         params.msg1.broadcast(Some([4, 5]));
-        sync::sem_set(params.sem3, 0);
+        sync::signal_and_release(params.sem3, 0);
         hprintln!("TASK 1: END");
     });
     spawn!(thread2, 2, stack2, params, app_inst, {

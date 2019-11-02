@@ -25,8 +25,8 @@ fn main() -> ! {
     let peripherals = init_peripherals().unwrap();
 
     let app_inst = app {
-        sem1: sync::create(generate_task_mask(&[1])).unwrap(),
-        sem2: sync::create(generate_task_mask(&[2])).unwrap(),
+        sem1: sync::new(generate_task_mask(&[1])).unwrap(),
+        sem2: sync::new(generate_task_mask(&[2])).unwrap(),
     };
 
     static mut stack1: [u32; 300] = [0; 300];
@@ -35,12 +35,12 @@ fn main() -> ! {
 
     spawn!(thread1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
-        sync::sem_set(params.sem2, generate_task_mask(&[2]));
+        sync::signal_and_release(params.sem2, generate_task_mask(&[2]));
         hprintln!("TASK 1: End");
     });
     spawn!(thread2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
-        if sync::sem_test(params.sem2).unwrap() {
+        if sync::test_and_reset(params.sem2).unwrap() {
             hprintln!("TASK 2: sem2 enabled");
         } else {
             hprintln!("TASK 2: sem2 disabled");
@@ -49,7 +49,7 @@ fn main() -> ! {
     });
     spawn!(thread3, 3, stack3, params, app_inst, {
         hprintln!("TASK 3: Enter");
-        sync::sem_set(params.sem1, 0);
+        sync::signal_and_release(params.sem1, 0);
         hprintln!("TASK 3: End");
     });
 

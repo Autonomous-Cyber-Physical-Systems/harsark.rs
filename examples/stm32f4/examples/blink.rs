@@ -53,7 +53,7 @@ fn main() -> ! {
     let peripherals = resource::init_peripherals().unwrap();
 
     let app_inst = app {
-        peripherals: resource::create(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap()
+        peripherals: resource::new(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap()
     };
 
     app_inst.peripherals.acquire(|peripherals| {
@@ -61,10 +61,10 @@ fn main() -> ! {
         peripherals_init(peripherals);
     });
 
-    let e1 = event::create_FreeRunning(true, 2, EventTableType::Sec).unwrap();
+    let e1 = event::new_FreeRunning(true, 2, EventTableType::Sec).unwrap();
     event::set_tasks(e1, generate_task_mask(&[1]));
 
-    let e2 = event::create_FreeRunning(true, 3, EventTableType::Sec).unwrap();
+    let e2 = event::new_FreeRunning(true, 3, EventTableType::Sec).unwrap();
     event::set_tasks(e2, generate_task_mask(&[2]));
 
     static mut stack1: [u32; 300] = [0; 300];

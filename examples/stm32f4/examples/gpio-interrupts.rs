@@ -31,7 +31,7 @@ struct app{
 
 lazy_static! {
     static ref AppState: app = app {
-        peripherals: resource::create(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap()
+        peripherals: resource::new(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap()
     };
 }
 
@@ -122,10 +122,10 @@ fn main() -> ! {
         peripherals_init(peripherals);
     });
 
-    let e1 = event::create_OnOff(true).unwrap();
+    let e1 = event::new_OnOff(true).unwrap();
     event::set_tasks(e1, generate_task_mask(&[1]));
 
-    let e2 = event::create_OnOff(true).unwrap();
+    let e2 = event::new_OnOff(true).unwrap();
     event::set_tasks(e2, generate_task_mask(&[2]));
 
     static mut stack1: [u32; 300] = [0; 300];
