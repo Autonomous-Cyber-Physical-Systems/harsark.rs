@@ -31,10 +31,7 @@ impl<T> Resource<T> {
 
     fn lock(&self) -> Option<&T> {
         execute_critical(|cs_token| {
-            let pid = match check_priv() {
-                Npriv::Privileged => 1,
-                Npriv::Unprivileged => get_curr_tid() as u32
-            };
+            let pid = get_curr_tid() as u32;
             let res = resources_list
                 .borrow(cs_token)
                 .borrow_mut()
