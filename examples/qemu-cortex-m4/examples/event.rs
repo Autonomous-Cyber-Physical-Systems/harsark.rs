@@ -16,7 +16,7 @@ use hartex_rust::process::*;
 use hartex_rust::resource::{self, Resource};
 use hartex_rust::sync;
 use hartex_rust::types::*;
-use hartex_rust::{init, spawn};
+use hartex_rust::spawn;
 
 struct app {
     sem2: SemaphoreId,
@@ -72,7 +72,7 @@ fn main() -> ! {
         hprintln!("TASK 3: End");
     });
 
-    init!(true);
+    init(true);
     release(1);
     start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);
 

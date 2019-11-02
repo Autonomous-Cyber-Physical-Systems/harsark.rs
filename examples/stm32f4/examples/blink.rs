@@ -18,7 +18,7 @@ use hartex_rust::process::*;
 use hartex_rust::resource::{self, Resource};
 use hartex_rust::sync;
 use hartex_rust::types::*;
-use hartex_rust::{init, spawn};
+use hartex_rust::spawn;
 
 struct app{
     peripherals: Resource<RefCell<Peripherals>>,
@@ -94,7 +94,7 @@ fn main() -> ! {
         });
     });
 
-    init!(true);
+    init(true);
     release(0);
     start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);
 

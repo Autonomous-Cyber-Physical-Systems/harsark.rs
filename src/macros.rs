@@ -22,17 +22,6 @@ macro_rules! spawn {
     };
 }
 
-#[macro_export]
-macro_rules! init {
-    ($preemptive: expr, $stack: expr, $param: expr, $handler_fn: expr) => {
-        init($preemptive, false);
-        create_task(0, unsafe { &mut $stack }, $handler_fn, &$param).unwrap();
-    };
-    ($preemptive: expr) => {
-        init($preemptive, true);
-    };
-}
-
 // Ensure that check_priv has been imported into scope
 #[macro_export]
 macro_rules! priv_execute {

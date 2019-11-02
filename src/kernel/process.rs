@@ -23,8 +23,8 @@ static mut os_next_task: &TaskControlBlock = &empty_task;
 // end GLOBALS
 
 /// Initialize the switcher system
-pub fn init(is_preemptive: bool, create_idle_task: bool) {
-    execute_critical(|_| unsafe { all_tasks.init(is_preemptive, create_idle_task) })
+pub fn init(is_preemptive: bool) {
+    execute_critical(|_| unsafe { all_tasks.init(is_preemptive) })
 }
 
 // The below section just sets up the timer and starts it.
