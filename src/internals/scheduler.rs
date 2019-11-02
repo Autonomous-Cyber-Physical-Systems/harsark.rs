@@ -56,9 +56,8 @@ impl Scheduler {
     }
 
     // The below section just sets up the timer and starts it.
-    pub fn start_kernel(&mut self) -> Result<(), KernelError> {
+    pub fn start_kernel(&mut self) {
         self.is_running = true;
-        Ok(())
     }
 
     pub fn create_task<T: Sized>(
