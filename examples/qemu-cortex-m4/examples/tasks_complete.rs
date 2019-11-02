@@ -12,7 +12,7 @@ use hartex_rust::helper::generate_task_mask;
 use hartex_rust::process::*;
 use hartex_rust::resource::init_peripherals;
 use hartex_rust::types::*;
-use hartex_rust::{init, spawn};
+use hartex_rust::spawn;
 
 #[entry]
 fn main() -> ! {
@@ -38,10 +38,7 @@ fn main() -> ! {
         hprintln!("{}", param);
     });
 
-    init!(true, stack_idle, task_idle_param, |param| {
-        hprintln!("{}", param);
-        loop {}
-    });
+    init(true);
     release(generate_task_mask(&[1, 2, 3]));
     start_kernel(&mut peripherals.access().unwrap().borrow_mut(), 150_000);
 

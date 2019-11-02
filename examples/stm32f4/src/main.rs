@@ -18,7 +18,7 @@ use hartex_rust::messaging;
 use hartex_rust::process::*;
 use hartex_rust::resource::*;
 use hartex_rust::types::*;
-use hartex_rust::{init, spawn};
+use hartex_rust::spawn;
 
 #[entry]
 fn main() -> ! {
@@ -41,7 +41,7 @@ fn main() -> ! {
         hprintln!("task 3");
     });
 
-    init!(true, &0, |_| loop {
+    init(true, &0, |_| loop {
         cortex_m::asm::wfe();
     });
 
