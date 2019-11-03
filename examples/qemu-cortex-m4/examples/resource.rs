@@ -9,10 +9,10 @@ use cortex_m::interrupt::Mutex;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::helper::generate_task_mask;
-use hartex_rust::process::*;
-use hartex_rust::resource::{self, Resource};
-use hartex_rust::sync;
+use hartex_rust::util::generate_task_mask;
+use hartex_rust::tasks::*;
+use hartex_rust::resources;
+use hartex_rust::semaphores;
 use hartex_rust::types::*;
 use hartex_rust::spawn;
 
@@ -25,13 +25,13 @@ struct app {
 
 #[entry]
 fn main() -> ! {
-    let peripherals = resource::init_peripherals().unwrap();
+    let peripherals = resources::init_peripherals().unwrap();
 
     let app_inst = app {
-        sem3: sync::new(generate_task_mask(&[3])).unwrap(),
-        sem4: sync::new(generate_task_mask(&[4])).unwrap(),
-        res1: resource::new([1, 2, 3], generate_task_mask(&[1, 2, 3])).unwrap(),
-        res2: resource::new([4, 5, 6], generate_task_mask(&[4])).unwrap(),
+        sem3: semaphores::new(generate_task_mask(&[3])).unwrap(),
+        sem4: semaphores::new(generate_task_mask(&[4])).unwrap(),
+        res1: resources::new([1, 2, 3], generate_task_mask(&[1, 2, 3])).unwrap(),
+        res2: resources::new([4, 5, 6], generate_task_mask(&[4])).unwrap(),
     };
 
     static mut stack1: [u32; 300] = [0; 300];
@@ -50,8 +50,8 @@ fn main() -> ! {
         hprintln!("TASK 2: Enter");
         params.res1.acquire(|res| {
             hprintln!("TASK 2 : res1 : {:?}", res);
-            sync::signal_and_release(params.sem3, 0);
-            sync::signal_and_release(params.sem4, 0);
+            semaphores::signal_and_release(params.sem3, 0);
+            semaphores::signal_and_release(params.sem4, 0);
             hprintln!("TASK 2 : task 3 and 4 dispatched");
         });
         hprintln!("TASK 2: End");

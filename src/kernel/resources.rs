@@ -3,13 +3,13 @@ use core::cell::{RefCell};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
-use crate::errors::KernelError;
-use crate::internals::helper::is_privileged;
-use crate::internals::resource_manager::ResourceManager;
-use crate::internals::types::ResourceId;
+use crate::KernelError;
+use crate::utils::arch::is_privileged;
+use crate::system::resource_manager::ResourceManager;
+use crate::system::types::ResourceId;
 use crate::priv_execute;
 
-use crate::process::{block_tasks, get_curr_tid, schedule, unblock_tasks};
+use crate::kernel::tasks::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 
 use cortex_m::register::control::Npriv;
 

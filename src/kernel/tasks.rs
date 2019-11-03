@@ -1,16 +1,16 @@
-use crate::errors::KernelError;
+use crate::KernelError;
 
-use crate::interrupts::svc_call;
+use crate::utils::arch::svc_call;
 use crate::priv_execute;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
-use crate::internals::scheduler::*;
+use crate::system::task_manager::*;
 
 use cortex_m::Peripherals;
 
-use crate::internals::helper::is_privileged;
+use crate::utils::arch::is_privileged;
 
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
@@ -46,7 +46,8 @@ pub fn create_task<T: Sized>(
     stack: &mut [u32],
     handler_fn: fn(&T) -> !,
     param: &T,
-) -> Result<(), KernelError> {
+) -> Result<(), KernelError>
+    where T: Sync {
     priv_execute!({
         execute_critical(|_| unsafe { all_tasks.create_task(priority, stack, handler_fn, param) })
     })

@@ -13,10 +13,10 @@ use stm32f4::stm32f407::interrupt;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 
-use hartex_rust::helper::get_msb;
+use hartex_rust::util::get_msb;
 use hartex_rust::messaging;
-use hartex_rust::process::*;
-use hartex_rust::resource::*;
+use hartex_rust::tasks::*;
+use hartex_rust::resources::*;
 use hartex_rust::types::*;
 use hartex_rust::spawn;
 

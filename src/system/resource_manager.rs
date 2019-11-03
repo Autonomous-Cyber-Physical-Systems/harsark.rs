@@ -1,8 +1,8 @@
 use crate::config::MAX_RESOURCES;
-use crate::errors::KernelError;
-use crate::internals::helper::get_msb;
+use crate::KernelError;
+use crate::utils::arch::get_msb;
 
-use crate::internals::types::ResourceId;
+use crate::system::types::ResourceId;
 
 const PI: i32 = -1;
 

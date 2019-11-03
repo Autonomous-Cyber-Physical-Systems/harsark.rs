@@ -1,10 +1,10 @@
 #![feature(const_fn)]
 
 use crate::config::{MESSAGE_COUNT};
-use crate::errors::KernelError;
-use crate::internals::semaphores::SemaphoreControlBlock;
+use crate::KernelError;
+use crate::system::software_sync_bus::SemaphoreControlBlock;
 
-use crate::internals::types::{MessageId, SemaphoreId};
+use crate::system::types::{MessageId, SemaphoreId};
 
 #[derive(Clone, Copy)]
 pub struct MCB {

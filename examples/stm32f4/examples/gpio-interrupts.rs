@@ -15,12 +15,12 @@ use cortex_m_semihosting::hprintln;
 use stm32f4::stm32f407::{self, Peripherals};
 use stm32f4::stm32f407::interrupt;
 
-use hartex_rust::event::{self, EventTableType, EventType};
-use hartex_rust::helper::generate_task_mask;
-use hartex_rust::message::{self, Message};
-use hartex_rust::process::*;
-use hartex_rust::resource::{self, Resource};
-use hartex_rust::sync;
+use hartex_rust::events;
+use hartex_rust::util::generate_task_mask;
+use hartex_rust::messages;
+use hartex_rust::tasks::*;
+use hartex_rust::resources;
+use hartex_rust::semaphores;
 use hartex_rust::types::*;
 use hartex_rust::spawn;
 use cortex_m::peripheral::NVIC;
@@ -31,7 +31,7 @@ struct app{
 
 lazy_static! {
     static ref AppState: app = app {
-        peripherals: resource::new(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap()
+        peripherals: resources::new(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap()
     };
 }
 
@@ -115,7 +115,7 @@ fn EXTI4() {
 
 #[entry]
 fn main() -> ! {
-    let peripherals = resource::init_peripherals().unwrap();
+    let peripherals = resources::init_peripherals().unwrap();
 
     AppState.peripherals.acquire(|peripherals| {
         let peripherals = &mut peripherals.borrow_mut();

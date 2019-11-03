@@ -1,6 +1,6 @@
-use crate::internals::event_manager::*;
-use crate::internals::helper::is_privileged;
-use crate::internals::types::{EventId, SemaphoreId};
+use crate::system::event_manager::*;
+use crate::utils::arch::is_privileged;
+use crate::system::types::{EventId, SemaphoreId};
 use crate::priv_execute;
 
 use crate::KernelError;
@@ -10,7 +10,7 @@ use cortex_m::interrupt::Mutex;
 use cortex_m::register::control::Npriv;
 
 
-pub use crate::internals::event_manager::{EventTableType, EventType};
+pub use crate::system::event_manager::{EventTableType, EventType};
 
 static event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));
 
@@ -99,13 +99,13 @@ pub fn set_tasks(event_id: EventId, tasks: u32) -> Result<(), KernelError> {
     })
 }
 
-pub fn set_msg(event_id: EventId, msg_id: usize) -> Result<(), KernelError> {
+pub fn set_message(event_id: EventId, msg_id: usize) -> Result<(), KernelError> {
     priv_execute!({
         execute_critical(|cs_token| {
             event_manager
                 .borrow(cs_token)
                 .borrow_mut()
-                .set_msg(event_id, msg_id)
+                .set_message(event_id, msg_id)
         });
         Ok(())
     })
