@@ -1,4 +1,4 @@
-use crate::internals::time::{TickType, Time};
+use crate::system::time_manager::{TickType, Time};
 use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;

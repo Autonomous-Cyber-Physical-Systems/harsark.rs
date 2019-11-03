@@ -9,11 +9,11 @@ use cortex_m::interrupt::Mutex;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::helper::generate_task_mask;
-use hartex_rust::message::{self, Message};
-use hartex_rust::process::*;
-use hartex_rust::resource::{self, Resource};
-use hartex_rust::sync;
+use hartex_rust::util::generate_task_mask;
+use hartex_rust::messages;
+use hartex_rust::tasks::*;
+use hartex_rust::resources;
+use hartex_rust::semaphores;
 use hartex_rust::types::*;
 use hartex_rust::spawn;
 
@@ -24,11 +24,11 @@ struct app {
 
 #[entry]
 fn main() -> ! {
-    let peripherals = resource::init_peripherals().unwrap();
+    let peripherals = resources::init_peripherals().unwrap();
 
     let app_inst = app {
-        sem3: sync::new(generate_task_mask(&[3])).unwrap(),
-        msg1: message::create(
+        sem3: semaphores::new(generate_task_mask(&[3])).unwrap(),
+        msg1: messages::new(
             generate_task_mask(&[2]),
             generate_task_mask(&[2, 3]),
             [9, 10],
@@ -43,7 +43,7 @@ fn main() -> ! {
     spawn!(thread1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
         params.msg1.broadcast(Some([4, 5]));
-        sync::signal_and_release(params.sem3, 0);
+        semaphores::signal_and_release(params.sem3, 0);
         hprintln!("TASK 1: END");
     });
     spawn!(thread2, 2, stack2, params, app_inst, {

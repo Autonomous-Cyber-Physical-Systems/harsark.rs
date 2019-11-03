@@ -1,6 +1,6 @@
 use crate::config::MAX_TASKS;
-use crate::errors::KernelError;
-use crate::internals::helper::get_msb;
+use crate::KernelError;
+use crate::utils::arch::get_msb;
 use cortex_m_semihosting::hprintln;
 
 #[repr(C)]
@@ -66,7 +66,8 @@ impl Scheduler {
         stack: &mut [u32],
         handler_fn: fn(&T) -> !,
         param: &T,
-    ) -> Result<(), KernelError> {
+    ) -> Result<(), KernelError>
+        where T: Sync {
         match self.create_tcb(stack, handler_fn, param) {
             Ok(tcb) => {
                 self.insert_tcb(priority, tcb)?;
@@ -81,7 +82,8 @@ impl Scheduler {
         stack: &mut [u32],
         handler: fn(&T) -> !,
         param: &T,
-    ) -> Result<TaskControlBlock, KernelError> {
+    ) -> Result<TaskControlBlock, KernelError>
+        where T: Sync {
         if stack.len() < 32 {
             return Err(KernelError::StackTooSmall);
         }

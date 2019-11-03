@@ -1,8 +1,8 @@
-use crate::event::sweep_event_table;
-use crate::internals::event_manager::EventTableType;
-use crate::internals::time::TickType;
+use crate::kernel::events::sweep_event_table;
+use crate::system::event_manager::EventTableType;
+use crate::system::time_manager::TickType;
 use crate::kernel::time::{get_msec_10, tick};
-use crate::process::{is_preemptive, schedule, preempt};
+use crate::kernel::tasks::{is_preemptive, schedule, preempt};
 use cortex_m_rt::exception;
 use cortex_m_semihosting::hprintln;
 
@@ -37,15 +37,8 @@ fn SysTick() {
         _ => {}
     }
 }
-use crate::internals::helper::is_privileged;
 
 #[exception]
 fn SVCall() {
     schedule();
-}
-
-pub fn svc_call() {
-    unsafe {
-        asm!("svc 1");
-    }
 }

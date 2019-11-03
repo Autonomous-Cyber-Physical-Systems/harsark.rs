@@ -1,16 +1,16 @@
-use crate::errors::KernelError;
-use crate::internals::helper::is_privileged;
-pub use crate::internals::semaphores;
-use crate::internals::semaphores::*;
+use crate::KernelError;
+use crate::utils::arch::is_privileged;
+use crate::system::software_sync_bus;
+use crate::system::software_sync_bus::*;
 use crate::priv_execute;
-use crate::process::{get_curr_tid, release};
+use crate::kernel::tasks::{get_curr_tid, release};
 use core::borrow::BorrowMut;
 use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 use cortex_m::register::control::Npriv;
 
-use crate::internals::types::SemaphoreId;
+use crate::system::types::SemaphoreId;
 
 static SCB_table: Mutex<RefCell<SemaphoresTable>> =
     Mutex::new(RefCell::new(SemaphoresTable::new()));

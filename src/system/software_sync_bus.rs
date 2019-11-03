@@ -1,6 +1,6 @@
 use crate::config::SEMAPHORE_COUNT;
-use crate::errors::KernelError;
-use crate::internals::types::SemaphoreId;
+use crate::KernelError;
+use crate::system::types::SemaphoreId;
 use cortex_m_semihosting::hprintln;
 
 #[derive(Clone, Copy)]

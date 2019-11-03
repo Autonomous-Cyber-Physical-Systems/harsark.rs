@@ -1,9 +1,9 @@
 use crate::config::{EVENT_COUNT, EVENT_INDEX_TABLE_COUNT};
 use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE_SIGNAL};
-use crate::internals::types::{EventId, MessageId, SemaphoreId};
-use crate::message::broadcast;
-use crate::process::release;
-use crate::sync::signal_and_release;
+use crate::system::types::{EventId, MessageId, SemaphoreId};
+use crate::kernel::messages::broadcast;
+use crate::kernel::tasks::release;
+use crate::kernel::semaphores::signal_and_release;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum EventType {
@@ -221,7 +221,7 @@ impl EventManager {
         event.tasks = tasks_mask;
     }
 
-    pub fn set_msg(&mut self, event_id: EventId, msg_id: usize) {
+    pub fn set_message(&mut self, event_id: EventId, msg_id: usize) {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_SEND_MSG;
         event.msg_index = msg_id;

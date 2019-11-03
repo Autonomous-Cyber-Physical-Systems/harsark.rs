@@ -8,15 +8,16 @@ use cortex_m::interrupt::Mutex;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::helper::generate_task_mask;
-use hartex_rust::process::*;
-use hartex_rust::resource::init_peripherals;
+use hartex_rust::util::generate_task_mask;
+use hartex_rust::tasks::*;
+
 use hartex_rust::types::*;
 use hartex_rust::spawn;
+use hartex_rust::resources;
 
 #[entry]
 fn main() -> ! {
-    let peripherals = init_peripherals().unwrap();
+    let peripherals = resources::init_peripherals().unwrap();
 
     static mut stack1: [u32; 300] = [0; 300];
     static mut stack2: [u32; 300] = [0; 300];
