@@ -25,13 +25,17 @@ use hartex_rust::types::*;
 use hartex_rust::spawn;
 use cortex_m::peripheral::NVIC;
 
-struct app{
+struct AppState {
     peripherals: Resource<RefCell<Peripherals>>,
+    event_led1: EventId,
+    event_led2: EventId,
 }
 
 lazy_static! {
-    static ref AppState: app = app {
-        peripherals: resources::new(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap()
+    static ref globals: AppState = AppState {
+        peripherals: resources::new(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap(),
+        event_led1: events::new_OnOff(true).unwrap(),
+        event_led2: events::new_OnOff(true).unwrap(),
     };
 }
 
@@ -97,41 +101,39 @@ fn peripherals_init(peripherals: &mut Peripherals) {
 
 #[interrupt]
 fn EXTI3() {
-    AppState.peripherals.acquire(|peripherals| {
+    globals.peripherals.acquire(|peripherals| {
         let peripherals = &mut peripherals.borrow_mut();
         peripherals.EXTI.pr.write(|w| w.pr3().set_bit());
     });
-    event::enable_event(0);
+    events::enable_event(0);
 }
 
 #[interrupt]
 fn EXTI4() {
-    AppState.peripherals.acquire(|peripherals| {
+    globals.peripherals.acquire(|peripherals| {
         let peripherals = &mut peripherals.borrow_mut();
         peripherals.EXTI.pr.write(|w| w.pr4().set_bit());
     });
-    event::enable_event(1);
+    events::enable_event(1);
 }
 
 #[entry]
 fn main() -> ! {
     let peripherals = resources::init_peripherals().unwrap();
 
-    AppState.peripherals.acquire(|peripherals| {
+    globals.peripherals.acquire(|peripherals| {
         let peripherals = &mut peripherals.borrow_mut();
         peripherals_init(peripherals);
     });
 
-    let e1 = event::new_OnOff(true).unwrap();
-    event::set_tasks(e1, generate_task_mask(&[1]));
+    events::set_tasks(globals.event_led1, generate_task_mask(&[task1]));
 
-    let e2 = event::new_OnOff(true).unwrap();
-    event::set_tasks(e2, generate_task_mask(&[2]));
+    events::set_tasks(globals.event_led1, generate_task_mask(&[task2]));
 
     static mut stack1: [u32; 300] = [0; 300];
     static mut stack2: [u32; 300] = [0; 300];
 
-    spawn!(thread1, 1, stack1, params, AppState, {
+    spawn!(task1, 1, stack1, params, globals, {
         params.peripherals.acquire(|perf| {
             let perf = perf.borrow_mut();
             perf.GPIOA.odr.modify(|r, w| {
@@ -144,7 +146,7 @@ fn main() -> ! {
         });
         });
     });
-    spawn!(thread2, 2, stack2, params, AppState, {
+    spawn!(task2, 2, stack2, params, globals, {
         params.peripherals.acquire(|perf| {
             let perf = perf.borrow_mut();
             perf.GPIOA.odr.modify(|r, w| {

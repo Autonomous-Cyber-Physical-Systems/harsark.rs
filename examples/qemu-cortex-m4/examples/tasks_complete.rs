@@ -29,17 +29,17 @@ fn main() -> ! {
     static mut stack2: [u32; 300] = [0; 300];
     static mut stack3: [u32; 300] = [0; 300];
 
-    spawn!(thread1, 1, stack1, param, task1_param, {
+    spawn!(task1, 1, stack1, param, task1_param, {
         hprintln!("{}", param);
     });
-    spawn!(thread2, 2, stack2, param, task2_param, {
+    spawn!(task2, 2, stack2, param, task2_param, {
         hprintln!("{}", param);
     });
-    spawn!(thread3, 3, stack3, param, task3_param, {
+    spawn!(task3, 3, stack3, param, task3_param, {
         hprintln!("{}", param);
     });
 
     init(true);
-    release(generate_task_mask(&[1, 2, 3]));
+    release(generate_task_mask(&[task1, task2, task3]));
     start_kernel(unsafe{&mut peripherals.access().unwrap().borrow_mut()}, 150_000);loop {}
 }
