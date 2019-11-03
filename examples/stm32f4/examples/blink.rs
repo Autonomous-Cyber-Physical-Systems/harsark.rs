@@ -20,7 +20,7 @@ use hartex_rust::semaphores;
 use hartex_rust::types::*;
 use hartex_rust::spawn;
 
-struct app{
+struct AppState {
     peripherals: Resource<RefCell<Peripherals>>,
 }
 
@@ -52,7 +52,7 @@ fn peripherals_init(peripherals: &mut Peripherals) {
 fn main() -> ! {
     let peripherals = resources::init_peripherals().unwrap();
 
-    let app_inst = app {
+    let app_inst = AppState {
         peripherals: resources::new(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap()
     };
 
@@ -61,16 +61,16 @@ fn main() -> ! {
         peripherals_init(peripherals);
     });
 
-    let e1 = event::new_FreeRunning(true, 2, EventTableType::Sec).unwrap();
-    event::set_tasks(e1, generate_task_mask(&[1]));
+    let e1 = events::new_FreeRunning(true, 2, EventTableType::Sec).unwrap();
+    events::set_tasks(e1, generate_task_mask(&[task1]));
 
-    let e2 = event::new_FreeRunning(true, 3, EventTableType::Sec).unwrap();
-    event::set_tasks(e2, generate_task_mask(&[2]));
+    let e2 = events::new_FreeRunning(true, 3, EventTableType::Sec).unwrap();
+    events::set_tasks(e2, generate_task_mask(&[task2]));
 
     static mut stack1: [u32; 300] = [0; 300];
     static mut stack2: [u32; 300] = [0; 300];
 
-    spawn!(thread1, 1, stack1, params, app_inst, {
+    spawn!(task1, 1, stack1, params, app_inst, {
         params.peripherals.acquire(|perf| {
             let perf = perf.borrow_mut();
             perf.GPIOA.odr.modify(|r, w| {
@@ -83,7 +83,7 @@ fn main() -> ! {
         });
         });
     });
-    spawn!(thread2, 2, stack2, params, app_inst, {
+    spawn!(task2, 2, stack2, params, app_inst, {
         params.peripherals.acquire(|perf| {
             let perf = perf.borrow_mut();
             perf.GPIOA.odr.modify(|r, w| {

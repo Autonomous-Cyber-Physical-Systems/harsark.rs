@@ -28,15 +28,15 @@ fn main() -> ! {
     let peripherals = resources::init_peripherals().unwrap();
 
     let app_inst = app {
-        sem2: semaphores::new(generate_task_mask(&[2])).unwrap(),
-        msg1: messages::new(generate_task_mask(&[3]), generate_task_mask(&[3]), [9, 10]).unwrap(),
+        sem2: semaphores::new(generate_task_mask(&[task2])).unwrap(),
+        msg1: messages::new(generate_task_mask(&[task3]), generate_task_mask(&[task3]), [9, 10]).unwrap(),
     };
 
     let e1 = events::new_FreeRunning(true, 1, EventTableType::Sec).unwrap();
-    events::set_tasks(e1, generate_task_mask(&[1]));
+    events::set_tasks(e1, generate_task_mask(&[task1]));
 
     let e2 = events::new_FreeRunning(true, 2, EventTableType::Sec).unwrap();
-    events::set_semaphore(e2, app_inst.sem2, generate_task_mask(&[1, 2]));
+    events::set_semaphore(e2, app_inst.sem2, generate_task_mask(&[task1, task2]));
 
     let e3 = events::new_FreeRunning(false, 3, EventTableType::Sec).unwrap();
     events::set_message(e3, app_inst.msg1.get_id());
@@ -48,7 +48,7 @@ fn main() -> ! {
     static mut stack2: [u32; 300] = [0; 300];
     static mut stack3: [u32; 300] = [0; 300];
 
-    spawn!(thread1, 1, stack1, params, app_inst, {
+    spawn!(task1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
         if let Ok(x) = semaphores::test_and_reset(params.sem2) {
             if (x) {
@@ -57,14 +57,14 @@ fn main() -> ! {
         }
         hprintln!("TASK 1: End");
     });
-    spawn!(thread2, 2, stack2, params, app_inst, {
+    spawn!(task2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
         if let Ok(x) = semaphores::test_and_reset(params.sem2) {
             hprintln!("TASK 2: sem2 enabled");
         }
         hprintln!("TASK 2: End");
     });
-    spawn!(thread3, 3, stack3, params, app_inst, {
+    spawn!(task3, 3, stack3, params, app_inst, {
         hprintln!("TASK 3: Enter");
         if let Some(msg) = params.msg1.receive() {
             hprintln!("TASK 3: msg received : {:?}", msg);
@@ -73,6 +73,6 @@ fn main() -> ! {
     });
 
     init(true);
-    release(1);
+    release(task1);
     start_kernel(unsafe{&mut peripherals.access().unwrap().borrow_mut()}, 150_000);loop {}
 }
