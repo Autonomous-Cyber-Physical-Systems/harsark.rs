@@ -5,7 +5,7 @@ use crate::kernel::time::{get_msec_10, tick};
 use crate::kernel::tasks::{is_preemptive, schedule, preempt};
 use cortex_m_rt::exception;
 use cortex_m_semihosting::hprintln;
-
+use crate::utils::arch::pendSV_handler;
 static mut M_SEC: u32 = 0;
 static mut SEC: u32 = 0;
 static mut MIN: u32 = 0;
@@ -41,4 +41,9 @@ fn SysTick() {
 #[exception]
 fn SVCall() {
     schedule();
+}
+
+#[exception]
+fn PendSV() {
+    pendSV_handler();
 }

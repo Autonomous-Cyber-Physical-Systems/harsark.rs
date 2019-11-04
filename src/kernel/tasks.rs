@@ -65,9 +65,10 @@ pub fn preempt() -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
         let next_tid = handler.get_next_tid();
+        let curr_tid = handler.curr_tid;
         if handler.is_running {
-            if handler.curr_tid != next_tid {
-                context_switch(handler.curr_tid, next_tid);
+            if curr_tid != next_tid {
+                context_switch(curr_tid, next_tid);
             }
         }
         return Ok(());
@@ -116,9 +117,9 @@ pub fn unblock_tasks(tasks_mask: u32) {
 }
 
 pub fn task_exit() {
-    let rt = get_curr_tid();
+    let curr_tid = get_curr_tid();
     execute_critical(|_| {
-        unsafe { all_tasks.active_tasks &= !(1 << rt as u32) };
+        unsafe { all_tasks.active_tasks &= !(1 << curr_tid as u32) };
     });
     schedule()
 }
