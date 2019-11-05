@@ -3,6 +3,7 @@ use crate::KernelError;
 use crate::utils::arch::get_msb;
 
 use crate::system::types::ResourceId;
+use cortex_m_semihosting::hprintln;
 
 const PI: i32 = -1;
 
@@ -34,7 +35,7 @@ impl ResourceManager {
     pub const fn new() -> Self {
         ResourceManager {
             resource_control_blocks: [None; MAX_RESOURCES],
-            top: 0,
+            top: 1,
             pi_stack: [PI; MAX_RESOURCES],
             curr: 0,
             system_ceiling: PI,
@@ -60,27 +61,22 @@ impl ResourceManager {
         if resource.tasks_mask & pid_mask != pid_mask {
             return None;
         }
-
         if ceiling as i32 > self.system_ceiling {
             self.push_stack(ceiling);
 
-            let mask = self.get_pi_mask(ceiling, curr_pid);
-            self.system_ceiling = self.resource_control_blocks[id].unwrap().ceiling as i32;
+            let mask = self.get_pi_mask(ceiling)  & !(1 << curr_pid);
             return Some(mask);
         }
         return None;
     }
 
-    fn get_pi_mask(&self, ceiling: u32, curr_pid: u32) -> u32 {
+    fn get_pi_mask(&self, ceiling: u32) -> u32 {
         let mut mask = 0;
         if ceiling < 32 {
             mask = (1 << (ceiling + 1)) - 1;
         } else {
-            for i in 0..ceiling {
-                mask |= 1 << i;
-            }
+            mask = 0xffffffff
         }
-        mask &= !(1 << curr_pid);
         mask
     }
 
@@ -88,19 +84,20 @@ impl ResourceManager {
         let resource = self.resource_control_blocks[id].unwrap();
         if resource.ceiling as i32 == self.system_ceiling {
             self.pop_stack();
-            let mask = (1 << (resource.ceiling + 1)) - 1;
+            let mask = self.get_pi_mask(resource.ceiling);
             return Some(mask);
         }
         return None;
     }
 
     fn pop_stack(&mut self) {
-        self.system_ceiling = self.pi_stack[self.top - 1];
         self.top -= 1;
+        self.system_ceiling = self.pi_stack[self.top - 1];
     }
 
-    fn push_stack(&mut self, _ceiling: u32) {
-        self.pi_stack[self.top] = self.system_ceiling;
+    fn push_stack(&mut self, ceiling: u32) {
+        self.pi_stack[self.top] = ceiling as i32;
+        self.system_ceiling = ceiling as i32;
         self.top += 1;
     }
 }

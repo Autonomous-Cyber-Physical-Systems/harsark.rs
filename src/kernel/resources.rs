@@ -2,7 +2,6 @@ use crate::config::MAX_TASKS;
 use core::cell::{RefCell};
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
-
 use crate::KernelError;
 use crate::utils::arch::is_privileged;
 use crate::system::resource_manager::ResourceManager;
@@ -30,7 +29,7 @@ impl<T> Resource<T> {
     fn lock(&self) -> Option<&T> {
         execute_critical(|cs_token| {
             let pid = if is_privileged() {
-                1
+                0
             } else {
                 get_curr_tid() as u32
             };
@@ -65,9 +64,8 @@ impl<T> Resource<T> {
         }
     }
 
-    // only Privileged.
     pub unsafe fn access(&self) -> Result<&T, KernelError> {
-        priv_execute!({ Ok(&self.inner) })
+        Ok(&self.inner)
     }
 }
 
@@ -86,10 +84,7 @@ pub fn new<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, Kernel
 }
 
 pub fn init_peripherals() -> Result<Resource<RefCell<cortex_m::Peripherals>>, KernelError> {
-    let mut mask: u32 = 0;
-    for i in 0..MAX_TASKS {
-        mask |= 1 << i;
-    }
+    let mask: u32 = 0xffffffff;
     new(RefCell::new(cortex_m::Peripherals::take().unwrap()), mask)
 }
 
