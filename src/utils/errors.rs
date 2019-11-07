@@ -5,6 +5,7 @@ pub enum KernelError {
     StackTooSmall,
     LimitExceeded,
     AccessDenied,
+    Exists,
 }
 
 impl fmt::Debug for KernelError {
@@ -14,6 +15,7 @@ impl fmt::Debug for KernelError {
             KernelError::StackTooSmall => write!(f, "StackTooSmall"),
             KernelError::LimitExceeded => write!(f, "LimitExceeded"),
             KernelError::AccessDenied => write!(f, "AccessDenied"),
+            KernelError::Exists => write!(f, "Exists"),
         }
     }
 }

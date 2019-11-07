@@ -4,6 +4,7 @@ use crate::system::types::{EventId, MessageId, SemaphoreId};
 use crate::kernel::messages::broadcast;
 use crate::kernel::tasks::release;
 use crate::kernel::semaphores::signal_and_release;
+use crate::utils::errors::KernelError;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum EventType {
@@ -27,10 +28,10 @@ pub struct Event {
     threshold: u8,
     counter: u8,
     opcode: u8,
-    semaphore: SemaphoreId,
-    tasks: u32,
-    msg_index: MessageId,
-    next_event: EventId,
+    semaphore: Option<SemaphoreId>,
+    tasks: Option<u32>,
+    msg_index: Option<MessageId>,
+    next_event: Option<EventId>,
 }
 
 pub struct EventIndexTable {
@@ -155,13 +156,13 @@ impl EventManager {
         let event = self.event_table[event_id].as_ref().unwrap();
 
         if event.opcode & OPCODE_SIGNAL == OPCODE_SIGNAL {
-            signal_and_release(event.semaphore, event.tasks);
+            signal_and_release(event.semaphore.unwrap(), event.tasks.unwrap());
         }
         if event.opcode & OPCODE_SEND_MSG == OPCODE_SEND_MSG {
-            broadcast(event.msg_index);
+            broadcast(event.msg_index.unwrap());
         }
         if event.opcode & OPCODE_RELEASE == OPCODE_RELEASE {
-            release(event.tasks);
+            release(event.tasks.unwrap());
         }
         if event.opcode & OPCODE_ENABLE_EVENT == OPCODE_ENABLE_EVENT {
             self.enable_event(event_id);
@@ -192,10 +193,10 @@ impl EventManager {
             threshold,
             counter: 0,
             opcode: 0,
-            semaphore: 0,
-            tasks: 0,
-            msg_index: 0,
-            next_event: 0,
+            semaphore: None,
+            tasks: None,
+            msg_index: None,
+            next_event: None,
         });
         match event_counter_type {
             EventTableType::Hour => self.hr_event_table.add(self.curr),
@@ -208,28 +209,52 @@ impl EventManager {
         return id;
     }
 
-    pub fn set_semaphore(&mut self, event_id: EventId, sem: SemaphoreId, tasks_mask: u32) {
+    pub fn set_semaphore(&mut self, event_id: EventId, sem: SemaphoreId, tasks_mask: u32) -> Result<(),KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_SIGNAL;
-        event.semaphore = sem;
-        event.tasks |= tasks_mask;
+        if event.semaphore.is_none() {
+            event.semaphore.replace(sem);
+        } else {
+            return Err(KernelError::Exists);
+        }
+        if event.tasks.is_none() {
+            event.tasks.replace(tasks_mask);
+        } else {
+            return Err(KernelError::Exists);
+        }
+        Ok(())
     }
 
-    pub fn set_tasks(&mut self, event_id: EventId, tasks_mask: u32) {
+    pub fn set_tasks(&mut self, event_id: EventId, tasks_mask: u32) -> Result<(),KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_RELEASE;
-        event.tasks = tasks_mask;
+        if event.tasks.is_none() {
+            event.tasks.replace(tasks_mask);
+        } else {
+            return Err(KernelError::Exists);
+        }
+        Ok(())
     }
 
-    pub fn set_message(&mut self, event_id: EventId, msg_id: usize) {
+    pub fn set_message(&mut self, event_id: EventId, msg_id: usize) -> Result<(),KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_SEND_MSG;
-        event.msg_index = msg_id;
+        if event.msg_index.is_none() {
+            event.msg_index.replace(msg_id);
+        } else {
+            return Err(KernelError::Exists);
+        }
+        Ok(())
     }
 
-    pub fn set_next_event(&mut self, event_id: EventId, next: EventId) {
+    pub fn set_next_event(&mut self, event_id: EventId, next: EventId) -> Result<(),KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_ENABLE_EVENT;
-        event.next_event = next;
+        if event.next_event.is_none() {
+            event.next_event.replace(next);
+        } else {
+            return Err(KernelError::Exists);
+        }
+        Ok(())
     }
 }
