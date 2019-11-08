@@ -8,19 +8,19 @@ extern crate stm32f4;
 extern crate lazy_static;
 
 use core::cell::RefCell;
-use cortex_m::interrupt::Mutex;
+
 use cortex_m_rt::entry;
-use cortex_m_semihosting::hprintln;
+
 
 use stm32f4::stm32f407::{self, Peripherals};
 use stm32f4::stm32f407::interrupt;
 
 use hartex_rust::events;
 use hartex_rust::util::generate_task_mask;
-use hartex_rust::messages;
+
 use hartex_rust::tasks::*;
 use hartex_rust::resources;
-use hartex_rust::semaphores;
+
 use hartex_rust::types::*;
 use hartex_rust::spawn;
 use cortex_m::peripheral::NVIC;

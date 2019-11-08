@@ -4,8 +4,8 @@
 extern crate panic_halt;
 extern crate stm32f4;
 
-use core::cell::RefCell;
-use cortex_m::interrupt::Mutex;
+
+
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
@@ -51,7 +51,7 @@ fn main() -> ! {
     spawn!(task1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
         if let Ok(x) = semaphores::test_and_reset(params.sem2) {
-            if (x) {
+            if x {
                 hprintln!("TASK 1: sem2 enabled");
             }
         }
@@ -59,7 +59,7 @@ fn main() -> ! {
     });
     spawn!(task2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
-        if let Ok(x) = semaphores::test_and_reset(params.sem2) {
+        if let Ok(_x) = semaphores::test_and_reset(params.sem2) {
             hprintln!("TASK 2: sem2 enabled");
         }
         hprintln!("TASK 2: End");

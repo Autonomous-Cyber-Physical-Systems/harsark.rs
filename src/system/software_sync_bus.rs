@@ -2,7 +2,7 @@ use crate::config::SEMAPHORE_COUNT;
 use crate::system::types::{SemaphoreId, TaskId};
 use crate::types::BooleanVector;
 use crate::KernelError;
-use cortex_m_semihosting::hprintln;
+
 
 #[derive(Clone, Copy)]
 pub struct SemaphoreControlBlock {

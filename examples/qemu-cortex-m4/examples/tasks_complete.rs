@@ -4,7 +4,7 @@
 extern crate panic_halt;
 extern crate stm32f4;
 
-use cortex_m::interrupt::Mutex;
+
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
@@ -22,7 +22,7 @@ fn main() -> ! {
     let task1_param = "Hello from task 1 !";
     let task2_param = "Hello from task 2 !";
     let task3_param = "Hello from task 3 !";
-    let task_idle_param = "Waiting ...";
+    let _task_idle_param = "Waiting ...";
 
     static mut stack_idle: [u32; 300] = [0; 300];
     static mut stack1: [u32; 300] = [0; 300];

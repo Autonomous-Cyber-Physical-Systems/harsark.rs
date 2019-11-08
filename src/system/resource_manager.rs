@@ -3,7 +3,7 @@ use crate::utils::arch::get_msb;
 use crate::KernelError;
 
 use crate::system::types::{BooleanVector, ResourceId, TaskId};
-use cortex_m_semihosting::hprintln;
+
 
 const PI: i32 = -1;
 
@@ -71,7 +71,7 @@ impl ResourceManager {
     }
 
     fn get_pi_mask(&self, ceiling: TaskId) -> u32 {
-        let mut mask = 0;
+        let mask;
         if ceiling < 32 {
             mask = (1 << (ceiling + 1)) - 1;
         } else {

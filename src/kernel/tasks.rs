@@ -5,8 +5,8 @@ use crate::system::task_manager::*;
 use crate::utils::arch::svc_call;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
-use cortex_m::register::control::Npriv;
-use cortex_m_semihosting::hprintln;
+
+
 
 use cortex_m::Peripherals;
 

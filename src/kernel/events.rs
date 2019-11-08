@@ -7,7 +7,7 @@ use crate::KernelError;
 use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
-use cortex_m::register::control::Npriv;
+
 
 pub use crate::system::event_manager::{EventTableType, EventType};
 
@@ -19,15 +19,6 @@ pub fn sweep_event_table(event_type: EventTableType) {
             .borrow(cs_token)
             .borrow_mut()
             .sweep(event_type);
-    })
-}
-
-pub fn dispatch_event(event_id: EventId) {
-    execute_critical(|cs_token| {
-        event_manager
-            .borrow(cs_token)
-            .borrow_mut()
-            .execute_event(event_id);
     })
 }
 

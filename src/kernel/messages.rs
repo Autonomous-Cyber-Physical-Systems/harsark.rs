@@ -8,7 +8,7 @@ use crate::priv_execute;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 use cortex_m::interrupt::{free as execute_critical, CriticalSection};
-use cortex_m::register::control::Npriv;
+
 
 use crate::system::software_comm_bus::*;
 

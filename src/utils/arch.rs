@@ -1,5 +1,5 @@
 pub fn get_msb(val: u32) -> usize {
-    let mut res = 0;
+    let mut res ;
     unsafe {
         asm!("clz $1, $0"
         : "=r"(res)
@@ -14,7 +14,7 @@ pub fn get_msb(val: u32) -> usize {
 }
 
 pub fn is_privileged() -> bool {
-    let mut val = 9;
+    let val: u32 ;
     unsafe {
         asm!("mrs $0, CONTROL"
             : "=r"(val)

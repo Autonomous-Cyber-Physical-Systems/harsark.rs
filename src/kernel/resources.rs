@@ -1,4 +1,4 @@
-use crate::config::MAX_TASKS;
+
 use crate::priv_execute;
 use crate::system::resource_manager::ResourceManager;
 use crate::system::types::ResourceId;
@@ -10,7 +10,7 @@ use cortex_m::interrupt::Mutex;
 
 use crate::kernel::tasks::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 
-use cortex_m::register::control::Npriv;
+
 
 static resources_list: Mutex<RefCell<ResourceManager>> =
     Mutex::new(RefCell::new(ResourceManager::new()));
