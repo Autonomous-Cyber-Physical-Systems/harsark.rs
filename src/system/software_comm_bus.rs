@@ -4,16 +4,17 @@ use crate::config::{MESSAGE_COUNT};
 use crate::KernelError;
 use crate::system::software_sync_bus::SemaphoreControlBlock;
 
-use crate::system::types::{MessageId, SemaphoreId};
+use crate::system::types::{MessageId, SemaphoreId, TaskId};
+use crate::types::BooleanVector;
 
 #[derive(Clone, Copy)]
-pub struct MCB {
-    pub receivers: u32,
+pub struct MessageControlBlock {
+    pub receivers: BooleanVector,
 }
 
 pub struct MessagingManager {
-    pub mcb_table: [Option<MCB>; MESSAGE_COUNT],
-    pub scb_table: SemaphoresTable,
+    pub message_table: [Option<MessageControlBlock>; MESSAGE_COUNT],
+    pub semaphore_table: SemaphoresTable,
 }
 
 pub struct SemaphoresTable {
@@ -28,7 +29,7 @@ impl SemaphoresTable {
             curr: 0,
         }
     }
-    pub fn add_semaphore(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
+    pub fn add_semaphore(&mut self, task_mask: BooleanVector) -> Result<SemaphoreId, KernelError> {
         if self.curr >= MESSAGE_COUNT {
             return Err(KernelError::LimitExceeded);
         }
@@ -41,7 +42,7 @@ impl SemaphoresTable {
     pub fn signal_and_release(
         &mut self,
         sem_id: SemaphoreId,
-        tasks_mask: u32,
+        tasks_mask: BooleanVector,
     ) -> Result<u32, KernelError> {
         if let Some(sem) = &mut self.table[sem_id] {
             sem.signal_and_release(tasks_mask)
@@ -66,24 +67,24 @@ impl SemaphoresTable {
 impl<'a> MessagingManager {
     pub const fn new() -> Self {
         Self {
-            mcb_table: [None; MESSAGE_COUNT],
-            scb_table: SemaphoresTable::new(),
+            message_table: [None; MESSAGE_COUNT],
+            semaphore_table: SemaphoresTable::new(),
         }
     }
 
     pub fn broadcast(&mut self, msg_id: MessageId) -> Result<u32, KernelError> {
-        if self.mcb_table.get(msg_id).is_none() {
+        if self.message_table.get(msg_id).is_none() {
             return Err(KernelError::NotFound);
         }
-        let mcb = self.mcb_table[msg_id].unwrap();
+        let mcb = self.message_table[msg_id].unwrap();
         let mask = self
-            .scb_table
+            .semaphore_table
             .signal_and_release(msg_id, mcb.receivers)?;
         return Ok(mask);
     }
 
-    pub fn receive(&'a mut self, msg_id: MessageId, curr_pid: usize) -> bool {
-        match self.scb_table.test_and_reset(msg_id, curr_pid as u32) {
+    pub fn receive(&'a mut self, msg_id: MessageId, curr_pid: TaskId) -> bool {
+        match self.semaphore_table.test_and_reset(msg_id, curr_pid as u32) {
             Ok(res) if res == true => true,
             _ => false,
         }
@@ -91,11 +92,11 @@ impl<'a> MessagingManager {
 
     pub fn create(
         &mut self,
-        tasks_mask: u32,
-        receivers_mask: u32,
+        tasks_mask: BooleanVector,
+        receivers_mask: BooleanVector,
     ) -> Result<MessageId, KernelError> {
-        let msg_id = self.scb_table.add_semaphore(tasks_mask)?;
-        self.mcb_table[msg_id].replace(MCB{
+        let msg_id = self.semaphore_table.add_semaphore(tasks_mask)?;
+        self.message_table[msg_id].replace(MessageControlBlock {
             receivers: receivers_mask,
         });
         return Ok(msg_id);

@@ -2,15 +2,15 @@ use crate::config::MAX_RESOURCES;
 use crate::KernelError;
 use crate::utils::arch::get_msb;
 
-use crate::system::types::ResourceId;
+use crate::system::types::{ResourceId, TaskId, BooleanVector};
 use cortex_m_semihosting::hprintln;
 
 const PI: i32 = -1;
 
 #[derive(Clone, Copy)]
 pub struct ResourceControlBlock {
-    ceiling: u32,
-    tasks_mask: u32,
+    ceiling: TaskId,
+    tasks_mask: BooleanVector,
 }
 
 #[derive(Clone, Copy)]
@@ -23,9 +23,9 @@ pub struct ResourceManager {
 }
 
 impl ResourceControlBlock {
-    pub fn new(tasks_mask: u32) -> Self {
+    pub fn new(tasks_mask: BooleanVector) -> Self {
         Self {
-            ceiling: get_msb(tasks_mask) as u32,
+            ceiling: get_msb(tasks_mask) as TaskId,
             tasks_mask: tasks_mask,
         }
     }
@@ -42,7 +42,7 @@ impl ResourceManager {
         }
     }
 
-    pub fn create(&mut self, tasks_mask: u32) -> Result<ResourceId, KernelError> {
+    pub fn create(&mut self, tasks_mask: BooleanVector) -> Result<ResourceId, KernelError> {
         let id = self.curr;
         if id >= MAX_RESOURCES {
             return Err(KernelError::LimitExceeded);
@@ -52,11 +52,11 @@ impl ResourceManager {
         Ok(id)
     }
 
-    pub fn lock(&mut self, id: ResourceId, curr_pid: u32) -> Option<u32> {
+    pub fn lock(&mut self, id: ResourceId, curr_tid: TaskId) -> Option<u32> {
         let resource = self.resource_control_blocks[id].unwrap();
         let ceiling = resource.ceiling;
 
-        let pid_mask = 1 << curr_pid;
+        let pid_mask = 1 << curr_tid;
 
         if resource.tasks_mask & pid_mask != pid_mask {
             return None;
@@ -64,13 +64,13 @@ impl ResourceManager {
         if ceiling as i32 > self.system_ceiling {
             self.push_stack(ceiling);
 
-            let mask = self.get_pi_mask(ceiling)  & !(1 << curr_pid);
+            let mask = self.get_pi_mask(ceiling)  & !(1 << curr_tid);
             return Some(mask);
         }
         return None;
     }
 
-    fn get_pi_mask(&self, ceiling: u32) -> u32 {
+    fn get_pi_mask(&self, ceiling: TaskId) -> u32 {
         let mut mask = 0;
         if ceiling < 32 {
             mask = (1 << (ceiling + 1)) - 1;
@@ -95,7 +95,7 @@ impl ResourceManager {
         self.system_ceiling = self.pi_stack[self.top - 1];
     }
 
-    fn push_stack(&mut self, ceiling: u32) {
+    fn push_stack(&mut self, ceiling: TaskId) {
         self.pi_stack[self.top] = ceiling as i32;
         self.system_ceiling = ceiling as i32;
         self.top += 1;

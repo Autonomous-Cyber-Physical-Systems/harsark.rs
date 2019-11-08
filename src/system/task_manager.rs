@@ -2,14 +2,16 @@ use crate::config::MAX_TASKS;
 use crate::KernelError;
 use crate::utils::arch::get_msb;
 use cortex_m_semihosting::hprintln;
+use crate::types::BooleanVector;
+use crate::system::types::TaskId;
 
 #[repr(C)]
 pub struct Scheduler {
     pub curr_tid: usize,
     pub is_running: bool,
     pub task_control_blocks: [Option<TaskControlBlock>; MAX_TASKS],
-    pub blocked_tasks: u32,
-    pub active_tasks: u32,
+    pub blocked_tasks: BooleanVector,
+    pub active_tasks: BooleanVector,
     pub is_preemptive: bool,
     pub started: bool,
 }
@@ -110,20 +112,20 @@ impl Scheduler {
         return Ok(());
     }
 
-    pub fn block_tasks(&mut self, tasks_mask: u32) {
+    pub fn block_tasks(&mut self, tasks_mask: BooleanVector) {
         self.blocked_tasks |= tasks_mask;
     }
 
-    pub fn unblock_tasks(&mut self, tasks_mask: u32) {
+    pub fn unblock_tasks(&mut self, tasks_mask: BooleanVector) {
         self.blocked_tasks &= !tasks_mask;
     }
 
-    pub fn get_next_tid(&self) -> usize {
+    pub fn get_next_tid(&self) -> TaskId {
         let mask = self.active_tasks & !self.blocked_tasks;
-        return get_msb(mask);
+        return get_msb(mask) as TaskId;
     }
 
-    pub fn release(&mut self, tasks_mask: u32) {
+    pub fn release(&mut self, tasks_mask: BooleanVector) {
         self.active_tasks |= tasks_mask;
     }
 }

@@ -1,12 +1,13 @@
 use crate::config::SEMAPHORE_COUNT;
 use crate::KernelError;
-use crate::system::types::SemaphoreId;
+use crate::system::types::{SemaphoreId, TaskId};
 use cortex_m_semihosting::hprintln;
+use crate::types::BooleanVector;
 
 #[derive(Clone, Copy)]
 pub struct SemaphoreControlBlock {
-    pub flags: u32,
-    pub tasks: u32,
+    pub flags: BooleanVector,
+    pub tasks: BooleanVector,
 }
 
 pub struct SemaphoresTable {
@@ -15,20 +16,20 @@ pub struct SemaphoresTable {
 }
 
 impl SemaphoreControlBlock {
-    pub fn new(tasks: u32) -> Self {
+    pub fn new(tasks: BooleanVector) -> Self {
         Self {
             flags: 0,
             tasks
         }
     }
-    pub fn signal_and_release(&mut self, tasks_mask: u32) -> Result<u32, KernelError> {
+    pub fn signal_and_release(&mut self, tasks_mask: BooleanVector) -> Result<u32, KernelError> {
         self.flags |= tasks_mask;
         return Ok(self.tasks);
     }
-    pub fn test_and_reset(&mut self, curr_pid: u32) -> Result<bool, KernelError> {
-        let curr_pid_mask = 1 << curr_pid;
-        if self.flags & curr_pid_mask == curr_pid_mask {
-            self.flags &= !curr_pid_mask;
+    pub fn test_and_reset(&mut self, curr_tid: TaskId) -> Result<bool, KernelError> {
+        let curr_tid_mask = 1 << curr_tid;
+        if self.flags & curr_tid_mask == curr_tid_mask {
+            self.flags &= !curr_tid_mask;
             return Ok(true);
         } else {
             return Ok(false);
@@ -43,7 +44,7 @@ impl SemaphoresTable {
             curr: 0,
         }
     }
-    pub fn add_semaphore(&mut self, task_mask: u32) -> Result<SemaphoreId, KernelError> {
+    pub fn add_semaphore(&mut self, task_mask: BooleanVector) -> Result<SemaphoreId, KernelError> {
         if self.curr >= SEMAPHORE_COUNT {
             return Err(KernelError::LimitExceeded);
         }
@@ -56,7 +57,7 @@ impl SemaphoresTable {
     pub fn signal_and_release(
         &mut self,
         sem_id: SemaphoreId,
-        tasks_mask: u32,
+        tasks_mask: BooleanVector,
     ) -> Result<u32, KernelError> {
         if let Some(sem) = &mut self.table[sem_id] {
             sem.signal_and_release(tasks_mask)
@@ -68,7 +69,7 @@ impl SemaphoresTable {
     pub fn test_and_reset(
         &mut self,
         sem_id: SemaphoreId,
-        curr_pid: u32,
+        curr_pid: TaskId,
     ) -> Result<bool, KernelError> {
         if let Some(sem) = &mut self.table[sem_id] {
             sem.test_and_reset(curr_pid)

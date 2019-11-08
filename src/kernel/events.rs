@@ -64,7 +64,7 @@ pub fn new_OnOff(is_enabled: bool) -> Result<EventId, KernelError> {
             Ok(event_manager.borrow(cs_token).borrow_mut().create(
                 is_enabled,
                 EventType::OnOff,
-                10,
+                0,
                 EventTableType::OnOff,
             ))
         })

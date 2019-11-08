@@ -57,9 +57,13 @@ impl EventIndexTable {
         }
     }
 
-    pub fn add(&mut self, id: EventId) {
+    pub fn add(&mut self, id: EventId) -> Result<(),KernelError> {
+        if self.curr >= EVENT_INDEX_TABLE_COUNT {
+            return Err(KernelError::LimitExceeded);
+        }
         self.table[self.curr] = Some(id);
         self.curr += 1;
+        Ok(())
     }
 }
 

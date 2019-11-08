@@ -11,7 +11,7 @@ use crate::system::task_manager::*;
 use cortex_m::Peripherals;
 
 use crate::utils::arch::is_privileged;
-use crate::system::types::TaskId;
+use crate::system::types::{TaskId, BooleanVector};
 
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
@@ -33,9 +33,9 @@ pub fn init(is_preemptive: bool) {
 }
 
 // The below section just sets up the timer and starts it.
-pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(), KernelError> {
+pub fn start_kernel(peripherals: &mut Peripherals, tick_interval: u32) -> Result<(), KernelError> {
     priv_execute!({
-        let syst = &mut perif.SYST;
+        let syst = &mut peripherals.SYST;
         syst.set_clock_source(SystClkSource::Core);
         syst.set_reload(tick_interval);
         syst.enable_counter();
@@ -47,14 +47,14 @@ pub fn start_kernel(perif: &mut Peripherals, tick_interval: u32) -> Result<(), K
 }
 
 pub fn create_task<T: Sized>(
-    priority: usize,
+    priority: TaskId,
     stack: &mut [u32],
     handler_fn: fn(&T) -> !,
     param: &T,
 ) -> Result<(), KernelError>
     where T: Sync {
     priv_execute!({
-        execute_critical(|_| unsafe { all_tasks.create_task(priority, stack, handler_fn, param) })
+        execute_critical(|_| unsafe { all_tasks.create_task(priority as usize, stack, handler_fn, param) })
     })
 }
 
@@ -70,10 +70,10 @@ pub fn preempt() -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
         let next_tid = handler.get_next_tid();
-        let curr_tid = handler.curr_tid;
+        let curr_tid = handler.curr_tid as TaskId;
         if handler.is_running {
             if curr_tid != next_tid {
-                context_switch(curr_tid, next_tid);
+                context_switch(curr_tid as usize, next_tid as usize);
             }
         }
         return Ok(());
@@ -104,20 +104,20 @@ pub fn is_preemptive() -> bool {
     execute_critical(|_| unsafe { all_tasks.is_preemptive })
 }
 
-pub fn get_curr_tid() -> usize {
+pub fn get_curr_tid() -> TaskId {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
-        return handler.curr_tid;
+        return handler.curr_tid as TaskId;
     })
 }
 
-pub fn block_tasks(tasks_mask: u32) {
+pub fn block_tasks(tasks_mask: BooleanVector) {
     execute_critical(|_| unsafe {
         all_tasks.block_tasks(tasks_mask);
     })
 }
 
-pub fn unblock_tasks(tasks_mask: u32) {
+pub fn unblock_tasks(tasks_mask: BooleanVector) {
     execute_critical(|_| unsafe {
         all_tasks.unblock_tasks(tasks_mask);
     })
@@ -131,7 +131,7 @@ pub fn task_exit() {
     schedule()
 }
 
-pub fn release(tasks_mask: u32) {
+pub fn release(tasks_mask: BooleanVector) {
     execute_critical(|_|
         unsafe { all_tasks.release(tasks_mask) }
     );
