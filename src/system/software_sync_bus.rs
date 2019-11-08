@@ -1,8 +1,8 @@
 use crate::config::SEMAPHORE_COUNT;
-use crate::KernelError;
 use crate::system::types::{SemaphoreId, TaskId};
-use cortex_m_semihosting::hprintln;
 use crate::types::BooleanVector;
+use crate::KernelError;
+use cortex_m_semihosting::hprintln;
 
 #[derive(Clone, Copy)]
 pub struct SemaphoreControlBlock {
@@ -17,10 +17,7 @@ pub struct SemaphoresTable {
 
 impl SemaphoreControlBlock {
     pub fn new(tasks: BooleanVector) -> Self {
-        Self {
-            flags: 0,
-            tasks
-        }
+        Self { flags: 0, tasks }
     }
     pub fn signal_and_release(&mut self, tasks_mask: BooleanVector) -> Result<u32, KernelError> {
         self.flags |= tasks_mask;

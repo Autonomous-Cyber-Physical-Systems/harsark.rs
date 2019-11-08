@@ -1,8 +1,8 @@
 use crate::config::MAX_RESOURCES;
-use crate::KernelError;
 use crate::utils::arch::get_msb;
+use crate::KernelError;
 
-use crate::system::types::{ResourceId, TaskId, BooleanVector};
+use crate::system::types::{BooleanVector, ResourceId, TaskId};
 use cortex_m_semihosting::hprintln;
 
 const PI: i32 = -1;
@@ -64,7 +64,7 @@ impl ResourceManager {
         if ceiling as i32 > self.system_ceiling {
             self.push_stack(ceiling);
 
-            let mask = self.get_pi_mask(ceiling)  & !(1 << curr_tid);
+            let mask = self.get_pi_mask(ceiling) & !(1 << curr_tid);
             return Some(mask);
         }
         return None;

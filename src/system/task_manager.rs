@@ -1,9 +1,9 @@
 use crate::config::MAX_TASKS;
-use crate::KernelError;
-use crate::utils::arch::get_msb;
-use cortex_m_semihosting::hprintln;
-use crate::types::BooleanVector;
 use crate::system::types::TaskId;
+use crate::types::BooleanVector;
+use crate::utils::arch::get_msb;
+use crate::KernelError;
+use cortex_m_semihosting::hprintln;
 
 #[repr(C)]
 pub struct Scheduler {
@@ -46,15 +46,15 @@ impl Scheduler {
             This is the default task, that just puts the board for a power-save mode
             until any event (interrupt/exception) occurs.
         */
-            self.create_task(
-                0,
-                unsafe { &mut stack0 },
-                |_| loop {
-                    cortex_m::asm::wfe();
-                },
-                &0,
-            )
-            .unwrap();
+        self.create_task(
+            0,
+            unsafe { &mut stack0 },
+            |_| loop {
+                cortex_m::asm::wfe();
+            },
+            &0,
+        )
+        .unwrap();
     }
 
     // The below section just sets up the timer and starts it.
@@ -69,7 +69,9 @@ impl Scheduler {
         handler_fn: fn(&T) -> !,
         param: &T,
     ) -> Result<(), KernelError>
-        where T: Sync {
+    where
+        T: Sync,
+    {
         match self.create_tcb(stack, handler_fn, param) {
             Ok(tcb) => {
                 self.insert_tcb(priority, tcb)?;
@@ -85,7 +87,9 @@ impl Scheduler {
         handler: fn(&T) -> !,
         param: &T,
     ) -> Result<TaskControlBlock, KernelError>
-        where T: Sync {
+    where
+        T: Sync,
+    {
         if stack.len() < 32 {
             return Err(KernelError::StackTooSmall);
         }

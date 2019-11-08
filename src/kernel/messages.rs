@@ -1,10 +1,10 @@
 //use core::alloc::
 
-use crate::KernelError;
 use crate::utils::arch::is_privileged;
+use crate::KernelError;
 
-use crate::priv_execute;
 use crate::kernel::tasks::{get_curr_tid, release};
+use crate::priv_execute;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
 use cortex_m::interrupt::{free as execute_critical, CriticalSection};
@@ -36,7 +36,10 @@ impl<T: Sized> Message<T> {
             if let Some(msg) = msg {
                 self.inner.replace(msg);
             }
-            let mask = MessageTable.borrow(cs_token).borrow_mut().broadcast(self.id)?;
+            let mask = MessageTable
+                .borrow(cs_token)
+                .borrow_mut()
+                .broadcast(self.id)?;
             release(mask);
             Ok(())
         })
@@ -59,7 +62,10 @@ impl<T: Sized> Message<T> {
 
 pub fn broadcast(msg_id: MessageId) -> Result<(), KernelError> {
     execute_critical(|cs_token| {
-        let mask = MessageTable.borrow(cs_token).borrow_mut().broadcast(msg_id)?;
+        let mask = MessageTable
+            .borrow(cs_token)
+            .borrow_mut()
+            .broadcast(msg_id)?;
         release(mask);
         Ok(())
     })

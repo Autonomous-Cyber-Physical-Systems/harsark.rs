@@ -19,8 +19,9 @@ pub fn is_privileged() -> bool {
         asm!("mrs $0, CONTROL"
             : "=r"(val)
             :
-        )};
-    !((val&1) == 1)
+        )
+    };
+    !((val & 1) == 1)
 }
 
 pub fn svc_call() {
@@ -30,7 +31,7 @@ pub fn svc_call() {
 }
 
 pub fn pendSV_handler() {
-        unsafe{
+    unsafe {
         asm!(
             "
             /* Disable interrupts: */

@@ -1,9 +1,9 @@
-use crate::KernelError;
-use crate::utils::arch::is_privileged;
+use crate::kernel::tasks::{get_curr_tid, release};
+use crate::priv_execute;
 use crate::system::software_sync_bus;
 use crate::system::software_sync_bus::*;
-use crate::priv_execute;
-use crate::kernel::tasks::{get_curr_tid, release};
+use crate::utils::arch::is_privileged;
+use crate::KernelError;
 use core::borrow::BorrowMut;
 use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
@@ -37,6 +37,11 @@ pub fn test_and_reset(sem_id: SemaphoreId) -> Result<bool, KernelError> {
 
 pub fn new(tasks_mask: u32) -> Result<SemaphoreId, KernelError> {
     priv_execute!({
-        execute_critical(|cs_token| SCB_table.borrow(cs_token).borrow_mut().add_semaphore(tasks_mask))
+        execute_critical(|cs_token| {
+            SCB_table
+                .borrow(cs_token)
+                .borrow_mut()
+                .add_semaphore(tasks_mask)
+        })
     })
 }

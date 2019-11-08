@@ -1,17 +1,17 @@
 use crate::KernelError;
 
-use crate::utils::arch::svc_call;
 use crate::priv_execute;
+use crate::system::task_manager::*;
+use crate::utils::arch::svc_call;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 use cortex_m::register::control::Npriv;
 use cortex_m_semihosting::hprintln;
-use crate::system::task_manager::*;
 
 use cortex_m::Peripherals;
 
+use crate::system::types::{BooleanVector, TaskId};
 use crate::utils::arch::is_privileged;
-use crate::system::types::{TaskId, BooleanVector};
 
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
@@ -52,9 +52,13 @@ pub fn create_task<T: Sized>(
     handler_fn: fn(&T) -> !,
     param: &T,
 ) -> Result<(), KernelError>
-    where T: Sync {
+where
+    T: Sync,
+{
     priv_execute!({
-        execute_critical(|_| unsafe { all_tasks.create_task(priority as usize, stack, handler_fn, param) })
+        execute_critical(|_| unsafe {
+            all_tasks.create_task(priority as usize, stack, handler_fn, param)
+        })
     })
 }
 
@@ -132,15 +136,11 @@ pub fn task_exit() {
 }
 
 pub fn release(tasks_mask: BooleanVector) {
-    execute_critical(|_|
-        unsafe { all_tasks.release(tasks_mask) }
-    );
+    execute_critical(|_| unsafe { all_tasks.release(tasks_mask) });
 }
 
 pub fn enable_preemption() {
-    execute_critical(|_|
-        unsafe { all_tasks.is_preemptive = true }
-    )
+    execute_critical(|_| unsafe { all_tasks.is_preemptive = true })
 }
 
 pub fn disable_preemption() {

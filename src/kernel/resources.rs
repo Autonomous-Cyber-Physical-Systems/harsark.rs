@@ -1,12 +1,12 @@
 use crate::config::MAX_TASKS;
-use core::cell::{RefCell};
-use cortex_m::interrupt::free as execute_critical;
-use cortex_m::interrupt::Mutex;
-use crate::KernelError;
-use crate::utils::arch::is_privileged;
+use crate::priv_execute;
 use crate::system::resource_manager::ResourceManager;
 use crate::system::types::ResourceId;
-use crate::priv_execute;
+use crate::utils::arch::is_privileged;
+use crate::KernelError;
+use core::cell::RefCell;
+use cortex_m::interrupt::free as execute_critical;
+use cortex_m::interrupt::Mutex;
 
 use crate::kernel::tasks::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 
@@ -71,7 +71,7 @@ impl<T> Resource<T> {
 
 pub fn new<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, KernelError> {
     // External interrupts and Privileged tasks have a priority of 0
-    let tasks_mask = tasks_mask | 1<<0;
+    let tasks_mask = tasks_mask | 1 << 0;
     priv_execute!({
         execute_critical(|cs_token| {
             let id = resources_list

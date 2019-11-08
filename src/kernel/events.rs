@@ -1,14 +1,13 @@
-use crate::system::event_manager::*;
-use crate::utils::arch::is_privileged;
-use crate::system::types::{EventId, SemaphoreId};
 use crate::priv_execute;
+use crate::system::event_manager::*;
+use crate::system::types::{EventId, SemaphoreId};
+use crate::utils::arch::is_privileged;
 
 use crate::KernelError;
 use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 use cortex_m::register::control::Npriv;
-
 
 pub use crate::system::event_manager::{EventTableType, EventType};
 
@@ -41,7 +40,7 @@ pub fn enable_event(event_id: EventId) {
     })
 }
 
-pub fn new_FreeRunning (
+pub fn new_FreeRunning(
     is_enabled: bool,
     threshold: u8,
     event_counter_type: EventTableType,

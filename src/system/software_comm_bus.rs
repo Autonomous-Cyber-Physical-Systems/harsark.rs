@@ -1,8 +1,8 @@
 #![feature(const_fn)]
 
-use crate::config::{MESSAGE_COUNT};
-use crate::KernelError;
+use crate::config::MESSAGE_COUNT;
 use crate::system::software_sync_bus::SemaphoreControlBlock;
+use crate::KernelError;
 
 use crate::system::types::{MessageId, SemaphoreId, TaskId};
 use crate::types::BooleanVector;

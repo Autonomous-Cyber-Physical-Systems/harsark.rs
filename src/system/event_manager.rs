@@ -1,9 +1,9 @@
 use crate::config::{EVENT_COUNT, EVENT_INDEX_TABLE_COUNT};
 use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE_SIGNAL};
-use crate::system::types::{EventId, MessageId, SemaphoreId};
 use crate::kernel::messages::broadcast;
-use crate::kernel::tasks::release;
 use crate::kernel::semaphores::signal_and_release;
+use crate::kernel::tasks::release;
+use crate::system::types::{EventId, MessageId, SemaphoreId};
 use crate::utils::errors::KernelError;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -57,7 +57,7 @@ impl EventIndexTable {
         }
     }
 
-    pub fn add(&mut self, id: EventId) -> Result<(),KernelError> {
+    pub fn add(&mut self, id: EventId) -> Result<(), KernelError> {
         if self.curr >= EVENT_INDEX_TABLE_COUNT {
             return Err(KernelError::LimitExceeded);
         }
@@ -213,7 +213,12 @@ impl EventManager {
         return id;
     }
 
-    pub fn set_semaphore(&mut self, event_id: EventId, sem: SemaphoreId, tasks_mask: u32) -> Result<(),KernelError> {
+    pub fn set_semaphore(
+        &mut self,
+        event_id: EventId,
+        sem: SemaphoreId,
+        tasks_mask: u32,
+    ) -> Result<(), KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_SIGNAL;
         if event.semaphore.is_none() {
@@ -229,7 +234,7 @@ impl EventManager {
         Ok(())
     }
 
-    pub fn set_tasks(&mut self, event_id: EventId, tasks_mask: u32) -> Result<(),KernelError> {
+    pub fn set_tasks(&mut self, event_id: EventId, tasks_mask: u32) -> Result<(), KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_RELEASE;
         if event.tasks.is_none() {
@@ -240,7 +245,7 @@ impl EventManager {
         Ok(())
     }
 
-    pub fn set_message(&mut self, event_id: EventId, msg_id: usize) -> Result<(),KernelError> {
+    pub fn set_message(&mut self, event_id: EventId, msg_id: usize) -> Result<(), KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_SEND_MSG;
         if event.msg_index.is_none() {
@@ -251,7 +256,7 @@ impl EventManager {
         Ok(())
     }
 
-    pub fn set_next_event(&mut self, event_id: EventId, next: EventId) -> Result<(),KernelError> {
+    pub fn set_next_event(&mut self, event_id: EventId, next: EventId) -> Result<(), KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_ENABLE_EVENT;
         if event.next_event.is_none() {
