@@ -189,8 +189,11 @@ impl EventManager {
         event_type: EventType,
         threshold: u8,
         event_counter_type: EventTableType,
-    ) -> EventId {
+    ) -> Result<EventId,KernelError> {
         let id = self.curr;
+        if id >= self.event_table.len() {
+            return Err(KernelError::LimitExceeded)
+        }
         self.event_table[id] = Some(Event {
             is_enabled,
             event_type,
@@ -210,7 +213,7 @@ impl EventManager {
             EventTableType::OnOff => self.onoff_event_table.add(self.curr),
         };
         self.curr += 1;
-        return id;
+        return Ok(id);
     }
 
     pub fn set_semaphore(

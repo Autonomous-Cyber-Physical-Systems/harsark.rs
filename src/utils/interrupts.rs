@@ -6,10 +6,6 @@ use crate::system::time_manager::TickType;
 use crate::utils::arch::pendSV_handler;
 use cortex_m_rt::exception;
 
-static mut M_SEC: u32 = 0;
-static mut SEC: u32 = 0;
-static mut MIN: u32 = 0;
-
 // SysTick Exception handler
 #[exception]
 fn SysTick() {

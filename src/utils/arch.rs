@@ -1,5 +1,5 @@
 pub fn get_msb(val: u32) -> usize {
-    let mut res ;
+    let mut res;
     unsafe {
         asm!("clz $1, $0"
         : "=r"(res)

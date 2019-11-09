@@ -21,10 +21,6 @@ pub static mut all_tasks: Scheduler = Scheduler::new();
 static mut os_curr_task: &TaskControlBlock = &empty_task;
 #[no_mangle]
 static mut os_next_task: &TaskControlBlock = &empty_task;
-
-pub static mut os_curr_task_id: usize = 0;
-pub static mut os_next_task_id: usize = 0;
-
 // end GLOBALS
 
 /// Initialize the switcher system
@@ -90,7 +86,6 @@ fn context_switch(curr: usize, next: usize) {
     if handler.started {
         unsafe {
             os_curr_task = task_curr.as_ref().unwrap();
-            os_curr_task_id = curr;
         }
     } else {
         handler.started = true;
@@ -99,7 +94,6 @@ fn context_switch(curr: usize, next: usize) {
     let task_next = &handler.task_control_blocks[next];
     unsafe {
         os_next_task = task_next.as_ref().unwrap();
-        os_curr_task_id = next;
         cortex_m::peripheral::SCB::set_pendsv();
     }
 }

@@ -26,7 +26,7 @@ macro_rules! spawn {
 #[macro_export]
 macro_rules! priv_execute {
     ($handler: block) => {
-        match is_privileged() {
+        return match is_privileged() {
             false => Err(KernelError::AccessDenied),
             true => $handler,
         }

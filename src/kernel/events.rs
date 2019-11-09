@@ -43,7 +43,7 @@ pub fn new_FreeRunning(
                 EventType::FreeRunning,
                 threshold,
                 event_counter_type,
-            ))
+            )?)
         })
     })
 }
@@ -56,7 +56,7 @@ pub fn new_OnOff(is_enabled: bool) -> Result<EventId, KernelError> {
                 EventType::OnOff,
                 0,
                 EventTableType::OnOff,
-            ))
+            )?)
         })
     })
 }
@@ -72,8 +72,7 @@ pub fn set_semaphore(
                 .borrow(cs_token)
                 .borrow_mut()
                 .set_semaphore(event_id, sem, tasks_mask)
-        });
-        Ok(())
+        })
     })
 }
 
@@ -84,8 +83,7 @@ pub fn set_tasks(event_id: EventId, tasks: u32) -> Result<(), KernelError> {
                 .borrow(cs_token)
                 .borrow_mut()
                 .set_tasks(event_id, tasks)
-        });
-        Ok(())
+        })
     })
 }
 
@@ -96,8 +94,7 @@ pub fn set_message(event_id: EventId, msg_id: usize) -> Result<(), KernelError> 
                 .borrow(cs_token)
                 .borrow_mut()
                 .set_message(event_id, msg_id)
-        });
-        Ok(())
+        })
     })
 }
 
@@ -108,7 +105,6 @@ pub fn set_next_event(event_id: EventId, next: EventId) -> Result<(), KernelErro
                 .borrow(cs_token)
                 .borrow_mut()
                 .set_next_event(event_id, next)
-        });
-        Ok(())
+        })
     })
 }
