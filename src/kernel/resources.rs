@@ -1,7 +1,7 @@
 
 use crate::priv_execute;
 use crate::system::resource_manager::ResourceManager;
-use crate::system::types::ResourceId;
+use crate::system::types::{ResourceId, BooleanVector};
 use crate::utils::arch::is_privileged;
 use crate::KernelError;
 use core::cell::RefCell;
@@ -69,7 +69,7 @@ impl<T> Resource<T> {
     }
 }
 
-pub fn new<T: Sized>(resource: T, tasks_mask: u32) -> Result<Resource<T>, KernelError> {
+pub fn new<T: Sized>(resource: T, tasks_mask: BooleanVector) -> Result<Resource<T>, KernelError> {
     // External interrupts and Privileged tasks have a priority of 0
     let tasks_mask = tasks_mask | 1 << 0;
     priv_execute!({

@@ -9,12 +9,12 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
 
-use crate::system::types::SemaphoreId;
+use crate::system::types::{SemaphoreId, BooleanVector};
 
 static SCB_table: Mutex<RefCell<SemaphoresTable>> =
     Mutex::new(RefCell::new(SemaphoresTable::new()));
 
-pub fn signal_and_release(sem_id: SemaphoreId, tasks_mask: u32) -> Result<(), KernelError> {
+pub fn signal_and_release(sem_id: SemaphoreId, tasks_mask: BooleanVector) -> Result<(), KernelError> {
     execute_critical(|cs_token| {
         let mask = SCB_table
             .borrow(cs_token)
@@ -34,7 +34,7 @@ pub fn test_and_reset(sem_id: SemaphoreId) -> Result<bool, KernelError> {
     })
 }
 
-pub fn new(tasks_mask: u32) -> Result<SemaphoreId, KernelError> {
+pub fn new(tasks_mask: BooleanVector) -> Result<SemaphoreId, KernelError> {
     priv_execute!({
         execute_critical(|cs_token| {
             SCB_table

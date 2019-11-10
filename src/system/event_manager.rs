@@ -3,7 +3,7 @@ use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE
 use crate::kernel::messages::broadcast;
 use crate::kernel::semaphores::signal_and_release;
 use crate::kernel::tasks::release;
-use crate::system::types::{EventId, MessageId, SemaphoreId};
+use crate::system::types::{EventId, MessageId, SemaphoreId, BooleanVector};
 use crate::utils::errors::KernelError;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -29,7 +29,7 @@ pub struct Event {
     counter: u8,
     opcode: u8,
     semaphore: Option<SemaphoreId>,
-    tasks: Option<u32>,
+    tasks: Option<BooleanVector>,
     msg_index: Option<MessageId>,
     next_event: Option<EventId>,
 }
@@ -220,7 +220,7 @@ impl EventManager {
         &mut self,
         event_id: EventId,
         sem: SemaphoreId,
-        tasks_mask: u32,
+        tasks_mask: BooleanVector,
     ) -> Result<(), KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_SIGNAL;
@@ -237,7 +237,7 @@ impl EventManager {
         Ok(())
     }
 
-    pub fn set_tasks(&mut self, event_id: EventId, tasks_mask: u32) -> Result<(), KernelError> {
+    pub fn set_tasks(&mut self, event_id: EventId, tasks_mask: BooleanVector) -> Result<(), KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_RELEASE;
         if event.tasks.is_none() {
@@ -248,7 +248,7 @@ impl EventManager {
         Ok(())
     }
 
-    pub fn set_message(&mut self, event_id: EventId, msg_id: usize) -> Result<(), KernelError> {
+    pub fn set_message(&mut self, event_id: EventId, msg_id: MessageId) -> Result<(), KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_SEND_MSG;
         if event.msg_index.is_none() {

@@ -1,6 +1,6 @@
 use crate::priv_execute;
 use crate::system::event_manager::*;
-use crate::system::types::{EventId, SemaphoreId};
+use crate::system::types::{EventId, SemaphoreId, MessageId, BooleanVector};
 use crate::utils::arch::is_privileged;
 
 use crate::KernelError;
@@ -64,7 +64,7 @@ pub fn new_OnOff(is_enabled: bool) -> Result<EventId, KernelError> {
 pub fn set_semaphore(
     event_id: EventId,
     sem: SemaphoreId,
-    tasks_mask: u32,
+    tasks_mask: BooleanVector,
 ) -> Result<(), KernelError> {
     priv_execute!({
         execute_critical(|cs_token| {
@@ -76,7 +76,7 @@ pub fn set_semaphore(
     })
 }
 
-pub fn set_tasks(event_id: EventId, tasks: u32) -> Result<(), KernelError> {
+pub fn set_tasks(event_id: EventId, tasks: BooleanVector) -> Result<(), KernelError> {
     priv_execute!({
         execute_critical(|cs_token| {
             event_manager
@@ -87,7 +87,7 @@ pub fn set_tasks(event_id: EventId, tasks: u32) -> Result<(), KernelError> {
     })
 }
 
-pub fn set_message(event_id: EventId, msg_id: usize) -> Result<(), KernelError> {
+pub fn set_message(event_id: EventId, msg_id: MessageId) -> Result<(), KernelError> {
     priv_execute!({
         execute_critical(|cs_token| {
             event_manager
