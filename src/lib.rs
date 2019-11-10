@@ -1,6 +1,17 @@
 #![no_std]
 #![feature(asm)]
 #![feature(const_fn)]
+#![feature(lang_items)]
+
+#[cfg(feature="alloc")]
+pub extern crate alloc;
+#[cfg(feature="alloc")]
+extern crate alloc_cortex_m;
+
+#[macro_use]
+extern crate cortex_m_rt;
+
+
 #[allow(non_upper_case_globals)]
 
 mod config;
@@ -63,3 +74,6 @@ pub mod tasks {
 pub mod time {
     pub use crate::kernel::time::*;
 }
+
+#[cfg(feature="alloc")]
+pub use crate::utils::heap as heap;
