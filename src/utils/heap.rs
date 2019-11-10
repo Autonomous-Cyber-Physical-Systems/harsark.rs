@@ -9,9 +9,8 @@ static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
 use cortex_m_rt;
 
-pub fn init_heap() {
+pub fn init_heap(size: usize) {
     let start = cortex_m_rt::heap_start() as usize;
-    let size = 1024; // in bytes
     unsafe { ALLOCATOR.init(start, size) }
 }
 
