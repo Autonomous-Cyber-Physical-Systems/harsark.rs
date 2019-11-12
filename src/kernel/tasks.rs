@@ -18,9 +18,9 @@ static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 // GLOBALS:
 pub static mut all_tasks: Scheduler = Scheduler::new();
 #[no_mangle]
-static mut os_curr_task: &TaskControlBlock = &empty_task;
+pub static mut os_curr_task: &TaskControlBlock = &empty_task;
 #[no_mangle]
-static mut os_next_task: &TaskControlBlock = &empty_task;
+pub static mut os_next_task: &TaskControlBlock = &empty_task;
 // end GLOBALS
 
 /// Initialize the switcher system

@@ -1,3 +1,5 @@
+use crate::kernel::tasks::{os_curr_task, os_next_task};
+use cortex_m_semihosting::hprintln;
 pub fn get_msb(val: u32) -> usize {
     let mut res;
     unsafe {
@@ -31,6 +33,9 @@ pub fn svc_call() {
 }
 
 pub fn pendSV_handler() {
+    let curr: usize = unsafe{core::intrinsics::transmute(os_curr_task)};
+    let next: usize = unsafe{core::intrinsics::transmute(os_next_task)};
+//    hprintln!();
     unsafe {
         asm!(
             "
@@ -82,13 +87,12 @@ pub fn pendSV_handler() {
 	subs	r0, #16
 
 	/* Save current task's SP: */
-	ldr	r2, =os_curr_task
-	ldr	r1, [r2]
+	mov	r0, $1
+	ldr	r1, [r0]
 	str	r0, [r1]
 
 	/* Load next task's SP: */
-	ldr	r2, =os_next_task
-	ldr	r1, [r2]
+	mov	r1, $0
 	ldr	r0, [r1]
 
 	/* Load registers R4-R11 (32 bytes) from the new PSP and make the PSP
@@ -110,6 +114,9 @@ pub fn pendSV_handler() {
 
 	bx	r0
             "
+            :
+            : "r"(next), "r"(curr)
+            : "r0", "r1"
         )
     };
 }
