@@ -3,5 +3,5 @@ pub mod errors;
 pub mod helpers;
 pub mod interrupts;
 
-#[cfg(feature="alloc")]
+#[cfg(feature = "alloc")]
 pub mod heap;

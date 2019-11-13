@@ -1,15 +1,14 @@
+use cortex_m_rt::exception;
+
 use crate::kernel::events::sweep_event_table;
 use crate::kernel::tasks::{is_preemptive, schedule};
-use crate::kernel::time::{tick};
+use crate::kernel::time::tick;
 use crate::system::event_manager::EventTableType;
 use crate::system::time_manager::TickType;
 use crate::utils::arch::pendSV_handler;
-use cortex_m_rt::exception;
 
-// SysTick Exception handler
 #[exception]
 fn SysTick() {
-    // hprintln!("{:?}", cortex_m::register::control::read().npriv());
     if is_preemptive() {
         schedule();
     }

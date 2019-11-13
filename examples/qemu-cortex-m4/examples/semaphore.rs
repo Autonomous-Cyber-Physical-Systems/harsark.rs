@@ -4,17 +4,16 @@
 extern crate panic_halt;
 extern crate stm32f4;
 
-
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::util::generate_task_mask;
 use hartex_rust::tasks::*;
+use hartex_rust::util::generate_task_mask;
 
-use hartex_rust::semaphores;
 use hartex_rust::resources;
-use hartex_rust::types::*;
+use hartex_rust::semaphores;
 use hartex_rust::spawn;
+use hartex_rust::types::*;
 
 struct app {
     sem1: SemaphoreId,
@@ -56,5 +55,9 @@ fn main() -> ! {
 
     init(true);
     release(generate_task_mask(&[task2, task3]));
-    start_kernel(unsafe{&mut peripherals.access().unwrap().borrow_mut()}, 150_000);loop {}
+    start_kernel(
+        unsafe { &mut peripherals.access().unwrap().borrow_mut() },
+        150_000,
+    );
+    loop {}
 }

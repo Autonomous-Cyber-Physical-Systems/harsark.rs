@@ -4,7 +4,6 @@ use crate::types::BooleanVector;
 use crate::utils::arch::get_msb;
 use crate::KernelError;
 
-
 #[repr(C)]
 pub struct Scheduler {
     pub curr_tid: usize,

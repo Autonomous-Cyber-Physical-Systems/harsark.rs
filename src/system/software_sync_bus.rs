@@ -3,7 +3,6 @@ use crate::system::types::{SemaphoreId, TaskId};
 use crate::types::BooleanVector;
 use crate::KernelError;
 
-
 #[derive(Clone, Copy)]
 pub struct SemaphoreControlBlock {
     pub flags: BooleanVector,

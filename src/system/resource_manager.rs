@@ -1,9 +1,7 @@
 use crate::config::MAX_RESOURCES;
 use crate::utils::arch::get_msb;
 use crate::KernelError;
-
 use crate::system::types::{BooleanVector, ResourceId, TaskId};
-
 
 const PI: i32 = -1;
 

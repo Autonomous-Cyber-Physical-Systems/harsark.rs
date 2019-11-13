@@ -8,25 +8,21 @@ extern crate panic_halt;
 extern crate stm32f4;
 
 use core::cell::RefCell;
-use hartex_rust::alloc;
-use alloc::vec::Vec;
-use hartex_rust::heap::init_heap;
-
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
+use alloc::vec::Vec;
 
-use hartex_rust::util::generate_task_mask;
-use hartex_rust::tasks::*;
+use hartex_rust::alloc;
+use hartex_rust::heap::init_heap;
 use hartex_rust::resources;
-use hartex_rust::semaphores;
-use hartex_rust::types::*;
+use hartex_rust::tasks::*;
+use hartex_rust::util::generate_task_mask;
 use hartex_rust::spawn;
+use hartex_rust::types::*;
 
-lazy_static!{
-    static ref resource1: Resource<RefCell<Vec<u32>>> = resources::new(
-        RefCell::new(Vec::new()),
-        generate_task_mask(&[1,2]))
-        .unwrap();
+lazy_static! {
+    static ref resource1: Resource<RefCell<Vec<u32>>> =
+        resources::new(RefCell::new(Vec::new()), generate_task_mask(&[1, 2])).unwrap();
 }
 
 #[entry]
@@ -59,5 +55,9 @@ fn main() -> ! {
 
     init(true);
     release(generate_task_mask(&[task1, task2]));
-    start_kernel(unsafe{&mut peripherals.access().unwrap().borrow_mut()}, 150_000);loop {}
+    start_kernel(
+        unsafe { &mut peripherals.access().unwrap().borrow_mut() },
+        150_000,
+    );
+    loop {}
 }

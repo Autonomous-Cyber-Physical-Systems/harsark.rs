@@ -29,6 +29,6 @@ macro_rules! priv_execute {
         return match is_privileged() {
             false => Err(KernelError::AccessDenied),
             true => $handler,
-        }
+        };
     };
 }

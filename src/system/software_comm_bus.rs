@@ -1,9 +1,8 @@
 use crate::config::MESSAGE_COUNT;
 use crate::system::software_sync_bus::SemaphoreControlBlock;
-use crate::KernelError;
-
 use crate::system::types::{MessageId, SemaphoreId, TaskId};
 use crate::types::BooleanVector;
+use crate::KernelError;
 
 #[derive(Clone, Copy)]
 pub struct MessageControlBlock {
