@@ -1,13 +1,12 @@
 #![feature(alloc)]
 #![feature(global_allocator)]
 
+use cortex_m_rt;
 use alloc::alloc::Layout;
 use alloc_cortex_m::CortexMHeap;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
-
-use cortex_m_rt;
 
 pub fn init_heap(size: usize) {
     let start = cortex_m_rt::heap_start() as usize;

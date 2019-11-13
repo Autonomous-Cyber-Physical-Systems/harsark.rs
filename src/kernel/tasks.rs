@@ -1,15 +1,11 @@
-use crate::KernelError;
+use cortex_m::interrupt::free as execute_critical;
+use cortex_m::peripheral::syst::SystClkSource;
+use cortex_m::Peripherals;
 
+use crate::KernelError;
 use crate::priv_execute;
 use crate::system::task_manager::*;
 use crate::utils::arch::svc_call;
-use cortex_m::interrupt::free as execute_critical;
-use cortex_m::peripheral::syst::SystClkSource;
-
-
-
-use cortex_m::Peripherals;
-
 use crate::system::types::{BooleanVector, TaskId};
 use crate::utils::arch::is_privileged;
 

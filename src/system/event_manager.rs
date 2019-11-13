@@ -3,7 +3,7 @@ use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE
 use crate::kernel::messages::broadcast;
 use crate::kernel::semaphores::signal_and_release;
 use crate::kernel::tasks::release;
-use crate::system::types::{EventId, MessageId, SemaphoreId, BooleanVector};
+use crate::system::types::{BooleanVector, EventId, MessageId, SemaphoreId};
 use crate::utils::errors::KernelError;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -189,10 +189,10 @@ impl EventManager {
         event_type: EventType,
         threshold: u8,
         event_counter_type: EventTableType,
-    ) -> Result<EventId,KernelError> {
+    ) -> Result<EventId, KernelError> {
         let id = self.curr;
         if id >= self.event_table.len() {
-            return Err(KernelError::LimitExceeded)
+            return Err(KernelError::LimitExceeded);
         }
         self.event_table[id] = Some(Event {
             is_enabled,
@@ -237,7 +237,11 @@ impl EventManager {
         Ok(())
     }
 
-    pub fn set_tasks(&mut self, event_id: EventId, tasks_mask: BooleanVector) -> Result<(), KernelError> {
+    pub fn set_tasks(
+        &mut self,
+        event_id: EventId,
+        tasks_mask: BooleanVector,
+    ) -> Result<(), KernelError> {
         let event = &mut self.event_table[event_id].as_mut().unwrap();
         event.opcode |= OPCODE_RELEASE;
         if event.tasks.is_none() {

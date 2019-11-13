@@ -1,15 +1,15 @@
-use crate::priv_execute;
-use crate::system::event_manager::*;
-use crate::system::types::{EventId, SemaphoreId, MessageId, BooleanVector};
-use crate::utils::arch::is_privileged;
-
-use crate::KernelError;
 use core::cell::RefCell;
+
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
+use crate::priv_execute;
+use crate::system::event_manager::*;
+use crate::system::types::{BooleanVector, EventId, MessageId, SemaphoreId};
+use crate::utils::arch::is_privileged;
+use crate::KernelError;
 
-pub use crate::system::event_manager::{EventTableType, EventType};
+use crate::system::event_manager::{EventTableType, EventType};
 
 static event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));
 

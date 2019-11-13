@@ -1,29 +1,24 @@
 #![no_std]
 #![no_main]
 
+#[macro_use]
+extern crate lazy_static;
 extern crate panic_halt;
 extern crate stm32f4;
 
-#[macro_use]
-extern crate lazy_static;
-
 use core::cell::RefCell;
 
+use cortex_m::peripheral::NVIC;
 use cortex_m_rt::entry;
-
-
-use stm32f4::stm32f407::{self, Peripherals};
 use stm32f4::stm32f407::interrupt;
+use stm32f4::stm32f407::{self, Peripherals};
 
 use hartex_rust::events;
-use hartex_rust::util::generate_task_mask;
-
-use hartex_rust::tasks::*;
 use hartex_rust::resources;
-
-use hartex_rust::types::*;
 use hartex_rust::spawn;
-use cortex_m::peripheral::NVIC;
+use hartex_rust::tasks::*;
+use hartex_rust::types::*;
+use hartex_rust::util::generate_task_mask;
 
 struct AppState {
     peripherals: Resource<RefCell<Peripherals>>,
@@ -33,7 +28,11 @@ struct AppState {
 
 lazy_static! {
     static ref globals: AppState = AppState {
-        peripherals: resources::new(RefCell::new(Peripherals::take().unwrap()), generate_task_mask(&[1,2])).unwrap(),
+        peripherals: resources::new(
+            RefCell::new(Peripherals::take().unwrap()),
+            generate_task_mask(&[1, 2])
+        )
+        .unwrap(),
         event_led1: events::new_OnOff(true).unwrap(),
         event_led2: events::new_OnOff(true).unwrap(),
     };
@@ -96,7 +95,6 @@ fn peripherals_init(peripherals: &mut Peripherals) {
     gpioa
         .pupdr
         .write(|w| w.pupdr6().pull_up().pupdr7().pull_up());
-
 }
 
 #[interrupt]
@@ -137,30 +135,34 @@ fn main() -> ! {
         params.peripherals.acquire(|perf| {
             let perf = perf.borrow_mut();
             perf.GPIOA.odr.modify(|r, w| {
-            let led2 = r.odr6().bit();
-            if led2 {
-                w.odr6().clear_bit()
-            } else {
-                w.odr6().set_bit()
-            }
-        });
+                let led2 = r.odr6().bit();
+                if led2 {
+                    w.odr6().clear_bit()
+                } else {
+                    w.odr6().set_bit()
+                }
+            });
         });
     });
     spawn!(task2, 2, stack2, params, globals, {
         params.peripherals.acquire(|perf| {
             let perf = perf.borrow_mut();
             perf.GPIOA.odr.modify(|r, w| {
-            let led3 = r.odr7().bit();
-            if led3 {
-                w.odr7().clear_bit()
-            } else {
-                w.odr7().set_bit()
-            }
-        });
+                let led3 = r.odr7().bit();
+                if led3 {
+                    w.odr7().clear_bit()
+                } else {
+                    w.odr7().set_bit()
+                }
+            });
         });
     });
 
     init(true);
     release(0);
-    start_kernel(unsafe{&mut peripherals.access().unwrap().borrow_mut()}, 150_000);loop {}
+    start_kernel(
+        unsafe { &mut peripherals.access().unwrap().borrow_mut() },
+        150_000,
+    );
+    loop {}
 }

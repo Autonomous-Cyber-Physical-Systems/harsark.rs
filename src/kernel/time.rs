@@ -1,7 +1,9 @@
-use crate::system::time_manager::{TickType, Time};
 use core::cell::RefCell;
+
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
+
+use crate::system::time_manager::{TickType, Time};
 
 static CURR_TIME: Mutex<RefCell<Time>> = Mutex::new(RefCell::new(Time::new()));
 

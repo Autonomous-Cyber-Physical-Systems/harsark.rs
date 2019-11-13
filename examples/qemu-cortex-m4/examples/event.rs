@@ -4,19 +4,17 @@
 extern crate panic_halt;
 extern crate stm32f4;
 
-
-
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
 use hartex_rust::events;
-use hartex_rust::util::generate_task_mask;
 use hartex_rust::messages;
-use hartex_rust::tasks::*;
 use hartex_rust::resources;
 use hartex_rust::semaphores;
-use hartex_rust::types::*;
 use hartex_rust::spawn;
+use hartex_rust::tasks::*;
+use hartex_rust::types::*;
+use hartex_rust::util::generate_task_mask;
 
 struct app {
     sem2: SemaphoreId,
@@ -29,7 +27,12 @@ fn main() -> ! {
 
     let app_inst = app {
         sem2: semaphores::new(generate_task_mask(&[task2])).unwrap(),
-        msg1: messages::new(generate_task_mask(&[task3]), generate_task_mask(&[task3]), [9, 10]).unwrap(),
+        msg1: messages::new(
+            generate_task_mask(&[task3]),
+            generate_task_mask(&[task3]),
+            [9, 10],
+        )
+        .unwrap(),
     };
 
     let e1 = events::new_FreeRunning(true, 1, EventTableType::Sec).unwrap();
@@ -74,5 +77,9 @@ fn main() -> ! {
 
     init(true);
     release(task1);
-    start_kernel(unsafe{&mut peripherals.access().unwrap().borrow_mut()}, 150_000);loop {}
+    start_kernel(
+        unsafe { &mut peripherals.access().unwrap().borrow_mut() },
+        150_000,
+    );
+    loop {}
 }

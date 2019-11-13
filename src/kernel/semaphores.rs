@@ -1,20 +1,23 @@
-use crate::kernel::tasks::{get_curr_tid, release};
-use crate::priv_execute;
-
-use crate::system::software_sync_bus::*;
-use crate::utils::arch::is_privileged;
-use crate::KernelError;
 use core::cell::RefCell;
+
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
+use crate::kernel::tasks::{get_curr_tid, release};
+use crate::priv_execute;
+use crate::system::software_sync_bus::*;
+use crate::utils::arch::is_privileged;
+use crate::KernelError;
 
-use crate::system::types::{SemaphoreId, BooleanVector};
+use crate::system::types::{BooleanVector, SemaphoreId};
 
 static SCB_table: Mutex<RefCell<SemaphoresTable>> =
     Mutex::new(RefCell::new(SemaphoresTable::new()));
 
-pub fn signal_and_release(sem_id: SemaphoreId, tasks_mask: BooleanVector) -> Result<(), KernelError> {
+pub fn signal_and_release(
+    sem_id: SemaphoreId,
+    tasks_mask: BooleanVector,
+) -> Result<(), KernelError> {
     execute_critical(|cs_token| {
         let mask = SCB_table
             .borrow(cs_token)
