@@ -169,7 +169,7 @@ impl EventManager {
             release(event.tasks.unwrap());
         }
         if event.opcode & OPCODE_ENABLE_EVENT == OPCODE_ENABLE_EVENT {
-            self.enable_event(event_id);
+            self.enable_event(event.next_event.unwrap());
         }
     }
 
