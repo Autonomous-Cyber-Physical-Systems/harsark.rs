@@ -15,7 +15,11 @@ use hartex_rust::semaphores;
 use hartex_rust::spawn;
 use hartex_rust::types::*;
 
-struct app {
+/*
+The tasks can take only one argument, hence in case multiple variables have to be passed
+then they must be encapsulated into a single struct.
+*/
+struct AppState {
     sem1: SemaphoreId,
     sem2: SemaphoreId,
 }
@@ -24,7 +28,11 @@ struct app {
 fn main() -> ! {
     let peripherals = resources::init_peripherals().unwrap();
 
-    let app_inst = app {
+    /*
+        Instance of AppState whose reference will be shared to all tasks.
+        sem1 is a Semaphore that releases task1 on being signalled, similarly sem2 signals task2.
+    */
+    let app_inst = AppState {
         sem1: semaphores::new(generate_task_mask(&[task1])).unwrap(),
         sem2: semaphores::new(generate_task_mask(&[task2])).unwrap(),
     };
@@ -38,6 +46,7 @@ fn main() -> ! {
         semaphores::signal_and_release(params.sem2, generate_task_mask(&[task2]));
         hprintln!("TASK 1: End");
     });
+
     spawn!(task2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
         if semaphores::test_and_reset(params.sem2).unwrap() {
@@ -47,6 +56,7 @@ fn main() -> ! {
         }
         hprintln!("TASK 2: End");
     });
+
     spawn!(task3, 3, stack3, params, app_inst, {
         hprintln!("TASK 3: Enter");
         semaphores::signal_and_release(params.sem1, 0);

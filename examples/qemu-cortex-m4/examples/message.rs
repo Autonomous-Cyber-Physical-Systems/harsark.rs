@@ -15,7 +15,7 @@ use hartex_rust::tasks::*;
 use hartex_rust::types::*;
 use hartex_rust::util::generate_task_mask;
 
-struct app {
+struct AppState {
     sem3: SemaphoreId,
     msg1: Message<[u32; 2]>,
 }
@@ -24,11 +24,11 @@ struct app {
 fn main() -> ! {
     let peripherals = resources::init_peripherals().unwrap();
 
-    let app_inst = app {
+    let app_inst = AppState {
         sem3: semaphores::new(generate_task_mask(&[3])).unwrap(),
         msg1: messages::new(
             generate_task_mask(&[task2]),
-            generate_task_mask(&[task2, task3]),
+            generate_task_mask(&[task2]),
             [9, 10],
         )
         .unwrap(),
