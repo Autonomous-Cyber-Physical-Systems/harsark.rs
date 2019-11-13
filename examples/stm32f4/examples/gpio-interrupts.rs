@@ -105,7 +105,7 @@ fn EXTI3() {
         let peripherals = &mut peripherals.borrow_mut();
         peripherals.EXTI.pr.write(|w| w.pr3().set_bit());
     });
-    events::enable_event(0);
+    events::enable_event(globals.event_led1);
 }
 
 #[interrupt]
@@ -114,7 +114,7 @@ fn EXTI4() {
         let peripherals = &mut peripherals.borrow_mut();
         peripherals.EXTI.pr.write(|w| w.pr4().set_bit());
     });
-    events::enable_event(1);
+    events::enable_event(globals.event_led2);
 }
 
 #[entry]
@@ -128,7 +128,7 @@ fn main() -> ! {
 
     events::set_tasks(globals.event_led1, generate_task_mask(&[task1]));
 
-    events::set_tasks(globals.event_led1, generate_task_mask(&[task2]));
+    events::set_tasks(globals.event_led2, generate_task_mask(&[task2]));
 
     static mut stack1: [u32; 300] = [0; 300];
     static mut stack2: [u32; 300] = [0; 300];
