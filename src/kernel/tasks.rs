@@ -3,10 +3,10 @@ use crate::KernelError;
 use crate::priv_execute;
 use crate::system::task_manager::*;
 use crate::utils::arch::svc_call;
-use cortex_m::interrupt::free as execute_critical;
 use cortex_m::peripheral::syst::SystClkSource;
 
-
+use cortex_m::interrupt::{Mutex, free as execute_critical};
+use core::cell::RefCell;
 
 use cortex_m::Peripherals;
 
@@ -17,11 +17,10 @@ static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
 // GLOBALS:
 pub static mut all_tasks: Scheduler = Scheduler::new();
-#[no_mangle]
-pub static mut os_curr_task: &TaskControlBlock = &empty_task;
-#[no_mangle]
-pub static mut os_next_task: &TaskControlBlock = &empty_task;
 // end GLOBALS
+
+pub static os_curr_task_id: Mutex<RefCell<usize>> = Mutex::new(RefCell::new(0));
+pub static os_next_task_id: Mutex<RefCell<usize>> = Mutex::new(RefCell::new(0));
 
 /// Initialize the switcher system
 pub fn init(is_preemptive: bool) {
@@ -81,21 +80,19 @@ pub fn preempt() -> Result<(), KernelError> {
 }
 
 fn context_switch(curr: usize, next: usize) {
-    let handler = unsafe { &mut all_tasks };
-    let task_curr = &handler.task_control_blocks[curr];
-    if handler.started {
-        unsafe {
-            os_curr_task = task_curr.as_ref().unwrap();
+    execute_critical(|cs_token| {
+        let handler = unsafe { &mut all_tasks };
+        if handler.started {
+            os_curr_task_id.borrow(cs_token).replace(curr);
+        } else {
+            handler.started = true;
         }
-    } else {
-        handler.started = true;
-    }
-    handler.curr_tid = next;
-    let task_next = &handler.task_control_blocks[next];
-    unsafe {
-        os_next_task = task_next.as_ref().unwrap();
-        cortex_m::peripheral::SCB::set_pendsv();
-    }
+        handler.curr_tid = next;
+        os_next_task_id.borrow(cs_token).replace(next);
+        unsafe {
+            cortex_m::peripheral::SCB::set_pendsv();
+        }
+    })
 }
 
 pub fn is_preemptive() -> bool {

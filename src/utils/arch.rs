@@ -1,5 +1,8 @@
-use crate::kernel::tasks::{os_curr_task, os_next_task};
+use crate::kernel::tasks::{os_curr_task_id, os_next_task_id, all_tasks};
+use crate::system::task_manager::TaskControlBlock;
+
 use cortex_m_semihosting::hprintln;
+use cortex_m::interrupt::free as execute_critical;
 pub fn get_msb(val: u32) -> usize {
     let mut res;
     unsafe {
@@ -32,10 +35,21 @@ pub fn svc_call() {
     }
 }
 
+static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
+
 pub fn pendSV_handler() {
-    let curr: usize = unsafe{core::intrinsics::transmute(os_curr_task)};
-    let next: usize = unsafe{core::intrinsics::transmute(os_next_task)};
-//    hprintln!();
+    execute_critical(|cs_token| {
+
+        let curr_tid: usize = *os_curr_task_id.borrow(cs_token).borrow();
+        let next_tid: usize = *os_next_task_id.borrow(cs_token).borrow();
+
+        let next_task = unsafe { all_tasks.task_control_blocks[next_tid].as_ref().unwrap() };
+        let mut curr_task = &empty_task;
+        if unsafe{ all_tasks.started } {
+            curr_task = unsafe { all_tasks.task_control_blocks[curr_tid].as_ref().unwrap() };
+        }
+
+
     unsafe {
         asm!(
             "
@@ -115,8 +129,9 @@ pub fn pendSV_handler() {
 	bx	r0
             "
             :
-            : "r"(next), "r"(curr)
+            : "r"(next_task), "r"(curr_task)
             : "r0", "r1"
         )
     };
+    });
 }

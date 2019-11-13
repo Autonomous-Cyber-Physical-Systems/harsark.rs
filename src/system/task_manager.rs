@@ -3,7 +3,7 @@ use crate::system::types::TaskId;
 use crate::types::BooleanVector;
 use crate::utils::arch::get_msb;
 use crate::KernelError;
-
+use cortex_m_semihosting::hprintln;
 
 #[repr(C)]
 pub struct Scheduler {
