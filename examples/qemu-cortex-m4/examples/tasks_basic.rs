@@ -22,6 +22,8 @@ fn main() -> ! {
     static mut stack1: [u32; 300] = [0; 300];
     static mut stack2: [u32; 300] = [0; 300];
     static mut stack3: [u32; 300] = [0; 300];
+    static mut stack4: [u32; 300] = [0; 300];
+    static mut stack5: [u32; 300] = [0; 300];
 
     spawn!(task1, 1, stack1, {
         hprintln!("TASK 1");
@@ -32,9 +34,15 @@ fn main() -> ! {
     spawn!(task3, 3, stack3, {
         hprintln!("TASK 3");
     });
+    spawn!(task4, 4, stack4, {
+        hprintln!("TASK 4");
+    });
+    spawn!(task5, 5, stack5, {
+        hprintln!("TASK 5");
+    });
 
     init(true);
-    release(generate_task_mask(&[task1, task2, task3]));
+    release(generate_task_mask(&[task1, task2, task3, task4, task5]));
 
     start_kernel(unsafe {&mut peripherals.access().unwrap().borrow_mut()}, 150_000);
 

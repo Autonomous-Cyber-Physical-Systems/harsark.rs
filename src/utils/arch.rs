@@ -1,3 +1,8 @@
+use crate::kernel::tasks::{os_curr_task_id, os_next_task_id, scheduler};
+use crate::system::task_manager::TaskControlBlock;
+
+use cortex_m_semihosting::hprintln;
+use cortex_m::interrupt::free as execute_critical;
 pub fn get_msb(val: u32) -> usize {
     let mut res;
     unsafe {
@@ -30,7 +35,22 @@ pub fn svc_call() {
     }
 }
 
+static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
+
 pub fn pendSV_handler() {
+    execute_critical(|cs_token| {
+
+        let curr_tid: usize = *os_curr_task_id.borrow(cs_token).borrow();
+        let next_tid: usize = *os_next_task_id.borrow(cs_token).borrow();
+        let scheduler_inst = scheduler.borrow(cs_token).borrow_mut();
+        let next_task = unsafe { scheduler_inst.task_control_blocks[next_tid].as_ref().unwrap() };
+        let curr_task = unsafe { scheduler_inst.task_control_blocks[curr_tid].as_ref().unwrap() };
+//        let mut curr_task = &empty_task;
+//        if unsafe{ scheduler_inst.started } {
+//        }
+        hprintln!("{} {}", curr_tid, next_tid);
+
+
     unsafe {
         asm!(
             "
@@ -82,13 +102,12 @@ pub fn pendSV_handler() {
 	subs	r0, #16
 
 	/* Save current task's SP: */
-	ldr	r2, =os_curr_task
-	ldr	r1, [r2]
+	mov	r0, $1
+	ldr	r1, [r0]
 	str	r0, [r1]
 
 	/* Load next task's SP: */
-	ldr	r2, =os_next_task
-	ldr	r1, [r2]
+	mov	r0, $0
 	ldr	r0, [r1]
 
 	/* Load registers R4-R11 (32 bytes) from the new PSP and make the PSP
@@ -110,6 +129,10 @@ pub fn pendSV_handler() {
 
 	bx	r0
             "
+            :
+            : "r"(next_task), "r"(curr_task)
+            : "r0", "r1"
         )
     };
+    });
 }
