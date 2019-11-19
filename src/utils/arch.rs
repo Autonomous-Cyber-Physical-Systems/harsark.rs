@@ -1,4 +1,4 @@
-use crate::kernel::tasks::{os_curr_task_id, os_next_task_id, all_tasks};
+use crate::kernel::tasks::{os_curr_task_id, os_next_task_id, scheduler};
 use crate::system::task_manager::TaskControlBlock;
 
 use cortex_m_semihosting::hprintln;
@@ -42,12 +42,13 @@ pub fn pendSV_handler() {
 
         let curr_tid: usize = *os_curr_task_id.borrow(cs_token).borrow();
         let next_tid: usize = *os_next_task_id.borrow(cs_token).borrow();
-
-        let next_task = unsafe { all_tasks.task_control_blocks[next_tid].as_ref().unwrap() };
-        let mut curr_task = &empty_task;
-        if unsafe{ all_tasks.started } {
-            curr_task = unsafe { all_tasks.task_control_blocks[curr_tid].as_ref().unwrap() };
-        }
+        let scheduler_inst = scheduler.borrow(cs_token).borrow_mut();
+        let next_task = unsafe { scheduler_inst.task_control_blocks[next_tid].as_ref().unwrap() };
+        let curr_task = unsafe { scheduler_inst.task_control_blocks[curr_tid].as_ref().unwrap() };
+//        let mut curr_task = &empty_task;
+//        if unsafe{ scheduler_inst.started } {
+//        }
+        hprintln!("{} {}", curr_tid, next_tid);
 
 
     unsafe {
@@ -106,7 +107,7 @@ pub fn pendSV_handler() {
 	str	r0, [r1]
 
 	/* Load next task's SP: */
-	mov	r1, $0
+	mov	r0, $0
 	ldr	r0, [r1]
 
 	/* Load registers R4-R11 (32 bytes) from the new PSP and make the PSP
