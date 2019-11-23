@@ -1,3 +1,5 @@
+//! Utility functions
+
 pub mod arch;
 pub mod errors;
 pub mod helpers;

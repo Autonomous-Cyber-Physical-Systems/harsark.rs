@@ -1,3 +1,5 @@
+//! Kernel configuration
+
 mod tasks_config {
     #[cfg(all(
         any(feature = "tasks_32", feature = "default"),

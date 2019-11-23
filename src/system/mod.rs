@@ -1,3 +1,5 @@
+//! Kernel Data-structures definitions.
+
 pub mod event_manager;
 pub mod resource_manager;
 pub mod software_comm_bus;

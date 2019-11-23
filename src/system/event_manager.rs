@@ -1,3 +1,6 @@
+//! ## Event Manager
+//! hello
+
 use crate::config::{EVENT_COUNT, EVENT_INDEX_TABLE_COUNT};
 use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE_SIGNAL};
 use crate::kernel::messages::broadcast;
