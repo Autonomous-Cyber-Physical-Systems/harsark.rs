@@ -1,31 +1,46 @@
+//! # Task Manager
+//! The Definition of Data-structures required for task management.
+//!
 use crate::config::MAX_TASKS;
 use crate::system::types::TaskId;
 use crate::types::BooleanVector;
 use crate::utils::arch::get_msb;
 use crate::KernelError;
 
+/// Task Scheduler
 #[repr(C)]
 pub struct Scheduler {
+    /// The Task id of the currently running task.
     pub curr_tid: usize,
+    /// True if the scheduler has started scheduling tasks on the CPU.
     pub is_running: bool,
+    /// An Array of task control blocks corresponding to each task (created only if task exists).
     pub task_control_blocks: [Option<TaskControlBlock>; MAX_TASKS],
+    /// A boolean vector in which, if a bit at a position is true, it implies that the task is active and to be scheduled.
     pub blocked_tasks: BooleanVector,
+    /// A boolean vector in which, if a bit at a position is true, it implies that the task is blocked and cannot be scheduled even if it’s active.
     pub active_tasks: BooleanVector,
+    /// A variable which decided if the scheduler should preemptively schedule tasks or not.
     pub is_preemptive: bool,
+    /// Set true as soon as the first task is scheduled.
     pub started: bool,
 }
 
-/// A single thread's state
+/// A single tasks's state
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct TaskControlBlock {
-    // fields used in assembly, do not reorder them
+    /// Holds a reference to the stack pointer for the task.
     pub sp: usize, // current stack pointer of this thread
 }
 
+/// Task stack for idle task (0 priority task)
 static mut stack0: [u32; 64] = [0; 64];
 
+
 impl Scheduler {
+
+    /// Returns a new instance of `Scheduler`
     pub const fn new() -> Self {
         Self {
             curr_tid: 0,
@@ -38,13 +53,11 @@ impl Scheduler {
         }
     }
 
-    /// Initialize the switcher system
+    /// This method sets the is_preemptive field of the scheduler instance and defines the configurations
+    /// for the idle task and calls create\_task with it. The waiting task has zero priority; hence,
+    /// it is only executed when no other task is in Ready state.
     pub fn init(&mut self, is_preemptive: bool) {
         self.is_preemptive = is_preemptive;
-        /*
-            This is the default task, that just puts the board for a power-save mode
-            until any event (interrupt/exception) occurs.
-        */
         self.create_task(
             0,
             unsafe { &mut stack0 },
@@ -56,11 +69,17 @@ impl Scheduler {
         .unwrap();
     }
 
-    // The below section just sets up the timer and starts it.
+    /// It sets the is_running field to true as kernel then starts scheduling tasks.
     pub fn start_kernel(&mut self) {
         self.is_running = true;
     }
 
+    /// The program counter for the task is pointer value of the function pointer (`handler_fn`). param is a variable whose reference will be made accessible to the task, and this helps in sharing global state with other tasks. Both these values are stored in a specific index of the stack so that when the context\_switch function loads the stack for this task, the appropriate program counter and argument for that function is loaded.
+    /// An important thing to note is that the task’s index in the `task_control_blocks` is the priority of the task. Hence there can be only one task of the mentioned priority. Also, another important thing is that the argument param is of a generic type(`T`).
+    ///
+    /// The `<T: Sync>` informs the compiler that the type `T` must implement the Sync trait. By implementing the Sync trait, a type becomes safe to be shared across tasks. Hence if a type that doesn’t implement Sync trait (like a mutable integer) is passed as param, then the code won’t compile. Kernel primitives like Message and Resource (which are data race safe) implement the Sync trait; hence, it can be passed as param. In this way, the Kernel makes safety a requirement rather than a choice.
+    ///
+    /// `handler_fn` is of type `fn(&T) -> !`, which implies it is a function pointer which takes a parameter of Type `&T` and infinitely loops. For more details, look into `spawn!` Macro.
     pub fn create_task<T: Sized>(
         &mut self,
         priority: usize,
@@ -80,6 +99,7 @@ impl Scheduler {
         }
     }
 
+    /// Creates a TCB corresponding to the tasks details passed onto this method.
     fn create_tcb<T: Sized>(
         &self,
         stack: &mut [u32],
@@ -107,6 +127,7 @@ impl Scheduler {
         Ok(tcb)
     }
 
+    /// Inserts the `TCB` into `task_control_blocks` at position `idx`.
     fn insert_tcb(&mut self, idx: usize, tcb: TaskControlBlock) -> Result<(), KernelError> {
         if idx >= MAX_TASKS {
             return Err(KernelError::NotFound);
@@ -115,19 +136,26 @@ impl Scheduler {
         return Ok(());
     }
 
+    /// Appends `tasks_mask` onto `blocked_tasks`.
     pub fn block_tasks(&mut self, tasks_mask: BooleanVector) {
         self.blocked_tasks |= tasks_mask;
     }
 
+    /// Removes `tasks_mask` from `blocked_tasks`.
     pub fn unblock_tasks(&mut self, tasks_mask: BooleanVector) {
         self.blocked_tasks &= !tasks_mask;
     }
 
+    /// Returns the TaskId currently high priority task, which is in ready state.
+    /// The highest priority is determined by calculating the most significant bit of boolean vector
+    /// corresponding to the tasks in the ready state. The tasks in the ready state can be identified
+    /// by the boolean and of `active_tasks` and boolean not(`blocked_tasks`).
     pub fn get_next_tid(&self) -> TaskId {
         let mask = self.active_tasks & !self.blocked_tasks;
         return get_msb(mask) as TaskId;
     }
 
+    /// Updates `active_tasks` with `task_mask`.
     pub fn release(&mut self, tasks_mask: BooleanVector) {
         self.active_tasks |= tasks_mask;
     }
