@@ -1,3 +1,8 @@
+//! # Machine specific
+//!
+//! Defines functions which are defined majorly in assembly. Thus, might change for one board to another.
+
+/// Returns the MSB of `val`. It is written using CLZ instruction.
 pub fn get_msb(val: u32) -> usize {
     let mut res;
     unsafe {
@@ -13,6 +18,7 @@ pub fn get_msb(val: u32) -> usize {
     return res;
 }
 
+/// Returns true if Currently the Kernel is operating in Privileged mode.
 pub fn is_privileged() -> bool {
     let val: u32;
     unsafe {
@@ -24,12 +30,14 @@ pub fn is_privileged() -> bool {
     !((val & 1) == 1)
 }
 
+/// Creates an SVC Interrupt
 pub fn svc_call() {
     unsafe {
         asm!("svc 1");
     }
 }
 
+/// PendSV interrupt handler does the actual context switch in the Kernel.
 pub fn pendSV_handler() {
     unsafe {
         asm!(

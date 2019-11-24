@@ -1,3 +1,7 @@
+//! # Heap Allocator
+//!
+//! The Kernel attaches an allocator only if the `alloc` feature flag is enabled.
+
 #![feature(alloc)]
 #![feature(global_allocator)]
 
