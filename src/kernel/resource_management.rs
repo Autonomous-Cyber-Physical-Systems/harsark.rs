@@ -11,7 +11,7 @@ use crate::system::resource_manager::ResourceManager;
 use crate::system::types::{BooleanVector, ResourceId};
 use crate::utils::arch::is_privileged;
 use crate::KernelError;
-use crate::kernel::tasks::{block_tasks, get_curr_tid, schedule, unblock_tasks};
+use crate::kernel::task_management::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 
 /// Global instance of Resource manager
 static resources_list: Mutex<RefCell<ResourceManager>> =

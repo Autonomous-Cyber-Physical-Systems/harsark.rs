@@ -8,7 +8,7 @@ use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
-use crate::kernel::tasks::{get_curr_tid, release};
+use crate::kernel::task_management::{get_curr_tid, release};
 use crate::priv_execute;
 use crate::system::software_sync_bus::*;
 use crate::utils::arch::is_privileged;

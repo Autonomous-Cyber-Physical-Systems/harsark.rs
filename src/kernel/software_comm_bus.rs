@@ -6,7 +6,7 @@
 use crate::utils::arch::is_privileged;
 use crate::KernelError;
 
-use crate::kernel::tasks::{get_curr_tid, release};
+use crate::kernel::task_management::{get_curr_tid, release};
 use crate::priv_execute;
 use core::cell::RefCell;
 use cortex_m::interrupt::Mutex;
