@@ -1,16 +1,28 @@
+//! Task communication bus definition
+//!
+//! Inter task communication also utilizes semaphores to release tasks and keep track of the tasks
+//! which can access the message and the tasks that have to be notified about the arrival of messages.
+
 use crate::config::MESSAGE_COUNT;
 use crate::system::software_sync_bus::SemaphoreControlBlock;
 use crate::system::types::{MessageId, SemaphoreId, TaskId};
 use crate::types::BooleanVector;
 use crate::KernelError;
 
+/// Holds details corresponding to a single message
 #[derive(Clone, Copy)]
 pub struct MessageControlBlock {
+    /// Boolean vector representing the receiver tasks.
     pub receivers: BooleanVector,
 }
 
+/// The message table stores the metadata of messages, i.e., which tasks are the receivers and which
+/// tasks are the supposed to be released when the message has been dispatched. Note that MessagingManager
+/// has its SemaphoresTable, which has the `signal_and_release` and `test_and_reset` methods in it.
 pub struct MessagingManager {
+    /// This array stores the MCB corresponding to each message.
     pub message_table: [Option<MessageControlBlock>; MESSAGE_COUNT],
+    ///  This array stores the SemaphoresTable, which is used to message metadata.
     pub semaphore_table: SemaphoresTable,
 }
 
@@ -62,13 +74,15 @@ impl SemaphoresTable {
 }
 
 impl<'a> MessagingManager {
+
+    /// Returns a new instance of `SemaphoresTable`
     pub const fn new() -> Self {
         Self {
             message_table: [None; MESSAGE_COUNT],
             semaphore_table: SemaphoresTable::new(),
         }
     }
-
+    /// The sender task calls this function, it broadcasts the message corresponding to `msg_id`.
     pub fn broadcast(&mut self, msg_id: MessageId) -> Result<u32, KernelError> {
         if self.message_table.get(msg_id).is_none() {
             return Err(KernelError::NotFound);
@@ -80,6 +94,7 @@ impl<'a> MessagingManager {
         return Ok(mask);
     }
 
+    /// The receiver task calls this function, it returns true or false based on if the message is available being read.
     pub fn receive(&'a mut self, msg_id: MessageId, curr_pid: TaskId) -> bool {
         match self.semaphore_table.test_and_reset(msg_id, curr_pid as u32) {
             Ok(res) if res == true => true,
@@ -87,6 +102,7 @@ impl<'a> MessagingManager {
         }
     }
 
+    /// Creates a new entry in the `mcb_table` and `scb_table` corresponding to a message.
     pub fn create(
         &mut self,
         tasks_mask: BooleanVector,
