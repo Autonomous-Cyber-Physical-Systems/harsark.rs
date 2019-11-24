@@ -1,6 +1,6 @@
-//~ # Event Management Module
-//~
-//~ Defines Kernel routines for Event Management.
+//! # Event Management Module
+//!
+//! Defines Kernel routines for Event Management.
 
 use core::cell::RefCell;
 

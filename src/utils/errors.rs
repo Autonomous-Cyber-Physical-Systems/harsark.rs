@@ -1,5 +1,8 @@
+//! Error Enum
+
 use core::fmt;
 
+/// Error Type for Kernel.
 pub enum KernelError {
     NotFound,
     StackTooSmall,
