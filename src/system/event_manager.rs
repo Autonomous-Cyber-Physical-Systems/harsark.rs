@@ -4,9 +4,9 @@
 
 use crate::config::{EVENT_COUNT, EVENT_INDEX_TABLE_COUNT};
 use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE_SIGNAL};
-use crate::kernel::messages::broadcast;
-use crate::kernel::semaphores::signal_and_release;
-use crate::kernel::tasks::release;
+use crate::kernel::software_comm_bus::broadcast;
+use crate::kernel::software_sync_bus::signal_and_release;
+use crate::kernel::task_management::release;
 use crate::system::types::{BooleanVector, EventId, MessageId, SemaphoreId};
 use crate::utils::errors::KernelError;
 
