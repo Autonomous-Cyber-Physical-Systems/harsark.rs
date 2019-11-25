@@ -15,7 +15,7 @@ pub struct SemaphoreControlBlock {
     pub tasks: BooleanVector,
 }
 
-/// Manages semaphores
+/// Maintains state of all Semaphores in the Kernel.
 pub struct SemaphoresTable {
     /// List of SemaphoreControlBlocks.
     table: [Option<SemaphoreControlBlock>; SEMAPHORE_COUNT],
