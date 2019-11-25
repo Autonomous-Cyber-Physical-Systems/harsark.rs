@@ -1,4 +1,4 @@
-//! Kernel Data-structures.
+//! Kernel Data-structures. `Private`
 
 pub mod event_manager;
 pub mod resource_manager;

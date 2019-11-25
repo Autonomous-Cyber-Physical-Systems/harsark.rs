@@ -1,4 +1,4 @@
-//! Utility functions
+//! Utility functions.  `Private`
 
 pub mod arch;
 pub mod errors;

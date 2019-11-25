@@ -7,7 +7,7 @@ use crate::types::BooleanVector;
 use crate::utils::arch::get_msb;
 use crate::KernelError;
 
-/// Task Scheduler
+/// Maintains state of all tasks in the Kernel
 #[repr(C)]
 pub struct Scheduler {
     /// The Task id of the currently running task.

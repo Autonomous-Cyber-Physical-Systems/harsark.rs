@@ -1,4 +1,4 @@
-//! Kernel configuration
+//! Kernel configuration.  `Private`
 
 mod tasks_config {
     #[cfg(all(

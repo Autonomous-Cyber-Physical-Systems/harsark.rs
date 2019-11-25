@@ -19,7 +19,7 @@ pub struct ResourceControlBlock {
     tasks_mask: BooleanVector,
 }
 
-/// Manages Resources
+/// Maintains state of all Resources in the Kernel.
 #[derive(Clone, Copy)]
 pub struct ResourceManager {
     /// An Array of ResourceControlBlock for every resource.
