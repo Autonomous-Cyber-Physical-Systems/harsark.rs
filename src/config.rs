@@ -117,21 +117,21 @@ mod message_config {
 
 mod event_config {
     #[cfg(all(
-        any(feature = "event_32", feature = "default"),
-        not(any(feature = "event_16", feature = "event_64"))
+        any(feature = "events_32", feature = "default"),
+        not(any(feature = "events_16", feature = "events_64"))
     ))]
     pub const EVENT_COUNT: usize = 32;
 
-    #[cfg(feature = "event_16")]
+    #[cfg(feature = "events_16")]
     pub const EVENT_COUNT: usize = 16;
 
-    #[cfg(feature = "event_64")]
+    #[cfg(feature = "events_64")]
     pub const EVENT_COUNT: usize = 64;
 
     #[cfg(any(
-        all(feature = "event_32", any(feature = "event_16", feature = "event_64")),
-        all(feature = "event_16", any(feature = "event_32", feature = "event_64")),
-        all(feature = "event_64", any(feature = "event_32", feature = "event_16")),
+        all(feature = "events_32", any(feature = "events_16", feature = "events_64")),
+        all(feature = "events_16", any(feature = "events_32", feature = "events_64")),
+        all(feature = "events_64", any(feature = "events_32", feature = "events_16")),
     ))]
     compile_error!("Features 'event_32','event_18' and 'event_64' are mutually exclusive.");
 }

@@ -26,14 +26,16 @@ static mut os_curr_task: &TaskControlBlock = &empty_task;
 static mut os_next_task: &TaskControlBlock = &empty_task;
 // end GLOBALS
 
-/// Initialize the switcher system
+/// Initializes the Kernel scheduler. `is_preemptive` defines if the Kernel should operating preemptively 
+/// or not. This method sets the `is_preemptive` field of the Scheduler instance and creates the idle task. 
+/// The idle task is created with zero priority; hence, it is only executed when no other task is in Ready state.
 pub fn init(is_preemptive: bool) {
     execute_critical(|_| unsafe { all_tasks.init(is_preemptive) })
 }
 
 /// Starts the Kernel scheduler, which starts scheduling tasks and starts the SysTick timer using the
 /// reference of the Peripherals instance and the `tick_interval`. `tick_interval` specifies the
-/// the frequency of the timer interrupt. The SysTick exception updates the kernel regarding the time
+/// frequency of the timer interrupt. The SysTick exception updates the kernel regarding the time
 /// elapsed, which is used to dispatch events and schedule tasks.
 pub fn start_kernel(peripherals: &mut Peripherals, tick_interval: u32) -> Result<(), KernelError> {
     priv_execute!({
@@ -77,7 +79,8 @@ pub fn schedule() {
     }
 }
 
-/// If the scheduler is running and the highest priority task and currently running task aren’t the same, then the context switch function is called.
+/// If the scheduler is running and the highest priority task and currently running task aren’t the same, 
+/// then the `context_switch()` is called.
 pub fn preempt() -> Result<(), KernelError> {
     execute_critical(|_| {
         let handler = unsafe { &mut all_tasks };
