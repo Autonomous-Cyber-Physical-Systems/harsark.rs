@@ -1,0 +1,1 @@
+initSidebarItems({"static":[["stack0","Task stack for idle task (0 priority task)"]],"struct":[["Scheduler","Maintains state of all tasks in the Kernel"],["TaskControlBlock","A single tasks's state"]]});
