@@ -1,0 +1,14 @@
+var ALIASES = {};
+ALIASES["aligned"] = {};
+ALIASES["as_slice"] = {};
+ALIASES["bare_metal"] = {};
+ALIASES["cortex_m"] = {};
+ALIASES["cortex_m_rt"] = {};
+ALIASES["cortex_m_semihosting"] = {};
+ALIASES["generic_array"] = {};
+ALIASES["hartex_rust"] = {};
+ALIASES["r0"] = {};
+ALIASES["stable_deref_trait"] = {};
+ALIASES["typenum"] = {};
+ALIASES["vcell"] = {};
+ALIASES["volatile_register"] = {};
