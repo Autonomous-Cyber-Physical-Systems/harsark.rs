@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["SemaphoreControlBlock","Semaphores form the core of synchronization and communication in the Kernel."],["SemaphoresTable","Maintains state of all Semaphores in the Kernel."]]});
