@@ -1,1 +1,0 @@
-initSidebarItems({"type":[["BooleanVector",""],["EventId",""],["MessageId",""],["ResourceId",""],["SemaphoreId",""],["TaskId",""]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["new","Returns an initialized Message Container."]]});

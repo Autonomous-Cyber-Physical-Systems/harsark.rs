@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["generate_task_mask","Takes a list of TaskIds and returns a BooleanVector corresponding to it."]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["hstderr","Construct a new handle to the host's standard error."],["hstdout","Construct a new handle to the host's standard output."]],"struct":[["HStderr","Host's standard error"],["HStdout","Host's standard output"]]});

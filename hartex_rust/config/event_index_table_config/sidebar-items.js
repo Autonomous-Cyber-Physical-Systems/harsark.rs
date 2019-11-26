@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["EVENT_INDEX_TABLE_COUNT",""]]});

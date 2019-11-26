@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["OPCODE_ENABLE_EVENT",""],["OPCODE_RELEASE",""],["OPCODE_SEND_MSG",""],["OPCODE_SIGNAL",""]],"mod":[["event_config",""],["event_index_table_config",""],["message_config",""],["resources_config",""],["semaphores_config",""],["tasks_config",""]]});

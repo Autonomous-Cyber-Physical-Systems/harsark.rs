@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["get_msb","Returns the MSB of `val`. It is written using CLZ instruction."],["is_privileged","Returns true if Currently the Kernel is operating in Privileged mode."],["pendSV_handler","PendSV interrupt handler does the actual context switch in the Kernel."],["svc_call","Creates an SVC Interrupt"]]});
