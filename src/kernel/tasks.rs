@@ -38,9 +38,10 @@ pub fn start_kernel(peripherals: &mut Peripherals, tick_interval: u32) -> Result
         syst.enable_interrupt();
 
         execute_critical(|cs_token| unsafe { scheduler.borrow(cs_token).borrow_mut().start_kernel() });
+        
         preempt();
         Ok(())
-    })
+    });
 }
 
 pub fn create_task<T: Sized>(
@@ -87,7 +88,6 @@ pub fn preempt()  {
     unsafe {
         cortex_m::peripheral::SCB::set_pendsv();
     }
-    hprintln!("done");
 }
 
 pub fn is_preemptive() -> bool {
@@ -116,7 +116,6 @@ pub fn unblock_tasks(tasks_mask: BooleanVector) {
 pub fn task_exit() {
 //    let curr_tid = get_curr_tid();
     execute_critical(|cs_token| {
-        hprintln!("wdfsdf");
         let handler = &mut scheduler.borrow(cs_token).borrow_mut();
         unsafe { handler.active_tasks &= !(1 << handler.curr_tid as u32) };
     });

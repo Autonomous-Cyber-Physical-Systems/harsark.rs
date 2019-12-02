@@ -43,19 +43,18 @@ pub fn pendSV_handler() {
         let curr_tid: usize = *os_curr_task_id.borrow(cs_token).borrow();
         let next_tid: usize = *os_next_task_id.borrow(cs_token).borrow();
         let scheduler_inst = scheduler.borrow(cs_token).borrow_mut();
-        let next_task = unsafe { scheduler_inst.task_control_blocks[next_tid].as_ref().unwrap() };
-        let curr_task = unsafe { scheduler_inst.task_control_blocks[curr_tid].as_ref().unwrap() };
-//        let mut curr_task = &empty_task;
-//        if unsafe{ scheduler_inst.started } {
-//        }
-        hprintln!("{} {}", curr_tid, next_tid);
+        let next_task = scheduler_inst.task_control_blocks[next_tid].as_ref().unwrap();
+        let curr_task = scheduler_inst.task_control_blocks[curr_tid].as_ref().unwrap();
+    //    let mut curr_task = &empty_task;
+    //    if scheduler_inst.started {
+// 
+    //    }
 
 
     unsafe {
         asm!(
             "
             /* Disable interrupts: */
-	cpsid	i
 
 	/*
 	Exception frame saved by the NVIC hardware onto stack:
@@ -108,7 +107,7 @@ pub fn pendSV_handler() {
 
 	/* Load next task's SP: */
 	mov	r0, $0
-	ldr	r0, [r1]
+	ldr	r0, [r0]
 
 	/* Load registers R4-R11 (32 bytes) from the new PSP and make the PSP
 	   point to the end of the exception stack frame. The NVIC hardware
@@ -121,13 +120,6 @@ pub fn pendSV_handler() {
 	ldmia	r0!,{r4-r7}
 	msr	psp, r0
 
-	/* EXC_RETURN - Thread mode with PSP: */
-	ldr r0, =0xFFFFFFFD
-
-	/* Enable interrupts: */
-	cpsie	i
-
-	bx	r0
             "
             :
             : "r"(next_task), "r"(curr_task)
@@ -135,4 +127,12 @@ pub fn pendSV_handler() {
         )
     };
     });
+
+	unsafe {
+		asm!("
+			ldr r0, =0xFFFFFFFD
+			bx r0
+		");
+	}
+
 }
