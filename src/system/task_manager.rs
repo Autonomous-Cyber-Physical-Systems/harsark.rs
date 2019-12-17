@@ -24,6 +24,57 @@ pub struct TaskControlBlock {
     pub sp: usize, // current stack pointer of this thread
 }
 
+impl TaskControlBlock {
+    pub fn save_context(&self) {
+        unsafe {
+            asm!("
+                mrs	r0, psp
+                subs	r0, #16
+                stmia	r0!,{r4-r7}
+                mov	r4, r8
+                mov	r5, r9
+                mov	r6, r10
+                mov	r7, r11
+                subs	r0, #32
+                stmia	r0!,{r4-r7}
+                subs	r0, #16
+
+                /* Save current task's SP: */
+                mov	r1, $0
+                str	r0, [r1]
+            "
+            :
+            : "r"(self)
+            : "r0", "r1"
+            );
+        }
+    }
+
+    pub fn load_context(&self) {
+        unsafe {
+            asm!("
+                mov	r0, $0
+                ldr	r0, [r0]
+
+                /* Load registers R4-R11 (32 bytes) from the new PSP and make the PSP
+                point to the end of the exception stack frame. The NVIC hardware
+                will restore remaining registers after returning from exception): */
+                ldmia	r0!,{r4-r7}
+                mov	r8, r4
+                mov	r9, r5
+                mov	r10, r6
+                mov	r11, r7
+                ldmia	r0!,{r4-r7}
+                msr	psp, r0
+            "
+            :
+            : "r"(self)
+            : "r0", "r1"
+            );
+        }
+    }
+}
+
 static mut stack0: [u32; 64] = [0; 64];
 
 impl Scheduler {

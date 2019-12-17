@@ -4,7 +4,6 @@ use crate::priv_execute;
 use crate::system::task_manager::*;
 use crate::utils::arch::svc_call;
 use cortex_m::peripheral::syst::SystClkSource;
-use crate::utils::arch::pendSV_handler;
 use cortex_m::interrupt::{Mutex, free as execute_critical};
 use core::cell::RefCell;
 
