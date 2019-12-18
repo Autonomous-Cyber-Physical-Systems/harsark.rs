@@ -22,6 +22,10 @@ struct app {
     msg1: Message<[u32; 2]>,
 }
 
+static mut stack1: [u32; 500] = [0; 500];
+static mut stack2: [u32; 500] = [0; 500];
+static mut stack3: [u32; 500] = [0; 500];
+
 #[entry]
 fn main() -> ! {
     let peripherals = resources::init_peripherals().unwrap();
@@ -36,9 +40,6 @@ fn main() -> ! {
         .unwrap(),
     };
 
-    static mut stack1: [u32; 300] = [0; 300];
-    static mut stack2: [u32; 300] = [0; 300];
-    static mut stack3: [u32; 300] = [0; 300];
 
     spawn!(task1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");

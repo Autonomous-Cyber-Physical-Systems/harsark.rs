@@ -9,7 +9,7 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
 use crate::kernel::tasks::{block_tasks, get_curr_tid, schedule, unblock_tasks};
-
+use cortex_m_semihosting::hprintln;
 
 
 static resources_list: Mutex<RefCell<ResourceManager>> =
@@ -49,11 +49,12 @@ impl<T> Resource<T> {
         execute_critical(|cs_token| {
             if let Some(mask) = resources_list.borrow(cs_token).borrow_mut().unlock(self.id) {
                 unblock_tasks(mask);
-                schedule();
+                // schedule()
             }
-        })
+        });
     }
 
+    #[inline(always)]
     pub fn acquire<F>(&self, handler: F)
     where
         F: Fn(&T),

@@ -24,7 +24,7 @@ pub static os_next_task_id: Mutex<RefCell<usize>> = Mutex::new(RefCell::new(0));
 
 /// Initialize the switcher system
 pub fn init(is_preemptive: bool) {
-    execute_critical(|cs_token| unsafe { scheduler.borrow(cs_token).borrow_mut().init(is_preemptive) })
+    execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().init(is_preemptive) )
 }
 
 // The below section just sets up the timer and starts it.
@@ -35,12 +35,10 @@ pub fn start_kernel(peripherals: &mut Peripherals, tick_interval: u32) -> Result
         syst.set_reload(tick_interval);
         syst.enable_counter();
         syst.enable_interrupt();
-
-        execute_critical(|cs_token| unsafe { scheduler.borrow(cs_token).borrow_mut().start_kernel() });
-        
+        execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().start_kernel()); 
         preempt();
         Ok(())
-    });
+    })
 }
 
 pub fn create_task<T: Sized>(
@@ -53,9 +51,7 @@ where
     T: Sync,
 {
     priv_execute!({
-        execute_critical(|cs_token| unsafe {
-            scheduler.borrow(cs_token).borrow_mut().create_task(priority as usize, stack, handler_fn, param)
-        })
+        execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().create_task(priority as usize, stack, handler_fn, param))
     })
 }
 
@@ -69,7 +65,7 @@ pub fn schedule() {
 
 pub fn preempt()  {
     execute_critical(|cs_token| {
-        let handler = unsafe { &mut scheduler.borrow(cs_token).borrow_mut() };
+        let handler = &mut scheduler.borrow(cs_token).borrow_mut();
         let next_tid = handler.get_next_tid() as usize;
         let curr_tid = handler.curr_tid as usize;
         if handler.is_running {
@@ -90,7 +86,7 @@ pub fn preempt()  {
 }
 
 pub fn is_preemptive() -> bool {
-    execute_critical(|cs_token| unsafe { scheduler.borrow(cs_token).borrow_mut().is_preemptive })
+    execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().is_preemptive)
 }
 
 pub fn get_curr_tid() -> TaskId {
@@ -101,36 +97,29 @@ pub fn get_curr_tid() -> TaskId {
 }
 
 pub fn block_tasks(tasks_mask: BooleanVector) {
-    execute_critical(|cs_token| unsafe {
-        scheduler.borrow(cs_token).borrow_mut().block_tasks(tasks_mask);
-    })
+    execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().block_tasks(tasks_mask))
 }
 
 pub fn unblock_tasks(tasks_mask: BooleanVector) {
-    execute_critical(|cs_token| unsafe {
-        scheduler.borrow(cs_token).borrow_mut().unblock_tasks(tasks_mask);
-    })
+    execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().unblock_tasks(tasks_mask))
 }
 
 pub fn task_exit() {
-//    let curr_tid = get_curr_tid();
     execute_critical(|cs_token| {
         let handler = &mut scheduler.borrow(cs_token).borrow_mut();
-        unsafe { handler.active_tasks &= !(1 << handler.curr_tid as u32) };
+        handler.active_tasks &= !(1 << handler.curr_tid as u32);
     });
     schedule()
 }
 
 pub fn release(tasks_mask: BooleanVector) {
-    execute_critical(|cs_token| unsafe { scheduler.borrow(cs_token).borrow_mut().release(tasks_mask) });
+    execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().release(tasks_mask));
 }
 
 pub fn enable_preemption() {
-    execute_critical(|cs_token| unsafe { scheduler.borrow(cs_token).borrow_mut().is_preemptive = true })
+    execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().is_preemptive = true)
 }
 
 pub fn disable_preemption() {
-    execute_critical(|cs_token| unsafe {
-        scheduler.borrow(cs_token).borrow_mut().is_preemptive = false;
-    })
+    execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().is_preemptive = false)
 }

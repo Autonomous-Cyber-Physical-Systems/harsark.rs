@@ -8,7 +8,6 @@ use core::cell::RefCell;
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
-
 pub use crate::system::event_manager::{EventTableType, EventType};
 
 static event_manager: Mutex<RefCell<EventManager>> = Mutex::new(RefCell::new(EventManager::new()));

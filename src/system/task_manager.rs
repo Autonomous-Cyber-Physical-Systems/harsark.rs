@@ -3,7 +3,7 @@ use crate::system::types::TaskId;
 use crate::types::BooleanVector;
 use crate::utils::arch::get_msb;
 use crate::KernelError;
-use cortex_m_semihosting::hprintln;
+
 
 #[repr(C)]
 pub struct Scheduler {
@@ -56,9 +56,6 @@ impl TaskControlBlock {
                 mov	r0, $0
                 ldr	r0, [r0]
 
-                /* Load registers R4-R11 (32 bytes) from the new PSP and make the PSP
-                point to the end of the exception stack frame. The NVIC hardware
-                will restore remaining registers after returning from exception): */
                 ldmia	r0!,{r4-r7}
                 mov	r8, r4
                 mov	r9, r5

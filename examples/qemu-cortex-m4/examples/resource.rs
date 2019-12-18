@@ -23,6 +23,11 @@ struct app {
     res2: Resource<[u32; 3]>,
 }
 
+static mut stack1: [u32; 256] = [0; 256];
+static mut stack2: [u32; 256] = [0; 256];
+static mut stack3: [u32; 256] = [0; 256];
+static mut stack4: [u32; 256] = [0; 256];
+
 #[entry]
 fn main() -> ! {
     let peripherals = resources::init_peripherals().unwrap();
@@ -34,10 +39,6 @@ fn main() -> ! {
         res2: resources::new([4, 5, 6], generate_task_mask(&[task4])).unwrap(),
     };
 
-    static mut stack1: [u32; 512] = [0; 512];
-    static mut stack2: [u32; 512] = [0; 512];
-    static mut stack3: [u32; 512] = [0; 512];
-    static mut stack4: [u32; 512] = [0; 512];
 
     spawn!(task1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
@@ -52,6 +53,7 @@ fn main() -> ! {
             hprintln!("TASK 2 : res1 : {:?}", res);
             semaphores::signal_and_release(params.sem3, 0);
             semaphores::signal_and_release(params.sem4, 0);
+            for _ in 0..9999 {};
             hprintln!("TASK 2 : task 3 and 4 dispatched");
         });
         hprintln!("TASK 2: End");
@@ -72,6 +74,6 @@ fn main() -> ! {
     });
 
     init(true);
-    release(generate_task_mask(&[task1, task2]));
+    release(generate_task_mask(&[task2,task1]));
     start_kernel(unsafe{&mut peripherals.access().unwrap().borrow_mut()}, 150_000);loop {}
 }
