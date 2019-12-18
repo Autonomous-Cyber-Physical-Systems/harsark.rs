@@ -53,7 +53,6 @@ fn main() -> ! {
             hprintln!("TASK 2 : res1 : {:?}", res);
             semaphores::signal_and_release(params.sem3, 0);
             semaphores::signal_and_release(params.sem4, 0);
-            for _ in 0..9999 {};
             hprintln!("TASK 2 : task 3 and 4 dispatched");
         });
         hprintln!("TASK 2: End");
