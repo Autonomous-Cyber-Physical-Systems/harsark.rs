@@ -36,7 +36,7 @@ pub fn start_kernel(peripherals: &mut Peripherals, tick_interval: u32) -> Result
         syst.enable_counter();
         syst.enable_interrupt();
         execute_critical(|cs_token| scheduler.borrow(cs_token).borrow_mut().start_kernel()); 
-        preempt();
+        // preempt();
         Ok(())
     })
 }
