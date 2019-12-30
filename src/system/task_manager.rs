@@ -27,8 +27,8 @@ pub struct Scheduler {
 }
 
 /// A single tasks's state
-#[repr(C)]
 #[derive(Clone, Copy)]
+#[repr(C)]
 pub struct TaskControlBlock {
     /// Holds a reference to the stack pointer for the task.
     pub sp: usize, // current stack pointer of this thread
@@ -37,6 +37,95 @@ pub struct TaskControlBlock {
 /// Task stack for idle task (0 priority task)
 static mut stack0: [u32; 64] = [0; 64];
 
+use cortex_m_semihosting::hprintln;
+use crate::kernel::task_management::os_next_task;
+
+impl TaskControlBlock {
+    pub fn save_context(&self) {
+        unsafe {
+            asm!(
+                "
+        cpsid	i
+
+        mrs	r0, psp
+        subs	r0, #16
+        stmia	r0!,{r4-r7}
+        mov	r4, r8
+        mov	r5, r9
+        mov	r6, r10
+        mov	r7, r11
+        subs	r0, #32
+        stmia	r0!,{r4-r7}
+        subs	r0, #16
+    
+        ldr	r2, =os_curr_task
+        ldr	r1, [r2]
+        str	r0, [r1]
+
+        cpsie	i
+                "
+            )
+        };
+    }
+    pub fn load_context(&self) {
+        let x: usize = unsafe{core::mem::transmute(self)};
+        let y: usize = unsafe{core::mem::transmute(os_next_task)};
+        hprintln!("{} -> {}", x, y);
+        unsafe {
+            asm!(
+                "
+                cpsid	i
+
+                mov	r1, $0
+                @ldr	r2, =os_next_task
+                @ldr	r1, [r2]
+                @ldr	r1, [r1]
+                ldr	r0, [r1]
+                
+                bkpt
+
+                ldmia	r0!,{r4-r7}
+                mov	r8, r4
+                mov	r9, r5
+                mov	r10, r6
+                mov	r11, r7
+                ldmia	r0!,{r4-r7}
+                msr	psp, r0
+
+                ldr r0, =0xFFFFFFFD
+                cpsie	i
+                bx	r0
+                "
+                :
+                : "r"(x)
+                : "r0", "r1"
+            )
+        };
+        // unsafe {
+        //     asm!(
+        //         "
+        // cpsid	i
+
+        // ldr	r2, =os_next_task
+        // ldr	r1, [r2]
+        // ldr	r0, [r1]
+    
+        // ldmia	r0!,{r4-r7}
+        // mov	r8, r4
+        // mov	r9, r5
+        // mov	r10, r6
+        // mov	r11, r7
+        // ldmia	r0!,{r4-r7}
+        // msr	psp, r0
+
+        // ldr r0, =0xFFFFFFFD
+        // cpsie	i
+        // bx	r0
+        //         "
+        //     )
+        // };
+    }
+}
 
 impl Scheduler {
 

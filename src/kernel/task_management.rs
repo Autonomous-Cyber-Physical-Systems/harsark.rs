@@ -12,18 +12,20 @@ use crate::system::task_manager::*;
 use crate::utils::arch::svc_call;
 use crate::system::types::{BooleanVector, TaskId};
 use crate::utils::arch::is_privileged;
+use crate::utils::arch::pendSV_handler;
 
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
 // GLOBALS:
 /// Global Scheduler instance
+#[no_mangle]
 pub static mut all_tasks: Scheduler = Scheduler::new();
-#[no_mangle]
 /// Reference to TCB of currently running task
-static mut os_curr_task: &TaskControlBlock = &empty_task;
 #[no_mangle]
+pub static mut os_curr_task: &TaskControlBlock = &empty_task;
 /// Reference to TCB of next to be scheduled task
-static mut os_next_task: &TaskControlBlock = &empty_task;
+#[no_mangle]
+pub static mut os_next_task: &TaskControlBlock = &empty_task;
 // end GLOBALS
 
 /// Initializes the Kernel scheduler. `is_preemptive` defines if the Kernel should operating preemptively 
@@ -102,15 +104,19 @@ fn context_switch(curr: usize, next: usize) {
     let task_curr = &handler.task_control_blocks[curr];
     if handler.started {
         unsafe {
-            os_curr_task = task_curr.as_ref().unwrap();
+            let ctask = task_curr.as_ref().unwrap();
+            os_curr_task = ctask;
+            // ctask.save_context();
         }
     } else {
         handler.started = true;
     }
     handler.curr_tid = next;
     let task_next = &handler.task_control_blocks[next];
+    let ctask = task_next.as_ref().unwrap();
+    // ctask.load_context();
     unsafe {
-        os_next_task = task_next.as_ref().unwrap();
+        os_next_task = ctask;
         cortex_m::peripheral::SCB::set_pendsv();
     }
 }
