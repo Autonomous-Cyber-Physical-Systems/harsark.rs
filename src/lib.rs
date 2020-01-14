@@ -54,7 +54,7 @@ pub mod util {
 
 /// Exports types defined across other Kernel modules.
 pub mod types {
-    pub use crate::kernel::software_comm_bus::Message;
+    pub use crate::system::software_comm_bus::Message;
     pub use crate::kernel::resource_management::Resource;
     pub use crate::system::event_manager::{EventTableType, EventType};
     pub use crate::system::types::*;
@@ -73,7 +73,7 @@ pub mod events {
 
 /// Kernel routines which assist in Inter-task Communication.
 pub mod messages {
-    pub use crate::kernel::software_comm_bus::new;
+    // pub use crate::kernel::software_comm_bus::new;
 }
 
 /// Kernel routines which assist in Resource management.
