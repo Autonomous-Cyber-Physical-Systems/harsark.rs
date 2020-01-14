@@ -5,7 +5,6 @@
 use crate::config::{EVENT_COUNT, EVENT_INDEX_TABLE_COUNT};
 use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE_SIGNAL};
 use crate::kernel::software_comm_bus::broadcast;
-use crate::kernel::software_sync_bus::signal_and_release;
 use crate::kernel::task_management::release;
 use crate::system::types::{BooleanVector, EventId, MessageId, SemaphoreId};
 use crate::utils::errors::KernelError;
@@ -200,7 +199,7 @@ impl EventManager {
         let event = self.event_table[event_id].as_ref().unwrap();
 
         if event.opcode & OPCODE_SIGNAL == OPCODE_SIGNAL {
-            signal_and_release(event.semaphore.unwrap(), event.tasks.unwrap());
+            // signal_and_release(event.semaphore.unwrap(), event.tasks.unwrap());
         }
         if event.opcode & OPCODE_SEND_MSG == OPCODE_SEND_MSG {
             broadcast(event.msg_index.unwrap());
