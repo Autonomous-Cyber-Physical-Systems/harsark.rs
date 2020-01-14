@@ -84,9 +84,7 @@ pub mod resources {
 
 /// Kernel routines which assist in Inter-task Synchronization.
 pub mod semaphores {
-    pub use crate::kernel::software_sync_bus::new;
-    pub use crate::kernel::software_sync_bus::signal_and_release;
-    pub use crate::kernel::software_sync_bus::test_and_reset;
+    pub use crate::system::software_sync_bus::SemaphoreControlBlock;
 }
 
 /// Kernel routines which assist in Task management.

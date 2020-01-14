@@ -11,7 +11,7 @@ use hartex_rust::tasks::*;
 use hartex_rust::util::generate_task_mask;
 
 use hartex_rust::resources;
-use hartex_rust::semaphores;
+use hartex_rust::semaphores::{self, SemaphoreControlBlock};
 use hartex_rust::spawn;
 use hartex_rust::types::*;
 
@@ -20,8 +20,8 @@ The tasks can take only one argument, hence in case multiple variables have to b
 then they must be encapsulated into a single struct.
 */
 struct AppState {
-    sem1: SemaphoreId,
-    sem2: SemaphoreId,
+    sem1: SemaphoreControlBlock,
+    sem2: SemaphoreControlBlock,
 }
 
 #[entry]
@@ -32,9 +32,9 @@ fn main() -> ! {
         Instance of AppState whose reference will be shared to all tasks.
         sem1 is a Semaphore that releases task1 on being signalled, similarly sem2 signals task2.
     */
-    let app_inst = AppState {
-        sem1: semaphores::new(generate_task_mask(&[task1])).unwrap(),
-        sem2: semaphores::new(generate_task_mask(&[task2])).unwrap(),
+    static app_inst: AppState = AppState {
+        sem1: SemaphoreControlBlock::new(2),
+        sem2: SemaphoreControlBlock::new(4),
     };
 
     static mut stack1: [u32; 300] = [0; 300];
@@ -43,13 +43,13 @@ fn main() -> ! {
 
     spawn!(task1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
-        semaphores::signal_and_release(params.sem2, generate_task_mask(&[task2]));
+        params.sem2.signal_and_release(generate_task_mask(&[task2]));
         hprintln!("TASK 1: End");
     });
 
     spawn!(task2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
-        if semaphores::test_and_reset(params.sem2).unwrap() {
+        if params.sem2.test_and_reset().unwrap() {
             hprintln!("TASK 2: sem2 enabled");
         } else {
             hprintln!("TASK 2: sem2 disabled");
@@ -59,7 +59,7 @@ fn main() -> ! {
 
     spawn!(task3, 3, stack3, params, app_inst, {
         hprintln!("TASK 3: Enter");
-        semaphores::signal_and_release(params.sem1, 0);
+        params.sem1.signal_and_release(0);
         hprintln!("TASK 3: End");
     });
 

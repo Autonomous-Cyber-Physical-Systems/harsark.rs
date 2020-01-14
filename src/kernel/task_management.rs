@@ -14,7 +14,6 @@ use crate::system::task_manager::*;
 use crate::utils::arch::svc_call;
 use crate::system::types::{BooleanVector, TaskId};
 use crate::utils::arch::is_privileged;
-use crate::utils::arch::pendSV_handler;
 
 static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
 
@@ -103,30 +102,6 @@ pub fn preempt() -> Result<(), KernelError> {
         return Ok(());
     })
 }
-
-/// Assigns the appropriate values to `os_curr_task` and `os_next_task` and raises the PendSV interrupt.
-/// PendSV interrupt handler does the actual context switch.
-// fn context_switch(curr: usize, next: usize) {
-//     let handler = unsafe { &mut all_tasks };
-//     let task_curr = &handler.task_control_blocks[curr];
-//     if handler.started {
-//         unsafe {
-//             let ctask = task_curr.as_ref().unwrap();
-//             os_curr_task = ctask;
-//             // ctask.save_context();
-//         }
-//     } else {
-//         handler.started = true;
-//     }
-//     handler.curr_tid = next;
-//     let task_next = &handler.task_control_blocks[next];
-//     let ctask = task_next.as_ref().unwrap();
-//     // ctask.load_context();
-//     unsafe {
-//         os_next_task = ctask;
-//         cortex_m::peripheral::SCB::set_pendsv();
-//     }
-// }
 
 /// Returns if the scheduler is currently operating preemptively or not.
 pub fn is_preemptive() -> bool {
