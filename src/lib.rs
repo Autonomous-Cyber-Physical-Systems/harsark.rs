@@ -27,6 +27,9 @@
 #![feature(asm)]
 #![feature(const_fn)]
 #![feature(lang_items)]
+#![feature(const_if_match)]
+#![feature(const_loop)]
+#![feature(const_generics)]
 
 #[cfg(feature = "alloc")]
 pub extern crate alloc;
@@ -49,6 +52,7 @@ use crate::utils::errors::KernelError;
 
 /// Helper functions.
 pub mod util {
+    pub use crate::utils::helpers::TaskMask;
     pub use crate::utils::helpers::generate_task_mask;
 }
 

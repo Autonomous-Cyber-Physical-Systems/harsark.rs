@@ -13,7 +13,7 @@ use hartex_rust::semaphores::SemaphoreControlBlock;
 use hartex_rust::spawn;
 use hartex_rust::tasks::*;
 use hartex_rust::types::*;
-use hartex_rust::util::generate_task_mask;
+use hartex_rust::util::*;
 
 struct AppState {
     sem3: SemaphoreControlBlock,
@@ -25,12 +25,13 @@ fn main() -> ! {
     let peripherals = resources::init_peripherals().unwrap();
 
     let app_inst = AppState {
-        sem3: SemaphoreControlBlock::new(8),
+        sem3: SemaphoreControlBlock::new(TaskMask::generate([3])),
         msg1: Message::new(
-            4,
-            4,
+            TaskMask::generate([task2]),
+            TaskMask::generate([task2]),
             [9, 10],
-        ),
+        )
+        ,
     };
 
     static mut stack1: [u32; 300] = [0; 300];
@@ -59,7 +60,7 @@ fn main() -> ! {
     });
 
     init(true);
-    release(generate_task_mask(&[task1]));
+    release(TaskMask::generate([task1]));
     start_kernel(
         unsafe { &mut peripherals.access().unwrap().borrow_mut() },
         150_000,
