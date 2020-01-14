@@ -4,7 +4,6 @@
 
 use crate::config::{EVENT_COUNT, EVENT_INDEX_TABLE_COUNT};
 use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE_SIGNAL};
-use crate::kernel::software_comm_bus::broadcast;
 use crate::kernel::task_management::release;
 use crate::system::types::{BooleanVector, EventId, MessageId, SemaphoreId};
 use crate::utils::errors::KernelError;
@@ -202,7 +201,7 @@ impl EventManager {
             // signal_and_release(event.semaphore.unwrap(), event.tasks.unwrap());
         }
         if event.opcode & OPCODE_SEND_MSG == OPCODE_SEND_MSG {
-            broadcast(event.msg_index.unwrap());
+            // broadcast(event.msg_index.unwrap());
         }
         if event.opcode & OPCODE_RELEASE == OPCODE_RELEASE {
             release(event.tasks.unwrap());

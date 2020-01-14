@@ -7,16 +7,16 @@ extern crate stm32f4;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::messages;
+// use hartex_rust::messages::Message;
 use hartex_rust::resources;
-use hartex_rust::semaphores;
+use hartex_rust::semaphores::SemaphoreControlBlock;
 use hartex_rust::spawn;
 use hartex_rust::tasks::*;
 use hartex_rust::types::*;
 use hartex_rust::util::generate_task_mask;
 
 struct AppState {
-    sem3: SemaphoreId,
+    sem3: SemaphoreControlBlock,
     msg1: Message<[u32; 2]>,
 }
 
@@ -25,13 +25,12 @@ fn main() -> ! {
     let peripherals = resources::init_peripherals().unwrap();
 
     let app_inst = AppState {
-        sem3: semaphores::new(generate_task_mask(&[3])).unwrap(),
-        msg1: messages::new(
-            generate_task_mask(&[task2]),
-            generate_task_mask(&[task2]),
+        sem3: SemaphoreControlBlock::new(8),
+        msg1: Message::new(
+            4,
+            4,
             [9, 10],
-        )
-        .unwrap(),
+        ),
     };
 
     static mut stack1: [u32; 300] = [0; 300];
@@ -41,21 +40,21 @@ fn main() -> ! {
     spawn!(task1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
         params.msg1.broadcast(Some([4, 5]));
-        semaphores::signal_and_release(params.sem3, 0);
+        params.sem3.signal_and_release(0);
         hprintln!("TASK 1: END");
     });
     spawn!(task2, 2, stack2, params, app_inst, {
         hprintln!("TASK 2: Enter");
-        if let Some(msg) = params.msg1.receive() {
+        params.msg1.receive(|msg| {
             hprintln!("TASK 2: msg received : {:?}", msg);
-        }
+        });
         hprintln!("TASK 2: END");
     });
     spawn!(task3, 3, stack3, params, app_inst, {
         hprintln!("TASK 3: Enter");
-        if let Some(msg) = params.msg1.receive() {
+        params.msg1.receive(|msg| {
             hprintln!("TASK 3: msg received : {:?}", msg);
-        }
+        });
         hprintln!("TASK 3: END");
     });
 
