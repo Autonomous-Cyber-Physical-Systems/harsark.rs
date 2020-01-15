@@ -53,7 +53,7 @@ use crate::utils::errors::KernelError;
 /// Helper functions.
 pub mod util {
     pub use crate::utils::helpers::TaskMask;
-    pub use crate::utils::helpers::generate_task_mask;
+    pub use crate::utils::arch::is_privileged;
 }
 
 /// Exports types defined across other Kernel modules.
@@ -83,7 +83,7 @@ pub mod messages {
 /// Kernel routines which assist in Resource management.
 pub mod resources {
     pub use crate::kernel::resource_management::init_peripherals;
-    pub use crate::kernel::resource_management::new;
+    pub use crate::kernel::resource_management::Resource;
 }
 
 /// Kernel routines which assist in Inter-task Synchronization.
