@@ -21,6 +21,18 @@ pub fn get_msb(val: u32) -> usize {
     return res;
 }
 
+pub const fn get_msb_const(val: u32) -> usize {
+    let mut res = 0;
+    let mut i = 0;
+    while i < 32 {
+        if val & (1<<i) > 0 {
+            res = i;
+        }
+        i += 1;
+    }
+    return res;
+}
+
 /// Returns true if Currently the Kernel is operating in Privileged mode.
 pub fn is_privileged() -> bool {
     let val: u32;

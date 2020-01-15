@@ -22,7 +22,7 @@ struct AppState {
 
 #[entry]
 fn main() -> ! {
-    let peripherals = resources::init_peripherals().unwrap();
+    let peripherals = resources::init_peripherals();
 
     let app_inst = AppState {
         sem3: SemaphoreControlBlock::new(TaskMask::generate([3])),
