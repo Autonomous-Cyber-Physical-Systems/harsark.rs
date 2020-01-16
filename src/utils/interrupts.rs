@@ -4,7 +4,7 @@ use cortex_m_rt::exception;
 use crate::kernel::event_management::sweep_event_table;
 use crate::kernel::task_management::{is_preemptive, schedule};
 use crate::kernel::time_management::tick;
-use crate::system::event_manager::EventTableType;
+// use crate::system::event_manager::EventTableType;
 use crate::system::time_manager::TickType;
 use crate::utils::arch::pendSV_handler;
 
@@ -18,25 +18,7 @@ fn SysTick() {
     if is_preemptive() {
         schedule();
     }
-
-    sweep_event_table(EventTableType::OnOff);
-    sweep_event_table(EventTableType::MilliSec);
-
-    match tick() {
-        TickType::Hour => {
-            sweep_event_table(EventTableType::Sec);
-            sweep_event_table(EventTableType::Min);
-            sweep_event_table(EventTableType::Hour);
-        }
-        TickType::Min => {
-            sweep_event_table(EventTableType::Sec);
-            sweep_event_table(EventTableType::Min);
-        }
-        TickType::Sec => {
-            sweep_event_table(EventTableType::Sec);
-        }
-        _ => {}
-    }
+    sweep_event_table();
 }
 
 /// ### SVC Interrupt handler,

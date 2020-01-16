@@ -42,17 +42,10 @@ pub fn init(is_preemptive: bool) {
 /// reference of the Peripherals instance and the `tick_interval`. `tick_interval` specifies the
 /// frequency of the timer interrupt. The SysTick exception updates the kernel regarding the time
 /// elapsed, which is used to dispatch events and schedule tasks.
-pub fn start_kernel(peripherals: &mut Peripherals, tick_interval: u32) -> Result<(), KernelError> {
-    priv_execute!({
-        let syst = &mut peripherals.SYST;
-        syst.set_clock_source(SystClkSource::Core);
-        syst.set_reload(tick_interval);
-        syst.enable_counter();
-        syst.enable_interrupt();
-
-        execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().start_kernel());
-        preempt()
-    })
+pub fn start_kernel() -> !{
+    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().start_kernel());
+    preempt();
+    loop {}
 }
 
 /// Create a new task with the configuration set as arguments passed.

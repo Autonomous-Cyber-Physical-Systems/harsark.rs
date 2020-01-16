@@ -60,19 +60,15 @@ pub mod util {
 pub mod types {
     pub use crate::system::software_comm_bus::Message;
     pub use crate::kernel::resource_management::Resource;
-    pub use crate::system::event_manager::{EventTableType, EventType};
+    // pub use crate::system::event_manager::{EventTableType, EventType};
     pub use crate::system::types::*;
 }
 
 /// Kernel routines which assist in Event management.
 pub mod events {
     pub use crate::kernel::event_management::enable_event;
-    pub use crate::kernel::event_management::new_FreeRunning;
-    pub use crate::kernel::event_management::new_OnOff;
-    pub use crate::kernel::event_management::set_message;
-    pub use crate::kernel::event_management::set_next_event;
-    pub use crate::kernel::event_management::set_semaphore;
-    pub use crate::kernel::event_management::set_tasks;
+    pub use crate::kernel::event_management::new;
+    pub use crate::kernel::event_management::systick_start;
 }
 
 /// Kernel routines which assist in Inter-task Communication.

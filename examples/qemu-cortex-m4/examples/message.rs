@@ -9,6 +9,7 @@ use cortex_m_semihosting::hprintln;
 
 // use hartex_rust::messages::Message;
 use hartex_rust::resources;
+use hartex_rust::events;
 use hartex_rust::semaphores::SemaphoreControlBlock;
 use hartex_rust::spawn;
 use hartex_rust::tasks::*;
@@ -33,6 +34,10 @@ fn main() -> ! {
         )
         ,
     };
+
+    let x = events::new(true, 2, || {
+        hprintln!("Hello");
+    });
 
     static mut stack1: [u32; 512] = [0; 512];
     static mut stack2: [u32; 512] = [0; 512];
@@ -61,9 +66,11 @@ fn main() -> ! {
 
     init(false);
     release(TaskMask::generate([task1]));
-    start_kernel(
-        unsafe { &mut peripherals.access().unwrap().borrow_mut() },
-        150_000,
-    );
-    loop {}
+    peripherals.acquire(|peripherals| {
+        events::systick_start(
+            &mut peripherals.borrow_mut(),
+            125_000_00,
+        )
+    });
+    start_kernel();
 }
