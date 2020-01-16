@@ -67,7 +67,7 @@ fn main() -> ! {
         hprintln!("TASK 3: End");
     });
 
-    init(true);
+    init(false);
     release(TaskMask::generate([task1]));
     start_kernel(
         unsafe { &mut peripherals.access().unwrap().borrow_mut() },
