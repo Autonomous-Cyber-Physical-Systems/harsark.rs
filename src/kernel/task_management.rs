@@ -72,6 +72,8 @@ where
     })
 }
 
+use cortex_m_semihosting::hprintln;
+
 /// This function is called from both privileged and unprivileged context.
 /// Hence if the function is called from privileged context, then `preempt()` is called.
 /// Else, the `svc_call()` is executed, this function creates the SVC exception.

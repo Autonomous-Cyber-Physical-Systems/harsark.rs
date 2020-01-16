@@ -34,9 +34,9 @@ fn main() -> ! {
         ,
     };
 
-    static mut stack1: [u32; 300] = [0; 300];
-    static mut stack2: [u32; 300] = [0; 300];
-    static mut stack3: [u32; 300] = [0; 300];
+    static mut stack1: [u32; 512] = [0; 512];
+    static mut stack2: [u32; 512] = [0; 512];
+    static mut stack3: [u32; 512] = [0; 512];
 
     spawn!(task1, 1, stack1, params, app_inst, {
         hprintln!("TASK 1: Enter");
@@ -59,7 +59,7 @@ fn main() -> ! {
         hprintln!("TASK 3: END");
     });
 
-    init(true);
+    init(false);
     release(TaskMask::generate([task1]));
     start_kernel(
         unsafe { &mut peripherals.access().unwrap().borrow_mut() },

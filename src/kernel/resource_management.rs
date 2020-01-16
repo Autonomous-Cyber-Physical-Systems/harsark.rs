@@ -59,11 +59,7 @@ impl<T> Resource<T> {
     fn lock(&self) -> Result<&T,KernelError> {
         execute_critical(|cs_token| {
             let pi_stack = &mut PiStackGlobal.borrow(cs_token).borrow_mut();
-            let curr_tid = if is_privileged() {
-                0
-            } else {
-                get_curr_tid() as u32
-            };
+            let curr_tid = get_curr_tid() as u32;
             
             let ceiling = self.ceiling;
             let pid_mask = 1 << curr_tid;
