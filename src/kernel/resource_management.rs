@@ -13,6 +13,7 @@ use crate::utils::arch::is_privileged;
 use crate::KernelError;
 use crate::kernel::task_management::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 use crate::system::types::{BooleanVector, ResourceId, TaskId};
+use cortex_m_semihosting::hprintln;
 
 /// Global instance of Resource manager
 static PiStackGlobal: Mutex<RefCell<PiStack>> = Mutex::new(RefCell::new(PiStack::new()));
@@ -46,8 +47,8 @@ impl<T> Resource<T> {
     /// Returns the `Pi_mask`, which is just a boolean vector with all bits up to ceiling (including) set to 1.
     fn get_pi_mask(ceiling: TaskId) -> u32 {
         let mask;
-        if ceiling < 32 {
-            mask = (1 << (ceiling + 1)) - 1;
+        if ceiling < 31 {
+                mask = (1 << (ceiling + 1)) - 1;
         } else {
             mask = 0xffffffff
         }
@@ -68,7 +69,6 @@ impl<T> Resource<T> {
             }
             if ceiling as i32 > pi_stack.system_ceiling {
                 pi_stack.push_stack(ceiling);
-    
                 let mask = Self::get_pi_mask(ceiling) & !(1 << curr_tid);
                 block_tasks(mask);
                 return Ok(&self.inner);
