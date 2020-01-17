@@ -1,14 +1,12 @@
 //! # Software synchronization bus definition
 //!
-
-use crate::config::SEMAPHORE_COUNT;
 use crate::system::types::{SemaphoreId, TaskId};
 use crate::types::BooleanVector;
 use crate::KernelError;
 use crate::kernel::task_management::{get_curr_tid, release, schedule};
 use cortex_m::interrupt;
 use core::cell::RefCell;
-use cortex_m_semihosting::hprintln;
+
 /// Semaphores form the core of synchronization and communication in the Kernel.
 pub struct SemaphoreControlBlock {
     /// It is a boolean vector which represents the tasks notified by the semaphore.

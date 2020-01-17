@@ -53,68 +53,6 @@ mod resources_config {
     );
 }
 
-mod semaphores_config {
-    #[cfg(all(
-        any(feature = "semahpores_32", feature = "default"),
-        not(any(feature = "semahpores_16", feature = "semahpores_64"))
-    ))]
-    pub const SEMAPHORE_COUNT: usize = 32;
-
-    #[cfg(feature = "semahpores_16")]
-    pub const SEMAPHORE_COUNT: usize = 16;
-
-    #[cfg(feature = "semahpores_64")]
-    pub const SEMAPHORE_COUNT: usize = 64;
-
-    #[cfg(any(
-        all(
-            feature = "semahpores_32",
-            any(feature = "semahpores_16", feature = "semahpores_64")
-        ),
-        all(
-            feature = "semahpores_16",
-            any(feature = "semahpores_32", feature = "semahpores_64")
-        ),
-        all(
-            feature = "semahpores_64",
-            any(feature = "semahpores_32", feature = "semahpores_16")
-        ),
-    ))]
-    compile_error!(
-        "Features 'semahpores_32','semahpores_18' and 'semahpores_64' are mutually exclusive."
-    );
-}
-
-mod message_config {
-    #[cfg(all(
-        any(feature = "message_32", feature = "default"),
-        not(any(feature = "message_16", feature = "message_64"))
-    ))]
-    pub const MESSAGE_COUNT: usize = 32;
-
-    #[cfg(feature = "message_16")]
-    pub const MESSAGE_COUNT: usize = 16;
-
-    #[cfg(feature = "message_64")]
-    pub const MESSAGE_COUNT: usize = 64;
-
-    #[cfg(any(
-        all(
-            feature = "message_32",
-            any(feature = "message_16", feature = "message_64")
-        ),
-        all(
-            feature = "message_16",
-            any(feature = "message_32", feature = "message_64")
-        ),
-        all(
-            feature = "message_64",
-            any(feature = "message_32", feature = "message_16")
-        ),
-    ))]
-    compile_error!("Features 'message_32','message_18' and 'message_64' are mutually exclusive.");
-}
-
 mod event_config {
     #[cfg(all(
         any(feature = "events_32", feature = "default"),
@@ -150,15 +88,6 @@ mod event_index_table_config {
     compile_error!("Features 'event_index_8' and 'event_index_16' are mutually exclusive.");
 }
 
-pub use message_config::MESSAGE_COUNT;
 pub use resources_config::MAX_RESOURCES;
-pub use semaphores_config::SEMAPHORE_COUNT;
 pub use tasks_config::MAX_TASKS;
-
 pub use event_config::EVENT_COUNT;
-pub use event_index_table_config::EVENT_INDEX_TABLE_COUNT;
-
-pub const OPCODE_SIGNAL: u8 = 1;
-pub const OPCODE_SEND_MSG: u8 = 1 << 1;
-pub const OPCODE_RELEASE: u8 = 1 << 2;
-pub const OPCODE_ENABLE_EVENT: u8 = 1 << 3;

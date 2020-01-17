@@ -19,7 +19,7 @@
 /// ```
 #[macro_export]
 macro_rules! spawn {
-    ($task_name: ident, $priority: expr, $stack: expr, $var: ident, $param: expr, $handler_fn: block) => {
+    ($priority: expr, $stack: expr, $var: ident, $param: expr, $handler_fn: block) => {
         create_task(
             $priority,
             unsafe{ &mut $stack },
@@ -27,9 +27,8 @@ macro_rules! spawn {
                 $handler_fn
                 task_exit();
         },&$param).unwrap();
-        static $task_name: TaskId = $priority;
     };
-    ($task_name: ident, $priority: expr, $stack: expr, $handler_fn: block) => {
+    ($priority: expr, $stack: expr, $handler_fn: block) => {
         create_task(
             $priority,
             unsafe{ &mut $stack },
@@ -37,7 +36,6 @@ macro_rules! spawn {
                 $handler_fn
                 task_exit();
         },&0).unwrap();
-        static $task_name: TaskId = $priority;
     };
 }
 

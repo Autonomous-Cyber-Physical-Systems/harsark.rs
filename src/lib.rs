@@ -90,19 +90,11 @@ pub mod semaphores {
 /// Kernel routines which assist in Task management.
 pub mod tasks {
     pub use crate::kernel::task_management::create_task;
-    pub use crate::kernel::task_management::disable_preemption;
-    pub use crate::kernel::task_management::enable_preemption;
     pub use crate::kernel::task_management::get_curr_tid;
     pub use crate::kernel::task_management::init;
-    pub use crate::kernel::task_management::is_preemptive;
     pub use crate::kernel::task_management::release;
     pub use crate::kernel::task_management::start_kernel;
     pub use crate::kernel::task_management::task_exit;
-}
-
-/// Kernel routines which assist in Time management.
-pub mod time {
-    pub use crate::kernel::time_management::*;
 }
 
 #[cfg(feature = "alloc")]

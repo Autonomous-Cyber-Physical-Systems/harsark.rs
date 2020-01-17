@@ -4,7 +4,7 @@
 
 use cortex_m::interrupt::free as execute_critical; 
 use crate::kernel::task_management::{all_tasks,os_curr_task_id,os_next_task_id};
-
+use crate::system::task_manager::TaskControlBlock;
 /// Returns the MSB of `val`. It is written using CLZ instruction.
 pub fn get_msb(val: u32) -> usize {
     let mut res;
@@ -42,7 +42,7 @@ pub fn is_privileged() -> bool {
             :
         )
     };
-    !((val & 1) == 1)
+    !((val & 2) > 0)
 }
 
 /// Creates an SVC Interrupt
@@ -53,6 +53,7 @@ pub fn svc_call() {
 }
 
 /// PendSV interrupt handler does the actual context switch in the Kernel.
+#[inline(always)]
 pub fn pendSV_handler() {
         execute_critical(|cs_token| {
             let curr_tid: usize = unsafe { os_curr_task_id };
@@ -65,11 +66,9 @@ pub fn pendSV_handler() {
             } else {
                 handler.started = true;
             }
-            
             let next_task = handler.task_control_blocks[next_tid].as_ref().unwrap();
             next_task.load_context();
         });
-
         unsafe{
             asm!("
             ldr r0, =0xFFFFFFFD
@@ -77,4 +76,60 @@ pub fn pendSV_handler() {
             ");
         }
             
+}
+
+#[inline(always)]
+pub fn save_context(task_stack: &TaskControlBlock) {
+    unsafe {
+        asm!(
+            "
+    mrs	r0, psp
+    subs	r0, #16
+    stmia	r0!,{r4-r7}
+    mov	r4, r8
+    mov	r5, r9
+    mov	r6, r10
+    mov	r7, r11
+    subs	r0, #32
+    stmia	r0!,{r4-r7}
+    subs	r0, #16
+
+    mov	r1, $0
+    @bkpt
+    @ldr	r1, [r2]
+    str	r0, [r1]
+            "
+            :
+            : "r"(task_stack)
+            : "r0", "r1"
+        )
+    };
+}
+
+#[inline(always)]
+pub fn load_context(task_stack: &TaskControlBlock) {
+    unsafe {
+        asm!(
+            "
+            cpsid	i
+
+            mov	r1, $0
+            @ldr	r2, =os_next_task
+            @ldr	r1, [r2]
+            @ldr	r1, [r1]
+            ldr	r0, [r1]
+            
+            ldmia	r0!,{r4-r7}
+            mov	r8, r4
+            mov	r9, r5
+            mov	r10, r6
+            mov	r11, r7
+            ldmia	r0!,{r4-r7}
+            msr	psp, r0
+            "
+            :
+            : "r"(task_stack)
+            : "r0", "r1"
+        )
+    };
 }
