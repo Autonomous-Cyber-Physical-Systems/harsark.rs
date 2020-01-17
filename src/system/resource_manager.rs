@@ -6,7 +6,7 @@
 use crate::config::MAX_RESOURCES;
 use crate::utils::arch::get_msb;
 use crate::KernelError;
-use crate::system::types::{BooleanVector, ResourceId, TaskId};
+use crate::system::types::{BooleanVector, TaskId};
 
 const PI: i32 = -1;
 
@@ -29,15 +29,19 @@ impl PiStack {
     }
 
     /// Pops the stack top and assigns the `system_ceiling` to the new stack top.
-    pub fn pop_stack(&mut self) {
+    pub fn pop_stack(&mut self) -> Result<(),KernelError> {
         self.top -= 1;
+        if self.top < 0 {
+            return Err(KernelError::Empty)
+        }
         self.system_ceiling = self.pi_stack[self.top - 1];
+        Ok(())
     }
 
     /// Pushes the passed ceiling onto the pi_stack.
     pub fn push_stack(&mut self, ceiling: TaskId) -> Result<(),KernelError> {
         if self.top >= MAX_RESOURCES {
-            return Err(KernelError::MaxResources)
+            return Err(KernelError::LimitExceeded)
         }
         self.pi_stack[self.top] = ceiling as i32;
         self.system_ceiling = ceiling as i32;

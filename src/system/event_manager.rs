@@ -4,7 +4,7 @@
 
 use crate::config::EVENT_COUNT;
 use crate::kernel::task_management::release;
-use crate::system::types::{BooleanVector, EventId, MessageId, SemaphoreId};
+use crate::system::types::{BooleanVector, EventId};
 use crate::utils::errors::KernelError;
 
 /// Event Descriptor
@@ -55,25 +55,25 @@ impl EventTable
 
     /// This function dispatches all events mentioned in the `EventIndexTable` corresponding to the `EventTableType`.
     pub fn sweep(&mut self) {
-        self.events
-            .iter_mut()
-            .for_each(|event| {
-                if let Some(ref mut event) = event {
-                    event.execute_event();
-                }
-            });
+        for i in 0..self.curr {
+            if let Some(ref mut event) = self.events[i] {
+                event.execute_event();
+            }
+        }
     }
 
     /// Enables an Event.
-    pub fn enable_event(&mut self, event_id: EventId) {
-        let event = &mut self.events[event_id].as_mut().unwrap();
+    pub fn enable(&mut self, event_id: EventId) -> Result<(),KernelError> {
+        let event = &mut self.events[event_id].as_mut().ok_or(KernelError::NotFound)?;
         event.is_enabled = true;
+        Ok(())
     }
 
     /// Disables an Event.
-    pub fn disable_event(&mut self, event_id: EventId) {
-        let event = &mut self.events[event_id].as_mut().unwrap();
+    pub fn disable(&mut self, event_id: EventId) -> Result<(),KernelError> {
+        let event = &mut self.events[event_id].as_mut().ok_or(KernelError::NotFound)?;
         event.is_enabled = false;
+        Ok(())
     }
 
     /// Creates a new event.

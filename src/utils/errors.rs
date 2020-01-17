@@ -8,7 +8,7 @@ pub enum KernelError {
     StackTooSmall,
     LimitExceeded,
     AccessDenied,
-    MaxResources,
+    Empty,
     Exists,
 }
 
@@ -19,7 +19,7 @@ impl fmt::Debug for KernelError {
             KernelError::StackTooSmall => write!(f, "StackTooSmall"),
             KernelError::LimitExceeded => write!(f, "LimitExceeded"),
             KernelError::AccessDenied => write!(f, "AccessDenied"),
-            KernelError::MaxResources => write!(f, "MaxResources"),
+            KernelError::Empty => write!(f, "Empty"),
             KernelError::Exists => write!(f, "Exists"),
         }
     }
