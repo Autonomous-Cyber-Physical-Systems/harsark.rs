@@ -29,14 +29,24 @@ pub fn sweep_event_table() {
 }
 
 /// This function is used to enable events if disabled. Useful for dispatching OnOff type events.
-pub fn enable_event(event_id: EventId) {
+pub fn enable(event_id: EventId) -> Result<(),KernelError> {
     execute_critical(|cs_token| {
         event_manager
             .borrow(cs_token)
             .borrow_mut()
-            .enable_event(event_id);
+            .enable(event_id)
     })
 }
+/// This function is used to enable events if disabled. Useful for dispatching OnOff type events.
+pub fn disable(event_id: EventId) -> Result<(),KernelError> {
+    execute_critical(|cs_token| {
+        event_manager
+            .borrow(cs_token)
+            .borrow_mut()
+            .disable(event_id)
+    })
+}
+
 
 /// Starts the Kernel scheduler, which starts scheduling tasks and starts the SysTick timer using the
 /// reference of the Peripherals instance and the `tick_interval`. `tick_interval` specifies the
@@ -58,11 +68,11 @@ pub fn new(
 ) -> Result<EventId, KernelError> {
     priv_execute!({
         execute_critical(|cs_token| {
-            Ok(event_manager.borrow(cs_token).borrow_mut().create(
+            event_manager.borrow(cs_token).borrow_mut().create(
                 is_enabled,
                 threshold,
                 handler,
-            )?)
+            )
         })
     })
 }

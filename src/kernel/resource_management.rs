@@ -12,7 +12,7 @@ use crate::system::resource_manager::PiStack;
 use crate::utils::arch::is_privileged;
 use crate::KernelError;
 use crate::kernel::task_management::{block_tasks, get_curr_tid, schedule, unblock_tasks};
-use crate::system::types::{BooleanVector, ResourceId, TaskId};
+use crate::system::types::{BooleanVector, TaskId};
 use cortex_m_semihosting::hprintln;
 
 /// Global instance of Resource manager
@@ -68,7 +68,7 @@ impl<T> Resource<T> {
                 return Err(KernelError::AccessDenied);
             }
             if ceiling as i32 > pi_stack.system_ceiling {
-                pi_stack.push_stack(ceiling);
+                pi_stack.push_stack(ceiling)?;
                 let mask = Self::get_pi_mask(ceiling) & !(1 << curr_tid);
                 block_tasks(mask);
                 return Ok(&self.inner);
@@ -79,15 +79,16 @@ impl<T> Resource<T> {
 
     /// Unlocks the resource. It takes a BooleanVector corresponding to the tasks that have to be
     /// unblocked from `resource_manager.unlock()` and calls `unblock_tasks()` on it.
-    fn unlock(&self) {
+    fn unlock(&self) -> Result<(),KernelError> {
         execute_critical(|cs_token| {
             let pi_stack = &mut PiStackGlobal.borrow(cs_token).borrow_mut();
             if self.ceiling as i32 == pi_stack.system_ceiling {
-                pi_stack.pop_stack();
+                pi_stack.pop_stack()?;
                 let mask = Self::get_pi_mask(self.ceiling);
                 unblock_tasks(mask);
                 schedule();
             }
+            Ok(())
         })
     }
     /// Acquire is a helper function that ensures that if a resource is locked, it is unlocked too.
@@ -99,15 +100,8 @@ impl<T> Resource<T> {
     {
         let value = self.lock()?;
         let res = handler(value);
-        self.unlock();
+        self.unlock()?;
         return Ok(res);
-    }
-
-    /// There might be cases where the variable has to be accessed without locks for some reason.
-    /// This function is used to access the resource bypassing the locking system,
-    /// and it returns a reference to `self.inner`. This function is explicitly marked unsafe.
-    pub unsafe fn access(&self) -> Result<&T, KernelError> {
-        Ok(&self.inner)
     }
 }
 

@@ -66,7 +66,8 @@ pub mod types {
 
 /// Kernel routines which assist in Event management.
 pub mod events {
-    pub use crate::kernel::event_management::enable_event;
+    pub use crate::kernel::event_management::enable;
+    pub use crate::kernel::event_management::disable;
     pub use crate::kernel::event_management::new;
     pub use crate::kernel::event_management::systick_start;
 }
@@ -84,7 +85,7 @@ pub mod resources {
 
 /// Kernel routines which assist in Inter-task Synchronization.
 pub mod semaphores {
-    pub use crate::system::software_sync_bus::SemaphoreControlBlock;
+    pub use crate::system::software_sync_bus::Semaphore;
 }
 
 /// Kernel routines which assist in Task management.

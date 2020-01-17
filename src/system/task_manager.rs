@@ -59,7 +59,7 @@ impl Scheduler {
     /// This method sets the is_preemptive field of the scheduler instance and defines the configurations
     /// for the idle task and calls create\_task with it. The waiting task has zero priority; hence,
     /// it is only executed when no other task is in Ready state.
-    pub fn init(&mut self, is_preemptive: bool) {
+    pub fn init(&mut self, is_preemptive: bool) -> Result<(),KernelError>{
         self.is_preemptive = is_preemptive;
         
         static mut stack0: [u32; 64] = [0; 64];
@@ -70,8 +70,8 @@ impl Scheduler {
                 cortex_m::asm::wfe();
             },
             &0,
-        )
-        .unwrap();
+        )?;
+        Ok(())
     }
 
     /// The program counter for the task is pointer value of the function pointer (`handler_fn`). param is a variable whose reference will be made accessible to the task, and this helps in sharing global state with other tasks. Both these values are stored in a specific index of the stack so that when the context\_switch function loads the stack for this task, the appropriate program counter and argument for that function is loaded.
@@ -90,13 +90,8 @@ impl Scheduler {
     where
         T: Sync,
     {
-        match self.create_tcb(stack, handler_fn, param) {
-            Ok(tcb) => {
-                self.insert_tcb(priority, tcb)?;
-                return Ok(());
-            }
-            Err(e) => return Err(e),
-        }
+        let tcb = self.create_tcb(stack, handler_fn, param)?;
+        self.insert_tcb(priority, tcb)
     }
 
     /// Creates a TCB corresponding to the tasks details passed onto this method.
@@ -113,13 +108,13 @@ impl Scheduler {
             return Err(KernelError::StackTooSmall);
         }
 
-        let idx = stack.len() - 1;
+        let pos = stack.len() - 1;
         let args: u32 = unsafe { core::intrinsics::transmute(param) };
         let pc: usize = handler as usize;
 
-        stack[idx] = 1 << 24; // xPSR
-        stack[idx - 1] = pc as u32; // PC
-        stack[idx - 7] = args; // args
+        stack[pos] = 1 << 24; // xPSR
+        stack[pos - 1] = pc as u32; // PC
+        stack[pos - 7] = args; // args
 
         let stack_pointer: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
         let tcb = TaskControlBlock { stack_pointer: stack_pointer as usize };
@@ -127,12 +122,12 @@ impl Scheduler {
         Ok(tcb)
     }
 
-    /// Inserts the `TCB` into `task_control_blocks` at position `idx`.
-    fn insert_tcb(&mut self, idx: usize, tcb: TaskControlBlock) -> Result<(), KernelError> {
-        if idx >= MAX_TASKS {
+    /// Inserts the `TCB` into `task_control_blocks` at position `id`.
+    fn insert_tcb(&mut self, id: usize, tcb: TaskControlBlock) -> Result<(), KernelError> {
+        if id >= MAX_TASKS {
             return Err(KernelError::NotFound);
         }
-        self.task_control_blocks[idx] = Some(tcb);
+        self.task_control_blocks[id] = Some(tcb);
         return Ok(());
     }
 

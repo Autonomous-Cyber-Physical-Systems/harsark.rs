@@ -22,7 +22,7 @@ pub static mut os_next_task_id: usize = 0;
 /// Initializes the Kernel scheduler. `is_preemptive` defines if the Kernel should operating preemptively 
 /// or not. This method sets the `is_preemptive` field of the Scheduler instance and creates the idle task. 
 /// The idle task is created with zero priority; hence, it is only executed when no other task is in Ready state.
-pub fn init(is_preemptive: bool) {
+pub fn init(is_preemptive: bool) -> Result<(),KernelError>{
     execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().init(is_preemptive) )
 }
 
@@ -30,9 +30,10 @@ pub fn init(is_preemptive: bool) {
 /// reference of the Peripherals instance and the `tick_interval`. `tick_interval` specifies the
 /// frequency of the timer interrupt. The SysTick exception updates the kernel regarding the time
 /// elapsed, which is used to dispatch events and schedule tasks.
-pub fn start_kernel() -> !{
-    preempt();
-    loop {}
+pub fn start_kernel() -> ! {
+    loop {
+        preempt();
+    }
 }
 
 /// Create a new task with the configuration set as arguments passed.
@@ -57,16 +58,15 @@ where
 /// Else, the `svc_call()` is executed, this function creates the SVC exception.
 /// And the SVC handler calls schedule again. Thus, the permission level is raised to privileged via the exception.
 pub fn schedule() {
-    if is_privileged() == true {
-        preempt();
-    } else {
-        svc_call();
-    }
+    match is_privileged() {
+        true => preempt(),
+        false => svc_call(),
+    };
 }
 
 /// If the scheduler is running and the highest priority task and currently running task aren’t the same, 
 /// then the `context_switch()` is called.
-pub fn preempt() -> Result<(), KernelError> {
+pub fn preempt() {
     execute_critical(|cs_token| {
         let handler = &mut all_tasks.borrow(cs_token).borrow_mut();
         let next_tid = handler.get_next_tid();
@@ -79,15 +79,13 @@ pub fn preempt() -> Result<(), KernelError> {
                 handler.curr_tid = os_next_task_id;
             }
         }
-        return Ok(());
     })
 }
 
 /// Returns the TaskId of the currently running task in the kernel.
 pub fn get_curr_tid() -> TaskId {
     execute_critical(|cs_token| {
-        let handler = all_tasks.borrow(cs_token).borrow_mut();
-        return handler.curr_tid as TaskId;
+        all_tasks.borrow(cs_token).borrow().curr_tid as TaskId
     })
 }
 
@@ -113,5 +111,5 @@ pub fn task_exit() {
 
 /// The Kernel releases the tasks in the `task_mask`, these tasks transition from the waiting to the ready state.
 pub fn release(tasks_mask: BooleanVector) {
-    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().release(tasks_mask) );
+    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().release(tasks_mask));
 }
