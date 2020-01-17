@@ -2,8 +2,7 @@
 //!
 //! Defines Data-structures to manage events.
 
-use crate::config::{EVENT_COUNT, EVENT_INDEX_TABLE_COUNT};
-use crate::config::{OPCODE_ENABLE_EVENT, OPCODE_RELEASE, OPCODE_SEND_MSG, OPCODE_SIGNAL};
+use crate::config::EVENT_COUNT;
 use crate::kernel::task_management::release;
 use crate::system::types::{BooleanVector, EventId, MessageId, SemaphoreId};
 use crate::utils::errors::KernelError;

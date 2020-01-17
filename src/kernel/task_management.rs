@@ -5,29 +5,17 @@
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 use core::cell::RefCell;
-use cortex_m::peripheral::syst::SystClkSource;
-use cortex_m::Peripherals;
 
 use crate::KernelError;
 use crate::priv_execute;
 use crate::system::task_manager::*;
-use crate::utils::arch::svc_call;
 use crate::system::types::{BooleanVector, TaskId};
-use crate::utils::arch::is_privileged;
+use crate::utils::arch::{is_privileged, svc_call};
 
-static empty_task: TaskControlBlock = TaskControlBlock { sp: 0 };
-
-// GLOBALS:
 /// Global Scheduler instance
 #[no_mangle]
 pub static all_tasks: Mutex<RefCell<Scheduler>> = Mutex::new(RefCell::new(Scheduler::new()));
-/// Reference to TCB of currently running task
-#[no_mangle]
-pub static mut os_curr_task: &TaskControlBlock = &empty_task;
-/// Reference to TCB of next to be scheduled task
-#[no_mangle]
-pub static mut os_next_task: &TaskControlBlock = &empty_task;
-// end GLOBALS
+
 pub static mut os_curr_task_id: usize = 0;
 pub static mut os_next_task_id: usize = 0;
 
@@ -43,7 +31,6 @@ pub fn init(is_preemptive: bool) {
 /// frequency of the timer interrupt. The SysTick exception updates the kernel regarding the time
 /// elapsed, which is used to dispatch events and schedule tasks.
 pub fn start_kernel() -> !{
-    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().start_kernel());
     preempt();
     loop {}
 }
@@ -65,8 +52,6 @@ where
     })
 }
 
-use cortex_m_semihosting::hprintln;
-
 /// This function is called from both privileged and unprivileged context.
 /// Hence if the function is called from privileged context, then `preempt()` is called.
 /// Else, the `svc_call()` is executed, this function creates the SVC exception.
@@ -86,7 +71,7 @@ pub fn preempt() -> Result<(), KernelError> {
         let handler = &mut all_tasks.borrow(cs_token).borrow_mut();
         let next_tid = handler.get_next_tid();
         let curr_tid = handler.curr_tid as TaskId;
-        if handler.is_running && curr_tid != next_tid{
+        if curr_tid != next_tid{
             unsafe {
                 os_curr_task_id = curr_tid as usize;
                 os_next_task_id = next_tid as usize;
@@ -96,11 +81,6 @@ pub fn preempt() -> Result<(), KernelError> {
         }
         return Ok(());
     })
-}
-
-/// Returns if the scheduler is currently operating preemptively or not.
-pub fn is_preemptive() -> bool {
-    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().is_preemptive )
 }
 
 /// Returns the TaskId of the currently running task in the kernel.
@@ -134,17 +114,4 @@ pub fn task_exit() {
 /// The Kernel releases the tasks in the `task_mask`, these tasks transition from the waiting to the ready state.
 pub fn release(tasks_mask: BooleanVector) {
     execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().release(tasks_mask) );
-}
-
-/// Enables preemptive scheduling.
-pub fn enable_preemption() {
-    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().is_preemptive = true )
-}
-
-/// Disables preemptive scheduling.
-pub fn disable_preemption() {
-    execute_critical(|cs_token| {
-        let handler = &mut all_tasks.borrow(cs_token).borrow_mut();
-        handler.is_preemptive = false;
-    })
 }

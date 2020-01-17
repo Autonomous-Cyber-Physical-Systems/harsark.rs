@@ -4,7 +4,7 @@
 use crate::config::MAX_TASKS;
 use crate::system::types::TaskId;
 use crate::types::BooleanVector;
-use crate::utils::arch::get_msb;
+use crate::utils::arch::{get_msb, save_context, load_context};
 use crate::KernelError;
 
 /// Maintains state of all tasks in the Kernel
@@ -13,7 +13,7 @@ pub struct Scheduler {
     /// The Task id of the currently running task.
     pub curr_tid: usize,
     /// True if the scheduler has started scheduling tasks on the CPU.
-    pub is_running: bool,
+    pub started: bool,
     /// An Array of task control blocks corresponding to each task (created only if task exists).
     pub task_control_blocks: [Option<TaskControlBlock>; MAX_TASKS],
     /// A boolean vector in which, if a bit at a position is true, it implies that the task is active and to be scheduled.
@@ -22,8 +22,6 @@ pub struct Scheduler {
     pub active_tasks: BooleanVector,
     /// A variable which decided if the scheduler should preemptively schedule tasks or not.
     pub is_preemptive: bool,
-    /// Set true as soon as the first task is scheduled.
-    pub started: bool,
 }
 
 /// A single tasks's state
@@ -31,89 +29,40 @@ pub struct Scheduler {
 #[repr(C)]
 pub struct TaskControlBlock {
     /// Holds a reference to the stack pointer for the task.
-    pub sp: usize, // current stack pointer of this thread
+    stack_pointer: usize, // current stack pointer of this thread
 }
 
-/// Task stack for idle task (0 priority task)
-static mut stack0: [u32; 64] = [0; 64];
 
 impl TaskControlBlock {
     pub fn save_context(&self) {
-        let x: usize = unsafe{core::mem::transmute(self)};
-        unsafe {
-            asm!(
-                "
-        mrs	r0, psp
-        subs	r0, #16
-        stmia	r0!,{r4-r7}
-        mov	r4, r8
-        mov	r5, r9
-        mov	r6, r10
-        mov	r7, r11
-        subs	r0, #32
-        stmia	r0!,{r4-r7}
-        subs	r0, #16
-    
-        mov	r1, $0
-        @bkpt
-        @ldr	r1, [r2]
-        str	r0, [r1]
-                "
-                :
-                : "r"(x)
-                : "r0", "r1"
-            )
-        };
+        save_context(self)
     }
     pub fn load_context(&self) {
-        let x: usize = unsafe{core::mem::transmute(self)};
-        unsafe {
-            asm!(
-                "
-                cpsid	i
-
-                mov	r1, $0
-                @ldr	r2, =os_next_task
-                @ldr	r1, [r2]
-                @ldr	r1, [r1]
-                ldr	r0, [r1]
-                
-                ldmia	r0!,{r4-r7}
-                mov	r8, r4
-                mov	r9, r5
-                mov	r10, r6
-                mov	r11, r7
-                ldmia	r0!,{r4-r7}
-                msr	psp, r0
-                "
-                :
-                : "r"(x)
-                : "r0", "r1"
-            )
-        };
+        load_context(self)
     }
 }
 
 impl Scheduler {
-
+    
     /// Returns a new instance of `Scheduler`
     pub const fn new() -> Self {
         Self {
             curr_tid: 0,
-            is_running: false,
+            started: false,
             task_control_blocks: [None; MAX_TASKS],
             active_tasks: 1,
             blocked_tasks: 0,
             is_preemptive: false,
-            started: false,
         }
     }
-
+    
     /// This method sets the is_preemptive field of the scheduler instance and defines the configurations
     /// for the idle task and calls create\_task with it. The waiting task has zero priority; hence,
     /// it is only executed when no other task is in Ready state.
     pub fn init(&mut self, is_preemptive: bool) {
         self.is_preemptive = is_preemptive;
+        
+        static mut stack0: [u32; 64] = [0; 64];
         self.create_task(
             0,
             unsafe { &mut stack0 },
@@ -123,11 +72,6 @@ impl Scheduler {
             &0,
         )
         .unwrap();
-    }
-
-    /// It sets the is_running field to true as kernel then starts scheduling tasks.
-    pub fn start_kernel(&mut self) {
-        self.is_running = true;
     }
 
     /// The program counter for the task is pointer value of the function pointer (`handler_fn`). param is a variable whose reference will be made accessible to the task, and this helps in sharing global state with other tasks. Both these values are stored in a specific index of the stack so that when the context\_switch function loads the stack for this task, the appropriate program counter and argument for that function is loaded.
@@ -177,8 +121,8 @@ impl Scheduler {
         stack[idx - 1] = pc as u32; // PC
         stack[idx - 7] = args; // args
 
-        let sp: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
-        let tcb = TaskControlBlock { sp: sp as usize };
+        let stack_pointer: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
+        let tcb = TaskControlBlock { stack_pointer: stack_pointer as usize };
 
         Ok(tcb)
     }

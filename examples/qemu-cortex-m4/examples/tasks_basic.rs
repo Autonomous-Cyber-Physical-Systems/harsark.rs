@@ -11,10 +11,14 @@ use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
 use hartex_rust::tasks::*;
-use hartex_rust::util::generate_task_mask;
+use hartex_rust::util::TaskMask;
 use hartex_rust::resources;
 use hartex_rust::spawn;
 use hartex_rust::types::*;
+
+const task1: u32 = 1;
+const task2: u32 = 2;
+const task3: u32 = 3;
 
 #[entry]
 fn main() -> ! {
@@ -24,7 +28,7 @@ fn main() -> ! {
     RefCell is used to provide interior mutability read more at :
     https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
     */
-    let peripherals: Resource<RefCell<Peripherals>> = resources::init_peripherals().unwrap();
+    let peripherals: Resource<RefCell<Peripherals>> = resources::init_peripherals();
 
     /*
     Define the task stacks corresponding to each task.
@@ -41,13 +45,13 @@ fn main() -> ! {
     The third variable corresponds to the task stack.
     The fourth variable corresponds to the task body.
     */
-    spawn!(task1, 1, stack1, {
+    spawn!(task1, stack1, {
         hprintln!("TASK 1");
     });
-    spawn!(task2, 2, stack2, {
+    spawn!(task2, stack2, {
         hprintln!("TASK 2");
     });
-    spawn!(task3, 3, stack3, {
+    spawn!(task3, stack3, {
         hprintln!("TASK 3");
     });
 
@@ -56,17 +60,12 @@ fn main() -> ! {
     init(true);
 
     // Releases tasks task1, task2, task3
-    release(generate_task_mask(&[task1, task2, task3]));
+    release(TaskMask::generate([task1, task2, task3]));
 
     /*
     Starts scheduling tasks on the device.
     It requires a reference to the peripherals so as to start the SysTick timer.
     150_000 corresponds to the tick interval of the SysTick timer.
     */
-    start_kernel(
-        unsafe { &mut peripherals.access().unwrap().borrow_mut() },
-        150_000,
-    );
-
-    loop {}
+    start_kernel()
 }
