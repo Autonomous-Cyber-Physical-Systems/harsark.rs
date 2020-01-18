@@ -12,6 +12,8 @@ use crate::kernel::event::sweep_event_table;
 /// This interrupt handler updates the time and also dispatches the appropriate event handlers.
 /// The interrupt handler also calls `schedule()` in here so as to dispatch any higher priority
 /// task if there are any.
+
+
 #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
 #[exception]
 fn SysTick() {
@@ -24,7 +26,6 @@ fn SysTick() {
 fn SVCall() {
     schedule();
 }
-
 /// ### PendSV Interrupt handler,
 /// PendSV interrupt handler does the actual context switch in the Kernel.
 #[exception]

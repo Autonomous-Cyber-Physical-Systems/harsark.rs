@@ -1,7 +1,7 @@
 //! # Resource Management Module
 //! Defines the Kernel routines and primitives for resource management.
 //!
-use core::cell::RefCell;
+use core::cell::{RefCell,Cell};
 
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
