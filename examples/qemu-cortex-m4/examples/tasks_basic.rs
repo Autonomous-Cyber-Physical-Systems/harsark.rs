@@ -10,11 +10,10 @@ use cortex_m::peripheral::Peripherals;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::tasks::*;
+use hartex_rust::task::*;
 use hartex_rust::util::TaskMask;
-use hartex_rust::resources;
+use hartex_rust::primitive::*;
 use hartex_rust::spawn;
-use hartex_rust::types::*;
 
 const task1: u32 = 1;
 const task2: u32 = 2;
@@ -28,7 +27,7 @@ fn main() -> ! {
     RefCell is used to provide interior mutability read more at :
     https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
     */
-    let peripherals: Resource<RefCell<Peripherals>> = resources::init_peripherals();
+    let peripherals: Resource<RefCell<Peripherals>> = init_peripherals();
 
     /*
     Define the task stacks corresponding to each task.

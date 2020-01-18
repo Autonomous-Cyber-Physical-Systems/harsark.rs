@@ -1,8 +1,8 @@
 //! Interrupt Handlers
 use cortex_m_rt::exception;
 
-use crate::kernel::event_management::sweep_event_table;
-use crate::kernel::task_management::{schedule};
+use crate::kernel::event::sweep_event_table;
+use crate::kernel::task::schedule;
 use crate::utils::arch::pendSV_handler;
 
 /// ### SysTick Interrupt handler

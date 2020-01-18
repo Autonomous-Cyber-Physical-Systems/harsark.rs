@@ -3,9 +3,9 @@
 //! Defines Data-structures to manage events.
 
 use crate::config::EVENT_COUNT;
-use crate::kernel::task_management::release;
-use crate::system::types::{BooleanVector, EventId};
 use crate::utils::errors::KernelError;
+
+pub type EventId = usize;
 
 /// Event Descriptor
 #[derive(Clone, Copy)]

@@ -8,8 +8,7 @@ use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
 use crate::priv_execute;
-use crate::system::event_manager::*;
-use crate::system::types::EventId;
+use crate::system::event::*;
 use crate::utils::arch::is_privileged;
 use crate::KernelError;
 use cortex_m::peripheral::syst::SystClkSource;

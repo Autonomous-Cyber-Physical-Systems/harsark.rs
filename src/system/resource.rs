@@ -8,12 +8,11 @@ use cortex_m::interrupt::Mutex;
 
 use crate::priv_execute;
 use crate::utils::arch::{get_msb_const,get_msb};
-use crate::system::resource_manager::PiStack;
+use crate::system::pi_stack::PiStack;
 use crate::utils::arch::is_privileged;
 use crate::KernelError;
-use crate::kernel::task_management::{block_tasks, get_curr_tid, schedule, unblock_tasks};
-use crate::system::types::{BooleanVector, TaskId};
-use cortex_m_semihosting::hprintln;
+use crate::kernel::task::{block_tasks, get_curr_tid, schedule, unblock_tasks};
+use crate::system::scheduler::{TaskId, BooleanVector};
 
 /// Global instance of Resource manager
 static PiStackGlobal: Mutex<RefCell<PiStack>> = Mutex::new(RefCell::new(PiStack::new()));

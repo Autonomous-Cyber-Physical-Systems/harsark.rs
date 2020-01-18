@@ -3,10 +3,8 @@
 //! Inter task communication also utilizes semaphores to release tasks and keep track of the tasks
 //! which can access the message and the tasks that have to be notified about the arrival of messages.
 
-use crate::system::software_sync_bus::Semaphore;
-use crate::system::types::{TaskId};
-use crate::types::BooleanVector;
-use crate::KernelError;
+use crate::system::semaphore::Semaphore;
+use crate::system::scheduler::BooleanVector;
 use core::cell::RefCell;
 use cortex_m::interrupt;
 
