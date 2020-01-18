@@ -2,8 +2,6 @@
 //!
 //! Defines functions which are defined majorly in assembly. Thus, might change for one board to another.
 
-use cortex_m::interrupt::free as execute_critical; 
-use crate::kernel::task::{TaskManager};
 use crate::system::scheduler::TaskControlBlock;
 /// Returns the MSB of `val`. It is written using CLZ instruction.
 pub fn get_msb(val: u32) -> usize {
@@ -52,31 +50,14 @@ pub fn svc_call() {
     }
 }
 
-/// PendSV interrupt handler does the actual context switch in the Kernel.
 #[inline(always)]
-pub fn pendSV_handler() {
-        execute_critical(|cs_token| {
-            let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
-            let curr_tid: usize = handler.curr_tid;
-            let next_tid: usize = handler.get_next_tid() as usize;
-            
-            if handler.started {
-                let curr_task = handler.task_control_blocks[curr_tid].as_ref().unwrap();
-                curr_task.save_context();
-            } else {
-                handler.started = true;
-            }
-            let next_task = handler.task_control_blocks[next_tid].as_ref().unwrap();
-            next_task.load_context();
-
-            handler.curr_tid = next_tid;
-        });
-        unsafe{
-            asm!("
-            ldr r0, =0xFFFFFFFD
-            bx	r0
-            ");
-        }
+pub fn return_to_psp() {
+    unsafe{
+        asm!("
+        ldr r0, =0xFFFFFFFD
+        bx	r0
+        ");
+    }
 }
 
 #[inline(always)]
