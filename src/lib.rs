@@ -57,6 +57,7 @@ pub mod util {
 }
 
 /// Kernel routines which assist in Event management.
+#[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
 pub mod event {
     pub use crate::kernel::event::enable;
     pub use crate::kernel::event::disable;

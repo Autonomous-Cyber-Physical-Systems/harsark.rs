@@ -33,10 +33,6 @@ events_16 = []
 events_32 = []
 events_64 = []
 
-messages_16 = []
-messages_32 = []
-messages_64 = []
-
 alloc = ["alloc-cortex-m"]
 
 default = []
