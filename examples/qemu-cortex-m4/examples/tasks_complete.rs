@@ -7,16 +7,17 @@ extern crate stm32f4;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::tasks::*;
-use hartex_rust::util::generate_task_mask;
-
-use hartex_rust::resources;
+use hartex_rust::task::*;
+use hartex_rust::util::TaskMask;
+use hartex_rust::primitive::*;
 use hartex_rust::spawn;
-use hartex_rust::types::*;
+
+const task1: u32 = 1;
+const task2: u32 = 2;
 
 #[entry]
 fn main() -> ! {
-    let peripherals = resources::init_peripherals().unwrap();
+    let peripherals = init_peripherals();
 
     // These are task parameters, they are passed to the task when called
     let task1_param = "Hello from task 1 !";
@@ -34,19 +35,14 @@ fn main() -> ! {
     arg 5 : the task argument
     arg 6 : task body
     */
-    spawn!(task1, 1, stack1, param, task1_param, {
+    spawn!(task1, stack1, param, task1_param, {
         hprintln!("{}", param);
     });
-    spawn!(task2, 2, stack2, param, task2_param, {
+    spawn!(task2, stack2, param, task2_param, {
         hprintln!("{}", param);
     });
 
-    init(true);
-    release(generate_task_mask(&[task1, task2]));
-    start_kernel(
-        unsafe { &mut peripherals.access().unwrap().borrow_mut() },
-        150_000,
-    );
-
-    loop {}
+    init();
+    release(TaskMask::generate([task1, task2]));
+    start_kernel()
 }

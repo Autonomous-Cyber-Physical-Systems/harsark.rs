@@ -31,18 +31,6 @@ pub const fn get_msb_const(val: u32) -> usize {
     return res;
 }
 
-/// Returns true if Currently the Kernel is operating in Privileged mode.
-pub fn is_privileged() -> bool {
-    let val: u32;
-    unsafe {
-        asm!("mrs $0, CONTROL"
-            : "=r"(val)
-            :
-        )
-    };
-    !((val & 2) > 0)
-}
-
 /// Creates an SVC Interrupt
 pub fn svc_call() {
     unsafe {
