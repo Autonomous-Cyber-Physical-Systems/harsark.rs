@@ -18,7 +18,7 @@ pub struct Message<T> {
 
 impl<T: Clone> Message<T> {
     /// Creates a new entry in the `mcb_table` and `scb_table` corresponding to a message.
-    pub fn new(
+    pub const fn new(
         tasks_mask: BooleanVector,
         receivers_mask: BooleanVector,
         value: T,

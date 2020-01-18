@@ -53,7 +53,7 @@ use crate::utils::errors::KernelError;
 /// Helper functions.
 pub mod util {
     pub use crate::utils::helpers::TaskMask;
-    pub use crate::utils::arch::is_privileged;
+    pub use crate::utils::helpers::is_privileged;
 }
 
 /// Kernel routines which assist in Event management.

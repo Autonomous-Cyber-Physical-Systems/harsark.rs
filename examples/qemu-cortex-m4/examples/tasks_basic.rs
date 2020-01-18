@@ -56,7 +56,7 @@ fn main() -> ! {
 
 
     // Initializes the kernel in preemptive mode.
-    init(true);
+    init();
 
     // Releases tasks task1, task2, task3
     release(TaskMask::generate([task1, task2, task3]));

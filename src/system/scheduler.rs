@@ -60,8 +60,8 @@ impl Scheduler {
     /// This method sets the is_preemptive field of the scheduler instance and defines the configurations
     /// for the idle task and calls create\_task with it. The waiting task has zero priority; hence,
     /// it is only executed when no other task is in Ready state.
-    pub fn init(&mut self, is_preemptive: bool) -> Result<(),KernelError>{
-        self.is_preemptive = is_preemptive;
+    pub fn init(&mut self) -> Result<(),KernelError>{
+        self.is_preemptive = true;
         
         static mut stack0: [u32; 64] = [0; 64];
         self.create_task(
