@@ -19,23 +19,14 @@
 /// ```
 #[macro_export]
 macro_rules! spawn {
-    ($priority: expr, $stack: expr, $var: ident, $param: expr, $handler_fn: block) => {
-        create_task(
-            $priority,
-            unsafe{ &mut $stack },
-            |$var| loop {
-                $handler_fn
-                task_exit();
-        },&$param).unwrap();
-    };
     ($priority: expr, $stack: expr, $handler_fn: block) => {
         create_task(
             $priority,
             unsafe{ &mut $stack },
-            |_| loop {
+            || loop {
                 $handler_fn
                 task_exit();
-        },&0).unwrap();
+        }).unwrap();
     };
 }
 

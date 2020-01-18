@@ -27,40 +27,37 @@ const task3: u32 = 3;
 fn main() -> ! {
     let peripherals = init_peripherals();
 
-    // app_inst also holds the resource containers res1 and res2.
-    let app_inst = AppState {
-        sem2: Semaphore::new(TaskMask::generate([task2])),
-        sem3: Semaphore::new(TaskMask::generate([task3])),
-        res1: Resource::new([1, 2, 3], TaskMask::generate([task1, task2])),
-        res2: Resource::new([4, 5], TaskMask::generate([task3])),
-    };
+        static sem2: Semaphore = Semaphore::new(TaskMask::generate([task2]));
+        static sem3: Semaphore = Semaphore::new(TaskMask::generate([task3]));
+        static res1: Resource<[u32; 3]> = Resource::new([1, 2, 3], TaskMask::generate([task1, task2]));
+        static res2: Resource<[u32; 2]> = Resource::new([4, 5], TaskMask::generate([task3]));
 
     static mut stack1: [u32; 512] = [0; 512];
     static mut stack2: [u32; 512] = [0; 512];
     static mut stack3: [u32; 512] = [0; 512];
 
-    spawn!(task1, stack1, params, app_inst, {
+    spawn!(task1, stack1, {
         hprintln!("TASK 1: Enter");
         // If res1 is free, then the closure passed on is executed on the resource.
-        params.res1.acquire(|res| {
+        res1.acquire(|res| {
             hprintln!("TASK 1 : res1 : {:?}", res);
-            params.sem2.signal_and_release(0);
-            params.sem3.signal_and_release(0);
+            sem2.signal_and_release(0);
+            sem3.signal_and_release(0);
             for i in 0..10000 {}
             hprintln!("TASK 1 : task 2 and 3 dispatched");
         });
         hprintln!("TASK 1: End");
     });
-    spawn!(task2, stack2, params, app_inst, {
+    spawn!(task2, stack2, {
         hprintln!("TASK 2: Enter");
-        params.res1.acquire(|res| {
+        res1.acquire(|res| {
             hprintln!("TASK 2 : res1 : {:?}", res);
         });
         hprintln!("TASK 2: End");
     });
-    spawn!(task3, stack3, params, app_inst, {
+    spawn!(task3, stack3, {
         hprintln!("TASK 3: Enter");
-        params.res2.acquire(|res| {
+        res2.acquire(|res| {
             hprintln!("TASK 3 : res2 :  {:?}", res);
         });
         hprintln!("TASK 3: End");

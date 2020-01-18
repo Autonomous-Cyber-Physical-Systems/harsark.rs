@@ -21,7 +21,7 @@ impl Semaphore {
     }
 
     /// This method, when called, appends the `tasks_mask` to the flags field. Next, the tasks in the tasks field are released.
-    pub fn signal_and_release(&self, tasks_mask: BooleanVector) {
+    pub fn signal_and_release(&'static self, tasks_mask: BooleanVector) {
         interrupt::free(|_| {
             let flags: &mut BooleanVector = &mut self.flags.borrow_mut();
             *flags |= tasks_mask;
@@ -31,7 +31,7 @@ impl Semaphore {
     }
 
     /// This method, when called, appends the `tasks_mask` to the `flags` field. Next, the `tasks` in the `tasks` field are released.
-    pub fn test_and_reset(&self) -> Result<bool, KernelError> {
+    pub fn test_and_reset(&'static self) -> Result<bool, KernelError> {
         interrupt::free(|_| {
             let curr_tid = get_curr_tid() as u32;
             let curr_tid_mask = 1 << curr_tid;

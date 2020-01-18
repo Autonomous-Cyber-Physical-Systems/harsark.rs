@@ -4,6 +4,7 @@
 extern crate panic_halt;
 extern crate stm32f4;
 
+use core::cell::RefCell;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
@@ -13,11 +14,6 @@ use hartex_rust::util::TaskMask;
 use hartex_rust::primitive::*;
 use hartex_rust::spawn;
 
-struct AppState {
-    sem2: Semaphore,
-    msg1: Message<[u32; 2]>,
-}
-
 const task1: u32 = 1;
 const task2: u32 = 2;
 const task3: u32 = 3;
@@ -26,20 +22,18 @@ const task3: u32 = 3;
 fn main() -> ! {
     let peripherals = init_peripherals();
     
-    static app_inst: AppState = AppState {
-        sem2: Semaphore::new(TaskMask::generate([task2])),
-        msg1: Message::new(
+        static sem2: Semaphore = Semaphore::new(TaskMask::generate([task2]));
+        static msg1: Message<[u32; 2]> = Message::new(
             TaskMask::generate([task3]),
             TaskMask::generate([task3]),
             [9, 10],
-        ),
-    };
+        );
 
     let event1 = event::new(true, 3, || {
-        app_inst.msg1.broadcast(Some([1,2]));
+        msg1.broadcast(Some([1,2]));
     });
     let event2 = event::new(true, 2, || {
-        app_inst.sem2.signal_and_release(TaskMask::generate([task2]));
+        sem2.signal_and_release(TaskMask::generate([task2]));
     });
     let event2 = event::new(true, 6, || {
         release(TaskMask::generate([task1]));
@@ -49,23 +43,23 @@ fn main() -> ! {
     static mut stack2: [u32; 300] = [0; 300];
     static mut stack3: [u32; 300] = [0; 300];
 
-    spawn!(task1, stack1, params, app_inst, {
+    spawn!(task1, stack1, {
         hprintln!("TASK 1: Enter");
-        if let Ok(true) = params.sem2.test_and_reset() {
+        if let Ok(true) = sem2.test_and_reset() {
             hprintln!("TASK 1: sem2 enabled");
         }
         hprintln!("TASK 1: End");
     });
-    spawn!(task2, stack2, params, app_inst, {
+    spawn!(task2, stack2, {
         hprintln!("TASK 2: Enter");
-        if let Ok(true) = params.sem2.test_and_reset() {
+        if let Ok(true) = sem2.test_and_reset() {
             hprintln!("TASK 2: sem2 enabled");
         }
         hprintln!("TASK 2: End");
     });
-    spawn!(task3, stack3, params, app_inst, {
+    spawn!(task3, stack3, {
         hprintln!("TASK 3: Enter");
-        params.msg1.receive(|msg| {
+        msg1.receive(|msg| {
             hprintln!("TASK 3: msg received : {:?}", msg);
         });
         hprintln!("TASK 3: End");

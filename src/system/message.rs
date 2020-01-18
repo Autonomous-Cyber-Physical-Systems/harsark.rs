@@ -31,7 +31,7 @@ impl<T: Clone> Message<T> {
     }
 
     /// The sender task calls this function, it broadcasts the message corresponding to `msg_id`.
-    pub fn broadcast(&self,  msg: Option<T>) {
+    pub fn broadcast(&'static self,  msg: Option<T>) {
         interrupt::free(|_| {
             if let Some(msg) = msg {
                 self.value.replace(msg);
@@ -40,7 +40,7 @@ impl<T: Clone> Message<T> {
         })
     }
 
-    pub fn receive<F,R> (&self, handler: F) -> Option<R>
+    pub fn receive<F,R> (&'static self, handler: F) -> Option<R>
     where
         F: Fn(&T) -> R, 
     {
