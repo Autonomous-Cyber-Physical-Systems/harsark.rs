@@ -34,18 +34,15 @@ pub fn start_kernel() -> ! {
 }
 
 /// Create a new task with the configuration set as arguments passed.
-pub fn create_task<T: Sized>(
+pub fn create_task(
     priority: TaskId,
     stack: &mut [u32],
-    handler_fn: fn(&T) -> !,
-    param: &T,
+    handler_fn: fn() -> !,
 ) -> Result<(), KernelError>
-where
-    T: Sync,
 {
     priv_execute!({
         execute_critical(|cs_token| unsafe {
-            TaskManager.borrow(cs_token).borrow_mut().create_task(priority as usize, stack, handler_fn, param)
+            TaskManager.borrow(cs_token).borrow_mut().create_task(priority as usize, stack, handler_fn)
         })
     })
 }

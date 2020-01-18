@@ -67,12 +67,10 @@ impl Scheduler {
         self.create_task(
             0,
             unsafe { &mut stack0 },
-            |_| loop {
+            || loop {
                 cortex_m::asm::wfe();
-            },
-            &0,
-        )?;
-        Ok(())
+            }
+        )
     }
 
     /// The program counter for the task is pointer value of the function pointer (`handler_fn`). param is a variable whose reference will be made accessible to the task, and this helps in sharing global state with other tasks. Both these values are stored in a specific index of the stack so that when the context\_switch function loads the stack for this task, the appropriate program counter and argument for that function is loaded.
@@ -81,41 +79,33 @@ impl Scheduler {
     /// The `<T: Sync>` informs the compiler that the type `T` must implement the Sync trait. By implementing the Sync trait, a type becomes safe to be shared across tasks. Hence if a type that doesn’t implement Sync trait (like a mutable integer) is passed as param, then the code won’t compile. Kernel primitives like Message and Resource (which are data race safe) implement the Sync trait; hence, it can be passed as param. In this way, the Kernel makes safety a requirement rather than a choice.
     ///
     /// `handler_fn` is of type `fn(&T) -> !`, which implies it is a function pointer which takes a parameter of Type `&T` and infinitely loops. For more details, look into `spawn!` Macro.
-    pub fn create_task<T: Sized>(
+    pub fn create_task(
         &mut self,
         priority: usize,
         stack: &mut [u32],
-        handler_fn: fn(&T) -> !,
-        param: &T,
+        handler_fn: fn() -> !,
     ) -> Result<(), KernelError>
-    where
-        T: Sync,
     {
-        let tcb = self.create_tcb(stack, handler_fn, param)?;
+        let tcb = self.create_tcb(stack, handler_fn)?;
         self.insert_tcb(priority, tcb)
     }
 
     /// Creates a TCB corresponding to the tasks details passed onto this method.
-    fn create_tcb<T: Sized>(
+    fn create_tcb(
         &self,
         stack: &mut [u32],
-        handler: fn(&T) -> !,
-        param: &T,
+        handler: fn() -> !,
     ) -> Result<TaskControlBlock, KernelError>
-    where
-        T: Sync,
     {
         if stack.len() < 32 {
             return Err(KernelError::StackTooSmall);
         }
 
         let pos = stack.len() - 1;
-        let args: u32 = unsafe { core::intrinsics::transmute(param) };
         let pc: usize = handler as usize;
 
         stack[pos] = 1 << 24; // xPSR
         stack[pos - 1] = pc as u32; // PC
-        stack[pos - 7] = args; // args
 
         let stack_pointer: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
         let tcb = TaskControlBlock { stack_pointer: stack_pointer as usize };
