@@ -8,22 +8,18 @@ use core::cell::RefCell;
 
 use crate::KernelError;
 use crate::priv_execute;
-use crate::system::task_manager::*;
-use crate::system::types::{BooleanVector, TaskId};
+use crate::system::scheduler::*;
 use crate::utils::arch::{is_privileged, svc_call};
 
 /// Global Scheduler instance
 #[no_mangle]
-pub static all_tasks: Mutex<RefCell<Scheduler>> = Mutex::new(RefCell::new(Scheduler::new()));
-
-pub static mut os_curr_task_id: usize = 0;
-pub static mut os_next_task_id: usize = 0;
+pub static TaskManager: Mutex<RefCell<Scheduler>> = Mutex::new(RefCell::new(Scheduler::new()));
 
 /// Initializes the Kernel scheduler. `is_preemptive` defines if the Kernel should operating preemptively 
 /// or not. This method sets the `is_preemptive` field of the Scheduler instance and creates the idle task. 
 /// The idle task is created with zero priority; hence, it is only executed when no other task is in Ready state.
 pub fn init(is_preemptive: bool) -> Result<(),KernelError>{
-    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().init(is_preemptive) )
+    execute_critical(|cs_token| TaskManager.borrow(cs_token).borrow_mut().init(is_preemptive) )
 }
 
 /// Starts the Kernel scheduler, which starts scheduling tasks and starts the SysTick timer using the
@@ -48,7 +44,7 @@ where
 {
     priv_execute!({
         execute_critical(|cs_token| unsafe {
-            all_tasks.borrow(cs_token).borrow_mut().create_task(priority as usize, stack, handler_fn, param)
+            TaskManager.borrow(cs_token).borrow_mut().create_task(priority as usize, stack, handler_fn, param)
         })
     })
 }
@@ -67,43 +63,33 @@ pub fn schedule() {
 /// If the scheduler is running and the highest priority task and currently running task aren’t the same, 
 /// then the `context_switch()` is called.
 pub fn preempt() {
-    execute_critical(|cs_token| {
-        let handler = &mut all_tasks.borrow(cs_token).borrow_mut();
-        let next_tid = handler.get_next_tid();
-        let curr_tid = handler.curr_tid as TaskId;
-        if curr_tid != next_tid{
-            unsafe {
-                os_curr_task_id = curr_tid as usize;
-                os_next_task_id = next_tid as usize;
-                cortex_m::peripheral::SCB::set_pendsv();
-                handler.curr_tid = os_next_task_id;
-            }
-        }
-    })
+    unsafe {
+        cortex_m::peripheral::SCB::set_pendsv();
+    }
 }
 
 /// Returns the TaskId of the currently running task in the kernel.
 pub fn get_curr_tid() -> TaskId {
     execute_critical(|cs_token| {
-        all_tasks.borrow(cs_token).borrow().curr_tid as TaskId
+        TaskManager.borrow(cs_token).borrow().curr_tid as TaskId
     })
 }
 
 /// The Kernel blocks the tasks mentioned in `tasks_mask`.
 pub fn block_tasks(tasks_mask: BooleanVector) {
-    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().block_tasks(tasks_mask))
+    execute_critical(|cs_token| TaskManager.borrow(cs_token).borrow_mut().block_tasks(tasks_mask))
 }
 
 /// The Kernel unblocks the tasks mentioned in tasks_mask.
 pub fn unblock_tasks(tasks_mask: BooleanVector) {
-    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().unblock_tasks(tasks_mask))
+    execute_critical(|cs_token| TaskManager.borrow(cs_token).borrow_mut().unblock_tasks(tasks_mask))
 }
 
 /// The `task_exit` function is called just after a task finishes execution. This function unsets the task’s corresponding bit in the `active_tasks` and calls schedule. Hence in the next call to schedule, the kernel schedules some other task.
 pub fn task_exit() {
     let curr_tid = get_curr_tid();
     execute_critical(|cs_token| {
-        let handler = &mut all_tasks.borrow(cs_token).borrow_mut();
+        let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
         handler.active_tasks &= !(1 << curr_tid as u32);
     });
     schedule()
@@ -111,5 +97,5 @@ pub fn task_exit() {
 
 /// The Kernel releases the tasks in the `task_mask`, these tasks transition from the waiting to the ready state.
 pub fn release(tasks_mask: BooleanVector) {
-    execute_critical(|cs_token| all_tasks.borrow(cs_token).borrow_mut().release(tasks_mask));
+    execute_critical(|cs_token| TaskManager.borrow(cs_token).borrow_mut().release(tasks_mask));
 }

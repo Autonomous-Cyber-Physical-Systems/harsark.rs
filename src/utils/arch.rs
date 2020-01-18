@@ -3,8 +3,8 @@
 //! Defines functions which are defined majorly in assembly. Thus, might change for one board to another.
 
 use cortex_m::interrupt::free as execute_critical; 
-use crate::kernel::task_management::{all_tasks,os_curr_task_id,os_next_task_id};
-use crate::system::task_manager::TaskControlBlock;
+use crate::kernel::task::{TaskManager};
+use crate::system::scheduler::TaskControlBlock;
 /// Returns the MSB of `val`. It is written using CLZ instruction.
 pub fn get_msb(val: u32) -> usize {
     let mut res;
@@ -56,9 +56,9 @@ pub fn svc_call() {
 #[inline(always)]
 pub fn pendSV_handler() {
         execute_critical(|cs_token| {
-            let curr_tid: usize = unsafe { os_curr_task_id };
-            let next_tid: usize = unsafe { os_next_task_id };
-            let handler = &mut all_tasks.borrow(cs_token).borrow_mut();
+            let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
+            let curr_tid: usize = handler.curr_tid;
+            let next_tid: usize = handler.get_next_tid() as usize;
             
             if handler.started {
                 let curr_task = handler.task_control_blocks[curr_tid].as_ref().unwrap();
@@ -68,6 +68,8 @@ pub fn pendSV_handler() {
             }
             let next_task = handler.task_control_blocks[next_tid].as_ref().unwrap();
             next_task.load_context();
+
+            handler.curr_tid = next_tid;
         });
         unsafe{
             asm!("
@@ -75,7 +77,6 @@ pub fn pendSV_handler() {
             bx	r0
             ");
         }
-            
 }
 
 #[inline(always)]

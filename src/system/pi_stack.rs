@@ -4,9 +4,8 @@
 //! and implements the locking and unlocking mechanism.
 
 use crate::config::MAX_RESOURCES;
-use crate::utils::arch::get_msb;
 use crate::KernelError;
-use crate::system::types::{BooleanVector, TaskId};
+use crate::system::scheduler::TaskId;
 
 const PI: i32 = -1;
 

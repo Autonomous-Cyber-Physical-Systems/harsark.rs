@@ -56,46 +56,29 @@ pub mod util {
     pub use crate::utils::arch::is_privileged;
 }
 
-/// Exports types defined across other Kernel modules.
-pub mod types {
-    pub use crate::system::software_comm_bus::Message;
-    pub use crate::kernel::resource_management::Resource;
-    // pub use crate::system::event_manager::{EventTableType, EventType};
-    pub use crate::system::types::*;
-}
-
 /// Kernel routines which assist in Event management.
-pub mod events {
-    pub use crate::kernel::event_management::enable;
-    pub use crate::kernel::event_management::disable;
-    pub use crate::kernel::event_management::new;
-    pub use crate::kernel::event_management::systick_start;
+pub mod event {
+    pub use crate::kernel::event::enable;
+    pub use crate::kernel::event::disable;
+    pub use crate::kernel::event::new;
+    pub use crate::kernel::event::systick_start;
 }
 
 /// Kernel routines which assist in Inter-task Communication.
-pub mod messages {
-    // pub use crate::kernel::software_comm_bus::new;
-}
-
-/// Kernel routines which assist in Resource management.
-pub mod resources {
-    pub use crate::kernel::resource_management::init_peripherals;
-    pub use crate::kernel::resource_management::Resource;
-}
-
-/// Kernel routines which assist in Inter-task Synchronization.
-pub mod semaphores {
-    pub use crate::system::software_sync_bus::Semaphore;
+pub mod primitive {
+    pub use crate::system::message::Message;
+    pub use crate::system::resource::*;
+    pub use crate::system::semaphore::Semaphore;
 }
 
 /// Kernel routines which assist in Task management.
-pub mod tasks {
-    pub use crate::kernel::task_management::create_task;
-    pub use crate::kernel::task_management::get_curr_tid;
-    pub use crate::kernel::task_management::init;
-    pub use crate::kernel::task_management::release;
-    pub use crate::kernel::task_management::start_kernel;
-    pub use crate::kernel::task_management::task_exit;
+pub mod task {
+    pub use crate::kernel::task::create_task;
+    pub use crate::kernel::task::get_curr_tid;
+    pub use crate::kernel::task::init;
+    pub use crate::kernel::task::release;
+    pub use crate::kernel::task::start_kernel;
+    pub use crate::kernel::task::task_exit;
 }
 
 #[cfg(feature = "alloc")]

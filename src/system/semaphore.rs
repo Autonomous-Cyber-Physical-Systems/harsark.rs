@@ -1,9 +1,8 @@
 //! # Software synchronization bus definition
 //!
-use crate::system::types::{TaskId};
-use crate::types::BooleanVector;
+use crate::system::scheduler::BooleanVector;
 use crate::KernelError;
-use crate::kernel::task_management::{get_curr_tid, release, schedule};
+use crate::kernel::task::{get_curr_tid, release, schedule};
 use cortex_m::interrupt;
 use core::cell::RefCell;
 

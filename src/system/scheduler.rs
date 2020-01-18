@@ -2,10 +2,11 @@
 //! The Definition of Data-structures required for task management.
 //!
 use crate::config::MAX_TASKS;
-use crate::system::types::TaskId;
-use crate::types::BooleanVector;
 use crate::utils::arch::{get_msb, save_context, load_context};
 use crate::KernelError;
+
+pub type TaskId = u32;
+pub type BooleanVector = u32;
 
 /// Maintains state of all tasks in the Kernel
 #[repr(C)]
