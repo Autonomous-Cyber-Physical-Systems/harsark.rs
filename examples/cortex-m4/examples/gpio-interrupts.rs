@@ -7,38 +7,30 @@ extern crate panic_halt;
 extern crate stm32f4;
 
 use core::cell::RefCell;
+use cortex_m_semihosting::hprintln;
 
-use cortex_m::peripheral::NVIC;
 use cortex_m_rt::entry;
-use stm32f4::stm32f407::interrupt;
 use stm32f4::stm32f407::{self, Peripherals};
+use stm32f4::stm32f407::interrupt;
+use cortex_m::peripheral::NVIC;
 
-use hartex_rust::events;
-use hartex_rust::resources;
+use hartex_rust::task::*;
+use hartex_rust::util::TaskMask;
+use hartex_rust::primitive::*;
 use hartex_rust::spawn;
-use hartex_rust::tasks::*;
-use hartex_rust::types::*;
-use hartex_rust::util::generate_task_mask;
+use hartex_rust::event;
 
-struct AppState {
-    peripherals: Resource<RefCell<Peripherals>>,
-    event_led1: EventId,
-    event_led2: EventId,
-}
+const task1: u32 = 1;
+const task2: u32 = 2;
 
 lazy_static! {
-    static ref globals: AppState = AppState {
-        peripherals: resources::new(
-            RefCell::new(Peripherals::take().unwrap()),
-            generate_task_mask(&[1, 2])
-        )
-        .unwrap(),
-        event_led1: events::new_OnOff(true).unwrap(),
-        event_led2: events::new_OnOff(true).unwrap(),
-    };
+    static ref board_peripherals: Resource<RefCell<Peripherals>> = Resource::new(
+        RefCell::new(Peripherals::take().unwrap()),
+        TaskMask::generate([1, 2]),
+    );
 }
 
-fn peripherals_init(peripherals: &mut Peripherals) {
+fn peripherals_configure(peripherals: &mut Peripherals) {
     // instances of configuration registers
     let rcc = &peripherals.RCC;
     let gpioe = &peripherals.GPIOE;
@@ -99,41 +91,37 @@ fn peripherals_init(peripherals: &mut Peripherals) {
 
 #[interrupt]
 fn EXTI3() {
-    globals.peripherals.acquire(|peripherals| {
-        let peripherals = &mut peripherals.borrow_mut();
+    board_peripherals.acquire(|peripherals| {
+        let peripherals = &mut *peripherals.borrow_mut();
         peripherals.EXTI.pr.write(|w| w.pr3().set_bit());
     });
-    events::enable_event(globals.event_led1);
+    release(2);
 }
 
 #[interrupt]
 fn EXTI4() {
-    globals.peripherals.acquire(|peripherals| {
-        let peripherals = &mut peripherals.borrow_mut();
+    board_peripherals.acquire(|peripherals| {
+        let peripherals = &mut *peripherals.borrow_mut();
         peripherals.EXTI.pr.write(|w| w.pr4().set_bit());
     });
-    events::enable_event(globals.event_led2);
+    release(4);
 }
 
 #[entry]
 fn main() -> ! {
-    let peripherals = resources::init_peripherals().unwrap();
+    let cortex_peripherals = init_peripherals();
 
-    globals.peripherals.acquire(|peripherals| {
-        let peripherals = &mut peripherals.borrow_mut();
-        peripherals_init(peripherals);
+    board_peripherals.acquire(|perf| {
+        let perf = &mut *perf.borrow_mut();
+        peripherals_configure(perf);
     });
-
-    events::set_tasks(globals.event_led1, generate_task_mask(&[task1]));
-
-    events::set_tasks(globals.event_led2, generate_task_mask(&[task2]));
 
     static mut stack1: [u32; 300] = [0; 300];
     static mut stack2: [u32; 300] = [0; 300];
 
-    spawn!(task1, 1, stack1, params, globals, {
-        params.peripherals.acquire(|perf| {
-            let perf = perf.borrow_mut();
+    spawn!(task1, stack1, {
+        board_peripherals.acquire(|perf| {
+            let perf = &mut *perf.borrow_mut();
             perf.GPIOA.odr.modify(|r, w| {
                 let led2 = r.odr6().bit();
                 if led2 {
@@ -144,9 +132,9 @@ fn main() -> ! {
             });
         });
     });
-    spawn!(task2, 2, stack2, params, globals, {
-        params.peripherals.acquire(|perf| {
-            let perf = perf.borrow_mut();
+    spawn!(task2, stack2, {
+        board_peripherals.acquire(|perf| {
+            let perf = &mut *perf.borrow_mut();
             perf.GPIOA.odr.modify(|r, w| {
                 let led3 = r.odr7().bit();
                 if led3 {
@@ -158,11 +146,7 @@ fn main() -> ! {
         });
     });
 
-    init(true);
-    release(0);
-    start_kernel(
-        unsafe { &mut peripherals.access().unwrap().borrow_mut() },
-        150_000,
-    );
-    loop {}
+    init();
+    release(2);
+    start_kernel()
 }
