@@ -66,7 +66,6 @@ fn main() -> ! {
     });
 
     init();
-    release(TaskMask::generate([task1]));
     peripherals.acquire(|perf| {
         event::systick_start(
             &mut perf.borrow_mut(),
