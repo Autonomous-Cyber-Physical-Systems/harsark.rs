@@ -147,6 +147,5 @@ fn main() -> ! {
     });
 
     init();
-    release(2);
     start_kernel()
 }

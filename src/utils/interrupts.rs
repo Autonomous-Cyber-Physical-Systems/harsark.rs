@@ -34,7 +34,7 @@ fn PendSV() {
         let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
         let curr_tid: usize = handler.curr_tid;
         let next_tid: usize = handler.get_next_tid() as usize;
-        if curr_tid != next_tid {
+        if curr_tid != next_tid || (!handler.started) {
             if handler.started {
                 let curr_task = handler.task_control_blocks[curr_tid].as_ref().unwrap();
                 curr_task.save_context();

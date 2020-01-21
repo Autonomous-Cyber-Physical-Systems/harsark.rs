@@ -95,7 +95,6 @@ fn main() -> ! {
     });
 
     init();
-    release(3);
     cortex_peripherals.acquire(|perf| {
         let perf = &mut *perf.borrow_mut();
         event::systick_start(
