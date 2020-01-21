@@ -1,0 +1,8 @@
+empty program: 5.1K
+tasks_basic: 9K
+blink: 14K
+event: 18K
+heap: 18K
+message: 18K
+resource: 18K
+semaphore: 13K
