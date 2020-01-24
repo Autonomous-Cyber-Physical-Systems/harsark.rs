@@ -1,8 +1,9 @@
 empty program: 5.1K
-tasks_basic: 9K
-blink: 14K
+tasks_basic: 8.9K
 event: 18K
 heap: 18K
-message: 18K
+message: 17K
 resource: 18K
-semaphore: 13K
+semaphore: 8.9K
+blink: 14K
+gpio-interrupts: 9.1K
