@@ -51,7 +51,7 @@ pub fn disable(event_id: EventId) -> Result<(),KernelError> {
 /// reference of the Peripherals instance and the `tick_interval`. `tick_interval` specifies the
 /// frequency of the timer interrupt. The SysTick exception updates the kernel regarding the time
 /// elapsed, which is used to dispatch events and schedule tasks.
-pub fn systick_start(peripherals: &mut Peripherals, tick_interval: u32) {
+pub fn start_timer(peripherals: &mut Peripherals, tick_interval: u32) {
     let syst = &mut peripherals.SYST;
     syst.set_clock_source(SystClkSource::Core);
     syst.set_reload(tick_interval);

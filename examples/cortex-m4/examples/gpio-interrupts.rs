@@ -16,9 +16,8 @@ use cortex_m::peripheral::NVIC;
 
 use hartex_rust::task::*;
 use hartex_rust::util::TaskMask;
-use hartex_rust::primitive::*;
+use hartex_rust::primitives::*;
 use hartex_rust::spawn;
-use hartex_rust::event;
 
 const task1: u32 = 1;
 const task2: u32 = 2;

@@ -12,7 +12,7 @@ use cortex_m_semihosting::hprintln;
 
 use hartex_rust::task::*;
 use hartex_rust::util::TaskMask;
-use hartex_rust::primitive::*;
+use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 
 const task1: u32 = 1;
@@ -33,9 +33,9 @@ fn main() -> ! {
     Define the task stacks corresponding to each task.
     Note to specify the stack size according to the task parameters and local variables etc.
     */
-    static mut stack1: [u32; 300] = [0; 300];
-    static mut stack2: [u32; 300] = [0; 300];
-    static mut stack3: [u32; 300] = [0; 300];
+    static mut stack1: [u32; 128] = [0; 128];
+    static mut stack2: [u32; 128] = [0; 128];
+    static mut stack3: [u32; 128] = [0; 128];
 
     /*
     Task definition.

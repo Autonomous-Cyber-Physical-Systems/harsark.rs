@@ -9,7 +9,7 @@ use cortex_m_semihosting::hprintln;
 
 use hartex_rust::task::*;
 use hartex_rust::util::TaskMask;
-use hartex_rust::primitive::*;
+use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 
 /*

@@ -1,15 +1,13 @@
 //! # Resource Management Module
 //! Defines the Kernel routines and primitives for resource management.
 //!
-use core::cell::{RefCell,Cell};
+use core::cell::{RefCell};
 
 use cortex_m::interrupt::free as execute_critical;
 use cortex_m::interrupt::Mutex;
 
-use crate::priv_execute;
-use crate::utils::arch::{get_msb_const,get_msb};
+use crate::utils::arch::get_msb_const;
 use crate::system::pi_stack::PiStack;
-use crate::utils::helpers::is_privileged;
 use crate::KernelError;
 use crate::kernel::task::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 use crate::system::scheduler::{TaskId, BooleanVector};

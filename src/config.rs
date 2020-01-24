@@ -74,20 +74,6 @@ mod event_config {
     compile_error!("Features 'event_32','event_18' and 'event_64' are mutually exclusive.");
 }
 
-mod event_index_table_config {
-    #[cfg(all(
-        any(feature = "event_index_8", feature = "default"),
-        not(feature = "event_index_16")
-    ))]
-    pub const EVENT_INDEX_TABLE_COUNT: usize = 8;
-
-    #[cfg(feature = "event_16")]
-    pub const EVENT_INDEX_TABLE_COUNT: usize = 16;
-
-    #[cfg(any(all(feature = "event_index_8", feature = "event_index_16"),))]
-    compile_error!("Features 'event_index_8' and 'event_index_16' are mutually exclusive.");
-}
-
 pub use resources_config::MAX_RESOURCES;
 pub use tasks_config::MAX_TASKS;
 pub use event_config::EVENT_COUNT;

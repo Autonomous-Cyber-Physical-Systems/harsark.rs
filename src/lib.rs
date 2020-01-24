@@ -62,11 +62,11 @@ pub mod event {
     pub use crate::kernel::event::enable;
     pub use crate::kernel::event::disable;
     pub use crate::kernel::event::new;
-    pub use crate::kernel::event::systick_start;
+    pub use crate::kernel::event::start_timer;
 }
 
 /// Kernel routines which assist in Inter-task Communication.
-pub mod primitive {
+pub mod primitives {
     pub use crate::system::message::Message;
     pub use crate::system::resource::*;
     pub use crate::system::semaphore::Semaphore;
@@ -75,7 +75,6 @@ pub mod primitive {
 /// Kernel routines which assist in Task management.
 pub mod task {
     pub use crate::kernel::task::create_task;
-    pub use crate::kernel::task::get_curr_tid;
     pub use crate::kernel::task::init;
     pub use crate::kernel::task::release;
     pub use crate::kernel::task::start_kernel;

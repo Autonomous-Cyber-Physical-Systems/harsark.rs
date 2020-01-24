@@ -14,7 +14,7 @@ use stm32f4::stm32f407::Peripherals;
 
 use hartex_rust::task::*;
 use hartex_rust::util::TaskMask;
-use hartex_rust::primitive::*;
+use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 use hartex_rust::event;
 
@@ -57,7 +57,7 @@ fn main() -> ! {
         peripherals_configure(perf);
     });
 
-    let event1 = event::new(true, 3, || {
+    let event1 = event::new(true, 5, || {
         release(TaskMask::generate([task1]))
     });
     let event2 = event::new(true, 4, || {

@@ -22,7 +22,7 @@ pub struct Event
 
 impl Event {
     /// Takes the EventId and executes the corresponding event handler.
-    pub fn execute_event(&mut self) {
+    pub fn dispatch_event(&mut self) {
         if self.is_enabled {
             if self.counter == 0 {
                 self.counter = self.threshold;
@@ -57,7 +57,7 @@ impl EventTable
     pub fn sweep(&mut self) {
         for i in 0..self.curr {
             if let Some(ref mut event) = self.events[i] {
-                event.execute_event();
+                event.dispatch_event();
             }
         }
     }

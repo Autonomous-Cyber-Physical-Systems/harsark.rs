@@ -9,7 +9,7 @@ use cortex_m_semihosting::hprintln;
 
 use hartex_rust::task::*;
 use hartex_rust::util::TaskMask;
-use hartex_rust::primitive::*;
+use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 
 struct AppState {
@@ -27,10 +27,10 @@ const task3: u32 = 3;
 fn main() -> ! {
     let peripherals = init_peripherals();
 
-        static sem2: Semaphore = Semaphore::new(TaskMask::generate([task2]));
-        static sem3: Semaphore = Semaphore::new(TaskMask::generate([task3]));
-        static res1: Resource<[u32; 3]> = Resource::new([1, 2, 3], TaskMask::generate([task1, task2]));
-        static res2: Resource<[u32; 2]> = Resource::new([4, 5], TaskMask::generate([task3]));
+    static sem2: Semaphore = Semaphore::new(TaskMask::generate([task2]));
+    static sem3: Semaphore = Semaphore::new(TaskMask::generate([task3]));
+    static res1: Resource<[u32; 3]> = Resource::new([1, 2, 3], TaskMask::generate([task1, task2]));
+    static res2: Resource<[u32; 2]> = Resource::new([4, 5], TaskMask::generate([task3]));
 
     static mut stack1: [u32; 512] = [0; 512];
     static mut stack2: [u32; 512] = [0; 512];

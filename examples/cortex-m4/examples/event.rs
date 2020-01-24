@@ -11,7 +11,7 @@ use cortex_m_semihosting::hprintln;
 use hartex_rust::task::*;
 use hartex_rust::event;
 use hartex_rust::util::TaskMask;
-use hartex_rust::primitive::*;
+use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 
 const task1: u32 = 1;
@@ -67,7 +67,7 @@ fn main() -> ! {
 
     init();
     peripherals.acquire(|perf| {
-        event::systick_start(
+        event::start_timer(
             &mut perf.borrow_mut(),
             80_000_00,
         )

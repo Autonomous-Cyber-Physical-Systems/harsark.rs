@@ -16,7 +16,7 @@ use hartex_rust::alloc;
 use hartex_rust::heap::init_heap;
 use hartex_rust::task::*;
 use hartex_rust::util::TaskMask;
-use hartex_rust::primitive::*;
+use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 
 /*
