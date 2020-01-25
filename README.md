@@ -18,6 +18,12 @@ For examples, take a look at `/examples`.
 
 [API Reference](http://autonomous-cyber-physical-systems.github.io/hartex-rust)
 
+## Build instructions
+
+Please go through [this](https://rust-embedded.github.io/book/intro/install.html) and [this](https://rust-embedded.github.io/book/intro/install/linux.html) to setup all the tools required for development on your machine.
+
+Also, getting acquinted with embedded development using rust will be helpful in running and testing the kernel, [This](https://rust-embedded.github.io/book/intro/index.html) online book will be helpful for the same.
+
 ## References
 
 Gourinath Banda. “Scalable Real-Time Kernel for Small Embedded Systems”. En- glish. PhD thesis. Denmark: University of Southern Denmark, June 2003. URL: http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=84D11348847CDC13691DFAED09883FCB?doi=10.1.1.118.1909&rep=rep1&type=pdf.
