@@ -18,7 +18,8 @@ static PiStackGlobal: Mutex<RefCell<PiStack>> = Mutex::new(RefCell::new(PiStack:
 /// A Safe Container to store a resource, it can hold resource of any Generic Type
 /// and allow safe access to it without leading into Data races or Deadlocks.
 #[derive(Debug)]
-pub struct Resource<T: Sized> {
+pub struct Resource<T: Sized> 
+{
     /// An boolean vector holding which tasks have access to the resource.
     ceiling: TaskId,
     /// It holds the priority of the highest priority task that can access that resource.
@@ -27,7 +28,7 @@ pub struct Resource<T: Sized> {
     inner: T,
 }
 
-impl<T> Resource<T> {
+impl<T: Sized> Resource<T> {
     
     /// It is used to instantiate a new Resource. This function takes ownership of the variable.
     /// It returns a resource instantiated with the value. Hence ensuring the value cannot be accessed

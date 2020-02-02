@@ -33,7 +33,7 @@ impl PiStack {
         if self.top < 0 {
             return Err(KernelError::Empty)
         }
-        self.system_ceiling = self.pi_stack[self.top - 1];
+        self.system_ceiling = self.pi_stack[self.top];
         Ok(())
     }
 

@@ -9,14 +9,14 @@ use core::cell::RefCell;
 use cortex_m::interrupt;
 
 /// Holds details corresponding to a single message
-pub struct Message<T> {
+pub struct Message<T: Sized + Clone> {
     /// Boolean vector representing the receiver tasks.
     value: RefCell<T>,
     pub receivers: BooleanVector,
     semaphore: Semaphore
 }
 
-impl<T: Clone> Message<T> {
+impl<T: Sized + Clone> Message<T> {
     /// Creates a new entry in the `mcb_table` and `scb_table` corresponding to a message.
     pub const fn new(
         tasks_mask: BooleanVector,
@@ -53,4 +53,4 @@ impl<T: Clone> Message<T> {
     }
 }
 
-unsafe impl<T> Sync for Message<T> {}
+unsafe impl<T: Sized + Clone> Sync for Message<T> {}
