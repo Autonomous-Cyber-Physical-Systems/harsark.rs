@@ -21,7 +21,7 @@ pub struct PiStack {
 impl PiStack {
     pub const fn new() -> Self {
         Self {
-            top: 1,
+            top: 0,
             pi_stack: [PI; MAX_RESOURCES],
             system_ceiling: PI,
         }
@@ -39,12 +39,12 @@ impl PiStack {
 
     /// Pushes the passed ceiling onto the pi_stack.
     pub fn push_stack(&mut self, ceiling: TaskId) -> Result<(),KernelError> {
+        self.top += 1;
         if self.top >= MAX_RESOURCES {
             return Err(KernelError::LimitExceeded)
         }
         self.pi_stack[self.top] = ceiling as i32;
         self.system_ceiling = ceiling as i32;
-        self.top += 1;
         Ok(())
     }
 }

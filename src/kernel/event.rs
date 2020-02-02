@@ -4,22 +4,19 @@
 
 use core::cell::RefCell;
 
-use cortex_m::interrupt::free as execute_critical;
-use cortex_m::interrupt::Mutex;
+use crate::utils::arch::{critical_section,Mutex,SystClkSource,Peripherals};
 
 use crate::priv_execute;
 use crate::system::event::*;
 use crate::utils::helpers::is_privileged;
 use crate::KernelError;
-use cortex_m::peripheral::syst::SystClkSource;
-use cortex_m::peripheral::Peripherals;
 
 /// Global Instance of EventManager
 static event_manager: Mutex<RefCell<EventTable>> = Mutex::new(RefCell::new(EventTable::new()));
 
 /// Dispatches all the events of EventTableType same as `event_type`.
 pub fn sweep_event_table() {
-    execute_critical(|cs_token| {
+    critical_section(|cs_token| {
         event_manager
             .borrow(cs_token)
             .borrow_mut()
@@ -29,7 +26,7 @@ pub fn sweep_event_table() {
 
 /// This function is used to enable events if disabled. Useful for dispatching OnOff type events.
 pub fn enable(event_id: EventId) -> Result<(),KernelError> {
-    execute_critical(|cs_token| {
+    critical_section(|cs_token| {
         event_manager
             .borrow(cs_token)
             .borrow_mut()
@@ -38,7 +35,7 @@ pub fn enable(event_id: EventId) -> Result<(),KernelError> {
 }
 /// This function is used to enable events if disabled. Useful for dispatching OnOff type events.
 pub fn disable(event_id: EventId) -> Result<(),KernelError> {
-    execute_critical(|cs_token| {
+    critical_section(|cs_token| {
         event_manager
             .borrow(cs_token)
             .borrow_mut()
@@ -66,7 +63,7 @@ pub fn new(
     handler: fn() -> (),
 ) -> Result<EventId, KernelError> {
     priv_execute!({
-        execute_critical(|cs_token| {
+        critical_section(|cs_token| {
             event_manager.borrow(cs_token).borrow_mut().create(
                 is_enabled,
                 threshold,

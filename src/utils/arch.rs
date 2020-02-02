@@ -103,3 +103,9 @@ pub fn load_context(task_stack: &TaskControlBlock) {
         )
     };
 }
+
+// processor specific Exports
+pub use cortex_m::interrupt::free as critical_section;
+pub use cortex_m::interrupt::Mutex;
+pub use cortex_m::peripheral::syst::SystClkSource;
+pub use cortex_m::peripheral::Peripherals;
