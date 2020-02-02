@@ -3,3 +3,6 @@
 .gdb_history
 Cargo.lock
 target/
+log.txt
+cg.dot
+cg.svg

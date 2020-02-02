@@ -29,7 +29,7 @@ pub fn init() -> Result<(),KernelError>{
 /// elapsed, which is used to dispatch events and schedule tasks.
 pub fn start_kernel() -> ! {
     loop {
-        preempt();
+        schedule();
     }
 }
 
@@ -51,22 +51,17 @@ pub fn create_task(
 /// Else, the `svc_call()` is executed, this function creates the SVC exception.
 /// And the SVC handler calls schedule again. Thus, the permission level is raised to privileged via the exception.
 pub fn schedule() {
-    match is_privileged() {
-        true => preempt(),
-        false => svc_call(),
-    };
+    let is_preemptive = execute_critical(|cs_token| TaskManager.borrow(cs_token).borrow_mut().is_preemptive);
+    if is_preemptive {
+        match is_privileged() {
+            true => preempt(),
+            false => svc_call(),
+        };
+    } 
 }
 
-/// If the scheduler is running and the highest priority task and currently running task aren’t the same, 
-/// then the `context_switch()` is called.
-pub fn preempt() {
-    execute_critical(|cs_token| unsafe {
-        if TaskManager.borrow(cs_token).borrow().is_preemptive {
-            unsafe {
-                cortex_m::peripheral::SCB::set_pendsv();
-            }
-        }
-    })
+fn preempt() {
+    unsafe { cortex_m::peripheral::SCB::set_pendsv() }
 }
 
 /// Returns the TaskId of the currently running task in the kernel.
@@ -88,9 +83,9 @@ pub fn unblock_tasks(tasks_mask: BooleanVector) {
 
 /// The `task_exit` function is called just after a task finishes execution. This function unsets the task’s corresponding bit in the `active_tasks` and calls schedule. Hence in the next call to schedule, the kernel schedules some other task.
 pub fn task_exit() {
-    let curr_tid = get_curr_tid();
     execute_critical(|cs_token| {
         let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
+        let curr_tid = handler.curr_tid;
         handler.active_tasks &= !(1 << curr_tid as u32);
     });
     schedule()
@@ -99,4 +94,22 @@ pub fn task_exit() {
 /// The Kernel releases the tasks in the `task_mask`, these tasks transition from the waiting to the ready state.
 pub fn release(tasks_mask: BooleanVector) {
     execute_critical(|cs_token| TaskManager.borrow(cs_token).borrow_mut().release(tasks_mask));
+}
+
+pub fn enable_preemption() {
+    execute_critical(|cs_token| {
+        let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
+        handler.preempt_disable_count -= 1;
+        if handler.preempt_disable_count == 0 {
+            handler.is_preemptive = true;
+        }
+    })
+}
+
+pub fn disable_preemption() {
+    execute_critical(|cs_token| {
+        let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
+        handler.preempt_disable_count += 1;
+        handler.is_preemptive = false;
+    })
 }

@@ -23,6 +23,7 @@ pub struct Scheduler {
     pub active_tasks: BooleanVector,
     /// A variable which decided if the scheduler should preemptively schedule tasks or not.
     pub is_preemptive: bool,
+    pub preempt_disable_count: u32,
 }
 
 /// A single tasks's state
@@ -54,6 +55,7 @@ impl Scheduler {
             active_tasks: 1,
             blocked_tasks: 0,
             is_preemptive: false,
+            preempt_disable_count: 0,
         }
     }
     
@@ -136,9 +138,9 @@ impl Scheduler {
     /// The highest priority is determined by calculating the most significant bit of boolean vector
     /// corresponding to the tasks in the ready state. The tasks in the ready state can be identified
     /// by the boolean and of `active_tasks` and boolean not(`blocked_tasks`).
-    pub fn get_next_tid(&self) -> TaskId {
+    pub fn get_next_tid(&self) -> usize {
         let mask = self.active_tasks & !self.blocked_tasks;
-        return get_msb(mask) as TaskId;
+        return get_msb(mask);
     }
 
     /// Updates `active_tasks` with `task_mask`.

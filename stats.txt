@@ -7,3 +7,9 @@ resource: 18K
 semaphore: 8.9K
 blink: 14K
 gpio-interrupts: 9.1K
+
+full context switch: 174
+load pendsv: 20
+switch from pendsv: 23
+load context: 20
+save context: 23
