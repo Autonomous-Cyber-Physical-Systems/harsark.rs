@@ -39,16 +39,18 @@ fn main() -> ! {
     });
     spawn!(task2, stack2, {
         hprintln!("TASK 2: Enter");
-        msg1.receive(|msg| {
+        let msg = msg1.receive();
+        if let Some(msg) = msg {
             hprintln!("TASK 2: msg received : {:?}", msg);
-        });
+        }
         hprintln!("TASK 2: END");
     });
     spawn!(task3, stack3, {
         hprintln!("TASK 3: Enter");
-        msg1.receive(|msg| {
+        let msg = msg1.receive();
+        if let Some(msg) = msg {
             hprintln!("TASK 3: msg received : {:?}", msg);
-        });
+        }
         hprintln!("TASK 3: END");
     });
 

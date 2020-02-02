@@ -40,13 +40,11 @@ impl<T: Sized + Clone> Message<T> {
         })
     }
 
-    pub fn receive<F,R> (&'static self, handler: F) -> Option<R>
-    where
-        F: Fn(&T) -> R, 
+    pub fn receive (&'static self) -> Option<T>
     {
         interrupt::free(|_| {
             match self.semaphore.test_and_reset() {
-                Ok(res) if res == true => Some(handler(&self.value.borrow())),
+                Ok(res) if res == true => Some(self.value.borrow().clone()),
                 _ => None,
             }
         })
