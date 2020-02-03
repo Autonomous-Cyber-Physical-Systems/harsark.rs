@@ -13,7 +13,7 @@ use crate::utils::helpers::is_privileged;
 #[cfg(feature = "logger")]
 use crate::kernel::logging; 
 #[cfg(feature = "logger")]
-use crate::system::logger::LogEventType; 
+use crate::system::logger::LogEventType;
 
 /// Global Scheduler instance
 #[no_mangle]
@@ -47,6 +47,20 @@ pub fn start_kernel() -> ! {
 }
 
 /// Create a new task with the configuration set as arguments passed.
+#[cfg(feature="process_monitor")]
+pub fn create_task(
+    priority: TaskId,
+    deadline: u32,
+    stack: &mut [u32],
+    handler_fn: fn() -> !,
+) -> Result<(), KernelError>
+{
+    priv_execute!({
+        critical_section(|cs_token| TaskManager.borrow(cs_token).borrow_mut().create_task(priority as usize,deadline, stack, handler_fn))
+    })
+}
+
+#[cfg(not(feature="process_monitor"))]
 pub fn create_task(
     priority: TaskId,
     stack: &mut [u32],
@@ -84,7 +98,7 @@ pub fn get_curr_tid() -> TaskId {
 
 /// The Kernel blocks the tasks mentioned in `tasks_mask`.
 pub fn block_tasks(tasks_mask: BooleanVector) {
-    if cfg!(feature = "logger") {
+    #[cfg(feature = "logger")] {
         if logging::get_block_tasks_log() {
             logging::report(LogEventType::BlockTasks(tasks_mask));
         }
@@ -94,7 +108,7 @@ pub fn block_tasks(tasks_mask: BooleanVector) {
 
 /// The Kernel unblocks the tasks mentioned in tasks_mask.
 pub fn unblock_tasks(tasks_mask: BooleanVector) {
-    if cfg!(feature = "logger") {
+    #[cfg(feature = "logger")] {
         if logging::get_unblock_tasks_log() {
             logging::report(LogEventType::UnblockTasks(tasks_mask));
         }
@@ -107,7 +121,7 @@ pub fn task_exit() {
     critical_section(|cs_token| {
         let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
         let curr_tid = handler.curr_tid;
-        if cfg!(feature = "logger") {
+        #[cfg(feature = "logger")] {
             if logging::get_task_exit_log() {
                 logging::report(LogEventType::TaskExit(curr_tid as TaskId));
             }
@@ -118,12 +132,12 @@ pub fn task_exit() {
 }
 /// The Kernel releases the tasks in the `task_mask`, these tasks transition from the waiting to the ready state.
 pub fn release(tasks_mask: BooleanVector) {
-    if cfg!(feature = "logger") {
+    #[cfg(feature = "logger")] {
         if logging::get_release_log() {
             logging::report(LogEventType::ReleaseTasks(tasks_mask));
         }
     }
-    critical_section(|cs_token| TaskManager.borrow(cs_token).borrow_mut().release(tasks_mask));
+    critical_section(|cs_token| {TaskManager.borrow(cs_token).borrow_mut().release(tasks_mask)});
 }
 
 pub fn enable_preemption() {

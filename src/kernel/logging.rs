@@ -109,6 +109,12 @@ pub fn set_timer_event_log(val: bool) {
     })
 }
 
+pub fn set_deadline_log(val: bool) {
+    critical_section(|cs_token| {
+        Logger.borrow(cs_token).borrow_mut().deadline_log = val;
+    })
+}
+
 pub fn get_release_log() -> bool {
     critical_section(|cs_token| {
         Logger.borrow(cs_token).borrow_mut().release_log
@@ -172,5 +178,12 @@ pub fn get_semaphore_reset_log() -> bool {
 pub fn get_timer_event_log() -> bool {
     critical_section(|cs_token| {
         Logger.borrow(cs_token).borrow_mut().timer_event_log
+    })
+}
+
+
+pub fn get_deadline_log() -> bool {
+    critical_section(|cs_token| {
+        Logger.borrow(cs_token).borrow_mut().deadline_log
     })
 }

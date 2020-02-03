@@ -5,6 +5,11 @@ use crate::config::MAX_TASKS;
 use crate::utils::arch::{get_msb, save_context, load_context};
 use crate::KernelError;
 
+#[cfg(feature = "process_monitor")]
+use crate::kernel::process_monitor::{clear_deadline,set_deadline}; 
+
+use cortex_m_semihosting::hprintln;
+
 pub type TaskId = u32;
 pub type BooleanVector = u32;
 
@@ -27,11 +32,21 @@ pub struct Scheduler {
 }
 
 /// A single tasks's state
+#[cfg(not(feature="process_monitor"))]
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct TaskControlBlock {
     /// Holds a reference to the stack pointer for the task.
     stack_pointer: usize, // current stack pointer of this thread
+}
+
+#[cfg(feature="process_monitor")]
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct TaskControlBlock {
+    /// Holds a reference to the stack pointer for the task.
+    stack_pointer: usize, // current stack pointer of this thread
+    deadline: u32,
 }
 
 
@@ -62,6 +77,22 @@ impl Scheduler {
     /// This method sets the is_preemptive field of the scheduler instance and defines the configurations
     /// for the idle task and calls create\_task with it. The waiting task has zero priority; hence,
     /// it is only executed when no other task is in Ready state.
+    #[cfg(feature="process_monitor")]
+    pub fn init(&mut self) -> Result<(),KernelError>{
+        self.is_preemptive = true;
+        
+        static mut stack0: [u32; 64] = [0; 64];
+        self.create_task(
+            0,
+            100,
+            unsafe { &mut stack0 },
+            || loop {
+                cortex_m::asm::wfe();
+            }
+        )
+    }
+
+    #[cfg(not(feature="process_monitor"))]
     pub fn init(&mut self) -> Result<(),KernelError>{
         self.is_preemptive = true;
         
@@ -81,6 +112,7 @@ impl Scheduler {
     /// The `<T: Sync>` informs the compiler that the type `T` must implement the Sync trait. By implementing the Sync trait, a type becomes safe to be shared across tasks. Hence if a type that doesn’t implement Sync trait (like a mutable integer) is passed as param, then the code won’t compile. Kernel primitives like Message and Resource (which are data race safe) implement the Sync trait; hence, it can be passed as param. In this way, the Kernel makes safety a requirement rather than a choice.
     ///
     /// `handler_fn` is of type `fn(&T) -> !`, which implies it is a function pointer which takes a parameter of Type `&T` and infinitely loops. For more details, look into `spawn!` Macro.
+    #[cfg(not(feature="process_monitor"))]
     pub fn create_task(
         &mut self,
         priority: usize,
@@ -91,8 +123,22 @@ impl Scheduler {
         let tcb = self.create_tcb(stack, handler_fn)?;
         self.insert_tcb(priority, tcb)
     }
+    
+    #[cfg(feature="process_monitor")]
+    pub fn create_task(
+        &mut self,
+        priority: usize,
+        deadline: u32,
+        stack: &mut [u32],
+        handler_fn: fn() -> !,
+    ) -> Result<(), KernelError>
+    {
+        let tcb = self.create_tcb(deadline, stack, handler_fn)?;
+        self.insert_tcb(priority, tcb)
+    }
 
     /// Creates a TCB corresponding to the tasks details passed onto this method.
+    #[cfg(not(feature="process_monitor"))]
     fn create_tcb(
         &self,
         stack: &mut [u32],
@@ -110,7 +156,36 @@ impl Scheduler {
         stack[pos - 1] = pc as u32; // PC
 
         let stack_pointer: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
-        let tcb = TaskControlBlock { stack_pointer: stack_pointer as usize };
+        let tcb = TaskControlBlock {
+            stack_pointer: stack_pointer as usize 
+        };
+
+        Ok(tcb)
+    }
+    
+    #[cfg(feature="process_monitor")]
+    fn create_tcb(
+        &self,
+        deadline: u32,
+        stack: &mut [u32],
+        handler: fn() -> !,
+    ) -> Result<TaskControlBlock, KernelError>
+    {
+        if stack.len() < 32 {
+            return Err(KernelError::StackTooSmall);
+        }
+
+        let pos = stack.len() - 1;
+        let pc: usize = handler as usize;
+
+        stack[pos] = 1 << 24; // xPSR
+        stack[pos - 1] = pc as u32; // PC
+
+        let stack_pointer: usize = unsafe { core::intrinsics::transmute(&stack[stack.len() - 16]) };
+        let tcb = TaskControlBlock {
+            deadline, 
+            stack_pointer: stack_pointer as usize 
+        };
 
         Ok(tcb)
     }
@@ -145,6 +220,13 @@ impl Scheduler {
 
     /// Updates `active_tasks` with `task_mask`.
     pub fn release(&mut self, tasks_mask: BooleanVector) {
+        #[cfg(feature = "process_monitor")] {
+            for i in 0..32 {
+                if (tasks_mask & 1<<i) > 0 {
+                    set_deadline(i as TaskId, self.task_control_blocks[i].unwrap().deadline)
+                }
+            }
+        }
         self.active_tasks |= tasks_mask;
     }
 }

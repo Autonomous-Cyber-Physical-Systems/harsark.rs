@@ -14,6 +14,8 @@ use hartex_rust::task::*;
 use hartex_rust::util::TaskMask;
 use hartex_rust::primitives::*;
 use hartex_rust::spawn;
+use hartex_rust::event;
+use hartex_rust::logging;
 
 const task1: u32 = 1;
 const task2: u32 = 2;
@@ -27,8 +29,8 @@ fn main() -> ! {
     RefCell is used to provide interior mutability read more at :
     https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
     */
-    let peripherals: Resource<RefCell<Peripherals>> = init_peripherals();
-
+    let mut peripherals = cortex_m::Peripherals::take().unwrap();
+    // peripherals.DWT.enable_cycle_counter();
     /*
     Define the task stacks corresponding to each task.
     Note to specify the stack size according to the task parameters and local variables etc.
@@ -44,14 +46,20 @@ fn main() -> ! {
     The third variable corresponds to the task stack.
     The fourth variable corresponds to the task body.
     */
-    spawn!(task1, stack1, {
+    spawn!(task1,2, stack1, {
         hprintln!("TASK 1");
+        cortex_m::asm::delay(9999999);
+        logging::process(|log: logging::LogEvent| {
+            hprintln!("{:?}", log);
+        });
     });
-    spawn!(task2, stack2, {
+    spawn!(task2,2, stack2, {
         hprintln!("TASK 2");
+        cortex_m::asm::delay(9999999);
     });
-    spawn!(task3, stack3, {
+    spawn!(task3,2, stack3, {
         hprintln!("TASK 3");
+        cortex_m::asm::delay(9999999);
     });
 
 
@@ -59,8 +67,9 @@ fn main() -> ! {
     init();
 
     // Releases tasks task1, task2, task3
+    logging::set_all(true);
     release(TaskMask::generate([task1, task2, task3]));
-
+    event::start_timer(&mut peripherals, 1000_0);
     /*
     Starts scheduling tasks on the device.
     It requires a reference to the peripherals so as to start the SysTick timer.

@@ -18,6 +18,7 @@ pub enum LogEventType {
     SemaphoreSignal(BooleanVector,BooleanVector),
     SemaphoreReset(TaskId),
     TimerEvent(EventId),
+    DeadlineExpired(TaskId,u32),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -50,6 +51,7 @@ pub struct Logger {
     pub semaphore_signal_log: bool,
     pub semaphore_reset_log: bool,
     pub timer_event_log: bool,
+    pub deadline_log: bool,
 }
 // use a circular queue instead of this crap.
 // ensure the handler is not None in start_kernel.
@@ -70,6 +72,7 @@ impl Logger {
             semaphore_signal_log : false,
             semaphore_reset_log : false,
             timer_event_log : false,
+            deadline_log: false,
         }
     }
     pub fn push(&mut self, event: LogEvent) {
@@ -99,16 +102,17 @@ impl fmt::Debug for LogEventType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             LogEventType::ReleaseTasks(tasks_mask) => write!(f, "Tasks Released: {}", tasks_mask),
-            LogEventType::BlockTasks(tasks_mask) => write!(f, "Exists"),
-            LogEventType::UnblockTasks(tasks_mask) => write!(f, "Exists"),
-            LogEventType::TaskExit(tasks_mask) => write!(f, "Exists"),
-            LogEventType::ResourceLock(ceiling,bool) => write!(f, "Exists"),
-            LogEventType::ResourceUnlock(ceiling) => write!(f, "Exists"),
-            LogEventType::MessageBroadcast(tasks_released,recieved) => write!(f, "Exists"),
-            LogEventType::MessageRecieve(task_id) => write!(f, "Exists"),
-            LogEventType::SemaphoreSignal(tasks_released,tasks_notified) => write!(f, "Exists"),
-            LogEventType::SemaphoreReset(task_id) => write!(f, "Exists"),
-            LogEventType::TimerEvent(EventId) => write!(f, "Exists"),
+            LogEventType::BlockTasks(tasks_mask) => write!(f, "BlockTasks"),
+            LogEventType::UnblockTasks(tasks_mask) => write!(f, "UnblockTasks"),
+            LogEventType::TaskExit(tasks_mask) => write!(f, "TaskExit"),
+            LogEventType::ResourceLock(ceiling,bool) => write!(f, "ResourceLock"),
+            LogEventType::ResourceUnlock(ceiling) => write!(f, "ResourceUnlock"),
+            LogEventType::MessageBroadcast(tasks_released,recieved) => write!(f, "MessageBroadcast"),
+            LogEventType::MessageRecieve(task_id) => write!(f, "MessageRecieve"),
+            LogEventType::SemaphoreSignal(tasks_released,tasks_notified) => write!(f, "SemaphoreSignal"),
+            LogEventType::SemaphoreReset(task_id) => write!(f, "SemaphoreReset"),
+            LogEventType::TimerEvent(EventId) => write!(f, "TimerEvent"),
+            LogEventType::DeadlineExpired(TaskId, u32) => write!(f, "DeadlineExpired"),
         }
     }
 }

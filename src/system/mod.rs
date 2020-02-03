@@ -11,3 +11,6 @@ pub mod event;
 
 #[cfg(feature="logger")]
 pub mod logger;
+
+#[cfg(feature="process_monitor")]
+pub mod process_monitor;
