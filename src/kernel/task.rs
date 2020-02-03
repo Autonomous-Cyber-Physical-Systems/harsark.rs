@@ -26,6 +26,14 @@ pub fn init() -> Result<(),KernelError>{
 /// frequency of the timer interrupt. The SysTick exception updates the kernel regarding the time
 /// elapsed, which is used to dispatch events and schedule tasks.
 pub fn start_kernel() -> ! {
+    /**
+     * ensure contracts here else panic, for example:  
+     * ensure timer has started if events are being used
+     * logger initialization is complete 
+     * ... etc
+     * 
+     * address integer overflow throught out the code base and add it to the paper.
+     */
     loop {
         schedule();
     }

@@ -14,10 +14,13 @@ use crate::kernel::event::sweep_event_table;
 /// task if there are any.
 
 
-#[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
+#[cfg(feature="timer")]
 #[exception]
 fn SysTick() {
+
+    #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
     sweep_event_table();
+    
     schedule();
 }
 /// ### SVC Interrupt handler,

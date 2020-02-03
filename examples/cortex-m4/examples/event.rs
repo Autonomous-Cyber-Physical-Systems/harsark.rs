@@ -59,9 +59,10 @@ fn main() -> ! {
     });
     spawn!(task3, stack3, {
         hprintln!("TASK 3: Enter");
-        msg1.receive(|msg| {
+        let msg = msg1.receive();
+        if let Some(msg) = msg {
             hprintln!("TASK 3: msg received : {:?}", msg);
-        });
+        }
         hprintln!("TASK 3: End");
     });
 

@@ -29,9 +29,13 @@ resources_16 = []
 resources_32 = []
 resources_64 = []
 
-events_16 = []
-events_32 = []
-events_64 = []
+events_16 = ["timer"]
+events_32 = ["timer"]
+events_64 = ["timer"]
+
+timer = []
+
+logger = []
 
 alloc = ["alloc-cortex-m"]
 
