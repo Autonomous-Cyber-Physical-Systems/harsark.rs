@@ -33,6 +33,8 @@ pub fn start_kernel() -> ! {
      * ... etc
      * 
      * address integer overflow throught out the code base and add it to the paper.
+     * also write about how size of enum with values is calculated
+     * safety in get_msb and all using option enum. go throught return errors.
      */
     loop {
         schedule();

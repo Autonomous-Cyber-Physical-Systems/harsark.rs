@@ -33,3 +33,5 @@ pub const EVENT_COUNT: usize = 16;
 
 #[cfg(feature = "events_64")]
 pub const EVENT_COUNT: usize = 64;
+
+pub const MAX_LOGS: usize = 128;
