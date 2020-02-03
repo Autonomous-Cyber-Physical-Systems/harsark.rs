@@ -20,10 +20,10 @@ pub enum LogEventType {
     TimerEvent(EventId),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct LogEvent {
-    event_type: LogEventType,
-    timestamp: u32
+    pub event_type: LogEventType,
+    pub timestamp: u32
 }
 
 impl LogEvent {
@@ -39,6 +39,17 @@ pub struct Logger {
     logs: Logs,
     start: usize,
     end: usize,
+    pub release_log: bool,
+    pub block_tasks_log: bool,
+    pub unblock_tasks_log: bool,
+    pub task_exit_log: bool,
+    pub resource_lock_log: bool,
+    pub resource_unlock_log: bool,
+    pub message_broadcast_log: bool,
+    pub message_recieve_log: bool,
+    pub semaphore_signal_log: bool,
+    pub semaphore_reset_log: bool,
+    pub timer_event_log: bool,
 }
 // use a circular queue instead of this crap.
 // ensure the handler is not None in start_kernel.
@@ -48,13 +59,24 @@ impl Logger {
             logs: [None; MAX_LOGS],
             start: 0,
             end: 0,
+            release_log : false,
+            block_tasks_log : false,
+            unblock_tasks_log : false,
+            task_exit_log : false,
+            resource_lock_log : false,
+            resource_unlock_log : false,
+            message_broadcast_log : false,
+            message_recieve_log : false,
+            semaphore_signal_log : false,
+            semaphore_reset_log : false,
+            timer_event_log : false,
         }
     }
     pub fn push(&mut self, event: LogEvent) {
         self.logs[self.end] = Some(event);
-        self.end += 1;
+        self.end = (self.end+1)%MAX_LOGS;
         if self.start == self.end {
-            self.start += 1;
+            self.start = (self.start+1)%MAX_LOGS;
         }
     }
     pub fn clear(&mut self) {
@@ -65,13 +87,10 @@ impl Logger {
         self.end = 0;
     }
     pub fn pop(&mut self) -> Option<LogEvent> {
-        if self.start == self.end {
-            return None;
-        }
         let pos = self.start;
         let val = self.logs[pos];
         self.logs[pos] = None;
-        self.start += 1;
+        self.start = (self.start+1)%MAX_LOGS;
         return val;
     }
 }

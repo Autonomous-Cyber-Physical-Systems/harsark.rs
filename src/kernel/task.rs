@@ -10,6 +10,11 @@ use crate::system::scheduler::*;
 use crate::utils::arch::{svc_call,Mutex,critical_section};
 use crate::utils::helpers::is_privileged;
 
+#[cfg(feature = "logger")]
+use crate::kernel::logging; 
+#[cfg(feature = "logger")]
+use crate::system::logger::LogEventType; 
+
 /// Global Scheduler instance
 #[no_mangle]
 pub static TaskManager: Mutex<RefCell<Scheduler>> = Mutex::new(RefCell::new(Scheduler::new()));
@@ -79,11 +84,21 @@ pub fn get_curr_tid() -> TaskId {
 
 /// The Kernel blocks the tasks mentioned in `tasks_mask`.
 pub fn block_tasks(tasks_mask: BooleanVector) {
+    if cfg!(feature = "logger") {
+        if logging::get_block_tasks_log() {
+            logging::report(LogEventType::BlockTasks(tasks_mask));
+        }
+    }
     critical_section(|cs_token| TaskManager.borrow(cs_token).borrow_mut().block_tasks(tasks_mask))
 }
 
 /// The Kernel unblocks the tasks mentioned in tasks_mask.
 pub fn unblock_tasks(tasks_mask: BooleanVector) {
+    if cfg!(feature = "logger") {
+        if logging::get_unblock_tasks_log() {
+            logging::report(LogEventType::UnblockTasks(tasks_mask));
+        }
+    }
     critical_section(|cs_token| TaskManager.borrow(cs_token).borrow_mut().unblock_tasks(tasks_mask))
 }
 
@@ -92,13 +107,22 @@ pub fn task_exit() {
     critical_section(|cs_token| {
         let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
         let curr_tid = handler.curr_tid;
+        if cfg!(feature = "logger") {
+            if logging::get_task_exit_log() {
+                logging::report(LogEventType::TaskExit(curr_tid as TaskId));
+            }
+        }
         handler.active_tasks &= !(1 << curr_tid as u32);
     });
     schedule()
 }
-
 /// The Kernel releases the tasks in the `task_mask`, these tasks transition from the waiting to the ready state.
 pub fn release(tasks_mask: BooleanVector) {
+    if cfg!(feature = "logger") {
+        if logging::get_release_log() {
+            logging::report(LogEventType::ReleaseTasks(tasks_mask));
+        }
+    }
     critical_section(|cs_token| TaskManager.borrow(cs_token).borrow_mut().release(tasks_mask));
 }
 

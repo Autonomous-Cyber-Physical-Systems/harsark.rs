@@ -81,5 +81,12 @@ pub mod task {
     pub use crate::kernel::task::task_exit;
 }
 
+#[cfg(feature="logger")]
+pub mod logging {
+    pub use crate::kernel::logging::process;
+    pub use crate::kernel::logging::set_all;
+    pub use crate::system::logger::LogEvent;
+}
+
 #[cfg(feature = "alloc")]
 pub use crate::utils::heap;
