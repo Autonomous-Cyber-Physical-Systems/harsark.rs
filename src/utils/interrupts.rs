@@ -7,7 +7,8 @@ use crate::kernel::task::schedule;
 use crate::utils::arch::return_to_psp;
 #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
 use crate::kernel::event::sweep_event_table;
-use crate::kernel::process_monitor::timer_update;
+use crate::kernel::process_monitor::sweep_deadlines;
+use crate::kernel::timer::update_time;
 /// ### SysTick Interrupt handler
 /// Its the Crux of the Kernel’s time management module and Task scheduling.
 /// This interrupt handler updates the time and also dispatches the appropriate event handlers.
@@ -22,8 +23,11 @@ fn SysTick() {
     #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
     sweep_event_table();
 
+    #[cfg(feature="timer")]
+    update_time();
+    
     #[cfg(feature="process_monitor")]
-    timer_update();
+    sweep_deadlines();
     
     // hprintln!("hello");
     schedule();
