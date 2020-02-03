@@ -5,9 +5,13 @@ use cortex_m::interrupt::free as execute_critical;
 use crate::kernel::task::{TaskManager};
 use crate::kernel::task::schedule;
 use crate::utils::arch::return_to_psp;
+
 #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
 use crate::kernel::event::sweep_event_table;
+
+#[cfg(feature="process_monitor")]
 use crate::kernel::process_monitor::sweep_deadlines;
+
 use crate::kernel::timer::update_time;
 /// ### SysTick Interrupt handler
 /// Its the Crux of the Kernel’s time management module and Task scheduling.

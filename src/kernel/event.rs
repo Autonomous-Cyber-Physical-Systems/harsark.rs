@@ -10,7 +10,7 @@ use crate::priv_execute;
 use crate::system::event::*;
 use crate::utils::helpers::is_privileged;
 use crate::KernelError;
-
+use crate::kernel::timer::get_time;
 /// Global Instance of EventManager
 static event_manager: Mutex<RefCell<EventTable>> = Mutex::new(RefCell::new(EventTable::new()));
 
@@ -20,7 +20,7 @@ pub fn sweep_event_table() {
         event_manager
             .borrow(cs_token)
             .borrow_mut()
-            .sweep();
+            .sweep(get_time());
     })
 }
 
@@ -59,7 +59,7 @@ pub fn start_timer(peripherals: &mut Peripherals, tick_interval: u32) {
 /// Creates a new Event of type EventType::FreeRunning.
 pub fn new(
     is_enabled: bool,
-    threshold: u8,
+    threshold: u32,
     handler: fn() -> (),
 ) -> Result<EventId, KernelError> {
     priv_execute!({

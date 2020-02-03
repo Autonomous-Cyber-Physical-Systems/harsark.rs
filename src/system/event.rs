@@ -14,21 +14,16 @@ pub struct Event
     /// Whether this event is currently enabled or not.
     is_enabled: bool,
     /// This is the frequency (of time unit in which it belongs to) in which the Event should run.
-    threshold: u8,
-    /// The current time elapsed. On reaching the value of the threshold, it is reset to zero, and the Event is dispatched.
-    counter: u8,
+    threshold: u32,
     handler: fn() -> (),
 }
 
 impl Event {
     /// Takes the EventId and executes the corresponding event handler.
-    pub fn dispatch_event(&mut self) {
+    pub fn dispatch_event(&mut self, curr_time: u32) {
         if self.is_enabled {
-            if self.counter == 0 {
-                self.counter = self.threshold;
+            if curr_time % self.threshold == 0 {
                 (self.handler)();
-            } else {
-                self.counter -= 1;
             }
         }
     }
@@ -54,10 +49,10 @@ impl EventTable
     }
 
     /// This function dispatches all events mentioned in the `EventIndexTable` corresponding to the `EventTableType`.
-    pub fn sweep(&mut self) {
+    pub fn sweep(&mut self, curr_time: u32) {
         for i in 0..self.curr {
             if let Some(ref mut event) = self.events[i] {
-                event.dispatch_event();
+                event.dispatch_event(curr_time);
             }
         }
     }
@@ -80,7 +75,7 @@ impl EventTable
     pub fn create(
         &mut self,
         is_enabled: bool,
-        threshold: u8,
+        threshold: u32,
         handler: fn() -> ()
     ) -> Result<EventId, KernelError> {
         let id = self.curr;
@@ -90,7 +85,6 @@ impl EventTable
         self.events[id] = Some(Event {
             is_enabled,
             threshold,
-            counter: 0,
             handler
         });
         self.curr += 1;
