@@ -1,11 +1,11 @@
 //! Kernel module and routines declaration. `Private`
 
-pub mod task;
+pub mod tasks;
 
 #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
-pub mod event;
+pub mod events;
 
-#[cfg(feature="logger")]
+#[cfg(feature="system_logger")]
 pub mod logging;
 
 #[cfg(feature="process_monitor")]

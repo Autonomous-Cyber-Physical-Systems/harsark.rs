@@ -14,8 +14,8 @@ use stm32f4::stm32f407::{self, Peripherals};
 use stm32f4::stm32f407::interrupt;
 use cortex_m::peripheral::NVIC;
 
-use hartex_rust::task::*;
-use hartex_rust::util::TaskMask;
+use hartex_rust::tasks::*;
+use hartex_rust::helpers::TaskMask;
 use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 

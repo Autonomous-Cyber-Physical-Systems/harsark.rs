@@ -2,12 +2,12 @@
 use cortex_m_rt::exception;
 
 use cortex_m::interrupt::free as execute_critical; 
-use crate::kernel::task::{TaskManager};
-use crate::kernel::task::schedule;
+use crate::kernel::tasks::{TaskManager};
+use crate::kernel::tasks::schedule;
 use crate::utils::arch::return_to_psp;
 
 #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
-use crate::kernel::event::sweep_event_table;
+use crate::kernel::events::sweep_event_table;
 
 #[cfg(feature="process_monitor")]
 use crate::kernel::process_monitor::sweep_deadlines;

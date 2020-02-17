@@ -4,7 +4,7 @@
 
 use crate::config::EVENT_COUNT;
 use crate::utils::errors::KernelError;
-use crate::system::logger::LogEventType;
+use crate::system::system_logger::LogEventType;
 use crate::kernel::logging;
 
 pub type EventId = usize;
@@ -27,7 +27,7 @@ impl Event {
         if self.is_enabled {
             if curr_time % self.threshold == 0 {
                 (self.handler)();
-                #[cfg(feature = "logger")] {
+                #[cfg(feature = "system_logger")] {
                     if logging::get_timer_event() {
                         logging::report(LogEventType::TimerEvent(self.event_id));
                     }

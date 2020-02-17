@@ -36,7 +36,7 @@ impl LogEvent {
     }
 }
 
-pub struct Logger {
+pub struct SystemLogger {
     logs: Logs,
     start: usize,
     end: usize,
@@ -54,7 +54,7 @@ pub struct Logger {
 }
 // use a circular queue instead of this crap.
 // ensure the handler is not None in start_kernel.
-impl Logger {
+impl SystemLogger {
     pub const fn new() -> Self {
         Self {
             logs: [None; MAX_LOGS],

@@ -51,20 +51,23 @@ pub mod macros;
 use crate::utils::errors::KernelError;
 
 /// Helper functions.
-pub mod util {
+pub mod helpers {
     pub use crate::utils::helpers::TaskMask;
     pub use crate::utils::helpers::is_privileged;
 }
 
 /// Kernel routines which assist in Event management.
 #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
-pub mod event {
-    pub use crate::kernel::event::enable;
-    pub use crate::kernel::event::disable;
-    pub use crate::kernel::event::new;
-    pub use crate::kernel::event::start_timer;
+pub mod events {
+    pub use crate::kernel::events::enable;
+    pub use crate::kernel::events::disable;
+    pub use crate::kernel::events::new;
 }
 
+#[cfg(feature = "timer")]
+pub mod timer {
+    pub use crate::kernel::timer::start_timer;
+}
 /// Kernel routines which assist in Inter-task Communication.
 pub mod primitives {
     pub use crate::system::message::Message;
@@ -73,15 +76,15 @@ pub mod primitives {
 }
 
 /// Kernel routines which assist in Task management.
-pub mod task {
-    pub use crate::kernel::task::create_task;
-    pub use crate::kernel::task::init;
-    pub use crate::kernel::task::release;
-    pub use crate::kernel::task::start_kernel;
-    pub use crate::kernel::task::task_exit;
+pub mod tasks {
+    pub use crate::kernel::tasks::create_task;
+    pub use crate::kernel::tasks::init;
+    pub use crate::kernel::tasks::release;
+    pub use crate::kernel::tasks::start_kernel;
+    pub use crate::kernel::tasks::task_exit;
 }
 
-#[cfg(feature="logger")]
+#[cfg(feature="system_logger")]
 pub mod logging {
     pub use crate::kernel::logging::process;
     pub use crate::kernel::logging::set_all;
@@ -96,7 +99,7 @@ pub mod logging {
     pub use crate::kernel::logging::set_semaphore_signal;
     pub use crate::kernel::logging::set_semaphore_reset;
     pub use crate::kernel::logging::set_timer_event;
-    pub use crate::system::logger::LogEvent;
+    pub use crate::system::system_logger::LogEvent;
 }
 
 #[cfg(feature = "alloc")]
