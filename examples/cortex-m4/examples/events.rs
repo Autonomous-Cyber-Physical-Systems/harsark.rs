@@ -8,11 +8,12 @@ use core::cell::RefCell;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::task::*;
-use hartex_rust::event;
-use hartex_rust::util::TaskMask;
+use hartex_rust::tasks::*;
+use hartex_rust::events;
+use hartex_rust::helpers::TaskMask;
 use hartex_rust::primitives::*;
 use hartex_rust::spawn;
+use hartex_rust::timer;
 
 const task1: u32 = 1;
 const task2: u32 = 2;
@@ -20,7 +21,7 @@ const task3: u32 = 3;
 
 #[entry]
 fn main() -> ! {
-    let peripherals = init_peripherals();
+    let mut peripherals = cortex_m::Peripherals::take().unwrap();
     
         static sem2: Semaphore = Semaphore::new(TaskMask::generate([task2]));
         static msg1: Message<[u32; 2]> = Message::new(
@@ -29,13 +30,13 @@ fn main() -> ! {
             [9, 10],
         );
 
-    let event1 = event::new(true, 3, || {
+    let event1 = events::new(true, 3, || {
         msg1.broadcast(Some([1,2]));
     });
-    let event2 = event::new(true, 2, || {
+    let event2 = events::new(true, 2, || {
         sem2.signal_and_release(TaskMask::generate([task2]));
     });
-    let event2 = event::new(true, 6, || {
+    let event2 = events::new(true, 6, || {
         release(TaskMask::generate([task1]));
     });
 
@@ -67,11 +68,9 @@ fn main() -> ! {
     });
 
     init();
-    peripherals.acquire(|perf| {
-        event::start_timer(
-            &mut perf.borrow_mut(),
-            80_000_00,
-        )
-    });
+    timer::start_timer(
+        &mut peripherals,
+        80_000_00,
+    );
     start_kernel()
 }

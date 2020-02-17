@@ -10,16 +10,20 @@ use cortex_m::peripheral::Peripherals;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::task::*;
-use hartex_rust::util::TaskMask;
+use hartex_rust::tasks::*;
+use hartex_rust::helpers::TaskMask;
 use hartex_rust::primitives::*;
 use hartex_rust::spawn;
-use hartex_rust::event;
-// use hartex_rust::logging;
+use hartex_rust::events;
+use hartex_rust::logging;
 
 const task1: u32 = 1;
 const task2: u32 = 2;
 const task3: u32 = 3;
+
+static mut stack1: [u32; 128] = [0; 128];
+static mut stack2: [u32; 128] = [0; 128];
+static mut stack3: [u32; 128] = [0; 128];
 
 #[entry]
 fn main() -> ! {
@@ -35,9 +39,6 @@ fn main() -> ! {
     Define the task stacks corresponding to each task.
     Note to specify the stack size according to the task parameters and local variables etc.
     */
-    static mut stack1: [u32; 128] = [0; 128];
-    static mut stack2: [u32; 128] = [0; 128];
-    static mut stack3: [u32; 128] = [0; 128];
 
     /*
     Task definition.

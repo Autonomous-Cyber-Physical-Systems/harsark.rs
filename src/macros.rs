@@ -17,7 +17,7 @@
 ///     hprintln!("Hello!");
 /// });
 /// ```
-// #[cfg(not(feature = "logger"))]
+// #[cfg(not(feature = "system_logger"))]
 #[macro_export]
 macro_rules! spawn {
     ($priority: expr, $stack: expr, $handler_fn: block) => {
@@ -41,7 +41,7 @@ macro_rules! spawn {
     };
 }
 
-// #[cfg(feature = "logger")]
+// #[cfg(feature = "system_logger")]
 // #[macro_export]
 // macro_rules! spawn {
 //     ($priority: expr, $deadline: expr, $stack: expr, $handler_fn: block) => {

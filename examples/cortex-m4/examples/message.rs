@@ -7,8 +7,8 @@ extern crate stm32f4;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::task::*;
-use hartex_rust::util::TaskMask;
+use hartex_rust::tasks::*;
+use hartex_rust::helpers::TaskMask;
 use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 
@@ -16,9 +16,12 @@ const task1: u32 = 1;
 const task2: u32 = 2;
 const task3: u32 = 3;
 
+static mut stack1: [u32; 512] = [0; 512];
+static mut stack2: [u32; 512] = [0; 512];
+static mut stack3: [u32; 512] = [0; 512];
+
 #[entry]
 fn main() -> ! {
-    let peripherals = init_peripherals();
 
         static sem3: Semaphore = Semaphore::new(TaskMask::generate([3]));
         static msg1: Message<[u32; 2]> = Message::new(
@@ -27,9 +30,6 @@ fn main() -> ! {
             [9, 10],
         );
 
-    static mut stack1: [u32; 512] = [0; 512];
-    static mut stack2: [u32; 512] = [0; 512];
-    static mut stack3: [u32; 512] = [0; 512];
 
     spawn!(task1, stack1, {
         hprintln!("TASK 1: Enter");

@@ -9,9 +9,9 @@ use cortex_m::interrupt::Mutex;
 use crate::utils::arch::get_msb_const;
 use crate::system::pi_stack::PiStack;
 use crate::KernelError;
-use crate::kernel::task::{block_tasks, get_curr_tid, schedule, unblock_tasks};
+use crate::kernel::tasks::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 use crate::system::scheduler::{TaskId, BooleanVector};
-use crate::system::logger::LogEventType;
+use crate::system::system_logger::LogEventType;
 use crate::kernel::logging;
 
 /// Global instance of Resource manager
@@ -71,7 +71,7 @@ impl<T: Sized> Resource<T> {
                 pi_stack.push_stack(ceiling)?;
                 let mask = Self::get_pi_mask(ceiling) & !(1 << curr_tid);
                 block_tasks(mask);
-                #[cfg(feature = "logger")] {
+                #[cfg(feature = "system_logger")] {
                     if logging::get_resource_lock() {
                         logging::report(LogEventType::ResourceLock(curr_tid));
                     }
@@ -93,7 +93,7 @@ impl<T: Sized> Resource<T> {
                 unblock_tasks(mask);
                 schedule();
             }
-            #[cfg(feature = "logger")] {
+            #[cfg(feature = "system_logger")] {
                 if logging::get_resource_unlock() {
                     logging::report(LogEventType::ResourceUnlock(get_curr_tid() as u32));
                 }
@@ -113,14 +113,6 @@ impl<T: Sized> Resource<T> {
         self.unlock()?;
         return Ok(res);
     }
-}
-
-/// This function instantiates the `cortex_m::Peripherals` struct, wraps it in a resource container,
-/// and returns it. This peripheral instance is instrumental in configuring the GPIO pins on the board,
-/// clock, etc.
-pub fn init_peripherals() -> Resource<RefCell<cortex_m::Peripherals>> {
-    let mask: u32 = 0xffffffff;
-    Resource::new(RefCell::new(cortex_m::Peripherals::take().unwrap()), mask)
 }
 
 unsafe impl<T> Sync for Resource<T> {}

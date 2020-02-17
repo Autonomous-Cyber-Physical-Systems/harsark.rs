@@ -7,8 +7,8 @@ extern crate stm32f4;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::task::*;
-use hartex_rust::util::TaskMask;
+use hartex_rust::tasks::*;
+use hartex_rust::helpers::TaskMask;
 use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 
@@ -21,10 +21,12 @@ const task1: u32 = 1;
 const task2: u32 = 2;
 const task3: u32 = 3;
 
+static mut stack1: [u32; 300] = [0; 300];
+static mut stack2: [u32; 300] = [0; 300];
+static mut stack3: [u32; 300] = [0; 300];
+
 #[entry]
 fn main() -> ! {
-    let peripherals = init_peripherals();
-
     /*
         Instance of AppState whose reference will be shared to all tasks.
         sem1 is a Semaphore that releases task1 on being signalled, similarly sem2 signals task2.
@@ -32,9 +34,6 @@ fn main() -> ! {
     static sem1: Semaphore = Semaphore::new(TaskMask::generate([task1]));
     static sem2: Semaphore = Semaphore::new(TaskMask::generate([task2]));
 
-    static mut stack1: [u32; 300] = [0; 300];
-    static mut stack2: [u32; 300] = [0; 300];
-    static mut stack3: [u32; 300] = [0; 300];
 
     spawn!(task1, stack1, {
         hprintln!("TASK 1: Enter");

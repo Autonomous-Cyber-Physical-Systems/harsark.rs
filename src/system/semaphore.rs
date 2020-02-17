@@ -2,10 +2,10 @@
 //!
 use crate::system::scheduler::BooleanVector;
 use crate::KernelError;
-use crate::kernel::task::{get_curr_tid, release, schedule};
+use crate::kernel::tasks::{get_curr_tid, release, schedule};
 use cortex_m::interrupt;
 use core::cell::RefCell;
-use crate::system::logger::LogEventType;
+use crate::system::system_logger::LogEventType;
 use crate::kernel::logging;
 
 /// Semaphores form the core of synchronization and communication in the Kernel.
@@ -28,7 +28,7 @@ impl Semaphore {
             let flags: &mut BooleanVector = &mut self.flags.borrow_mut();
             *flags |= tasks_mask;
             release(self.tasks);
-            #[cfg(feature = "logger")] {
+            #[cfg(feature = "system_logger")] {
                 if logging::get_semaphore_signal() {
                     logging::report(LogEventType::SemaphoreSignal(*flags, self.tasks));
                 }
@@ -45,7 +45,7 @@ impl Semaphore {
             let flags: &mut BooleanVector = &mut self.flags.borrow_mut();
             if *flags & curr_tid_mask == curr_tid_mask {
                 *flags &= !curr_tid_mask;
-                #[cfg(feature = "logger")] {
+                #[cfg(feature = "system_logger")] {
                     if logging::get_semaphore_reset() {
                         logging::report(LogEventType::SemaphoreReset(curr_tid));
                     }

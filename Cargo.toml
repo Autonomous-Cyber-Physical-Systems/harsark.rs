@@ -35,8 +35,8 @@ events_64 = ["timer"]
 
 timer = []
 
-logger = []
-process_monitor = ["timer", "logger"]
+system_logger = []
+process_monitor = ["timer", "system_logger"]
 
 alloc = ["alloc-cortex-m"]
 
