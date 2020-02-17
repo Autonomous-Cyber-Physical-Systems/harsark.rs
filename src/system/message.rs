@@ -7,7 +7,9 @@ use crate::system::semaphore::Semaphore;
 use crate::system::scheduler::BooleanVector;
 use core::cell::RefCell;
 use crate::utils::arch::critical_section;
-
+use crate::system::logger::LogEventType;
+use crate::kernel::logging;
+use crate::kernel::task::get_curr_tid;
 /// Holds details corresponding to a single message
 pub struct Message<T: Sized + Clone> {
     /// Boolean vector representing the receiver tasks.
@@ -38,8 +40,8 @@ impl<T: Sized + Clone> Message<T> {
             }
             self.semaphore.signal_and_release(self.receivers);
             #[cfg(feature = "logger")] {
-                if logging::get_message_broadcast_log() {
-                    logging::report(LogEventType::MessageBroadcast(self.receivers_mask, self.tasks_mask));
+                if logging::get_message_broadcast() {
+                    logging::report(LogEventType::MessageBroadcast(self.receivers));
                 }
             }
         })
@@ -51,7 +53,7 @@ impl<T: Sized + Clone> Message<T> {
             match self.semaphore.test_and_reset() {
                 Ok(res) if res == true => {
                     #[cfg(feature = "logger")] {
-                        if logging::get_message_recieve_log() {
+                        if logging::get_message_recieve() {
                             logging::report(LogEventType::MessageRecieve(get_curr_tid() as u32));
                         }
                     }

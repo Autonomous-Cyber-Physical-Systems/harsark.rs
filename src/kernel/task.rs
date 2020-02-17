@@ -99,7 +99,7 @@ pub fn get_curr_tid() -> TaskId {
 /// The Kernel blocks the tasks mentioned in `tasks_mask`.
 pub fn block_tasks(tasks_mask: BooleanVector) {
     #[cfg(feature = "logger")] {
-        if logging::get_block_tasks_log() {
+        if logging::get_block_tasks() {
             logging::report(LogEventType::BlockTasks(tasks_mask));
         }
     }
@@ -109,7 +109,7 @@ pub fn block_tasks(tasks_mask: BooleanVector) {
 /// The Kernel unblocks the tasks mentioned in tasks_mask.
 pub fn unblock_tasks(tasks_mask: BooleanVector) {
     #[cfg(feature = "logger")] {
-        if logging::get_unblock_tasks_log() {
+        if logging::get_unblock_tasks() {
             logging::report(LogEventType::UnblockTasks(tasks_mask));
         }
     }
@@ -122,7 +122,7 @@ pub fn task_exit() {
         let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
         let curr_tid = handler.curr_tid;
         #[cfg(feature = "logger")] {
-            if logging::get_task_exit_log() {
+            if logging::get_task_exit() {
                 logging::report(LogEventType::TaskExit(curr_tid as TaskId));
             }
         }
@@ -133,7 +133,7 @@ pub fn task_exit() {
 /// The Kernel releases the tasks in the `task_mask`, these tasks transition from the waiting to the ready state.
 pub fn release(tasks_mask: BooleanVector) {
     #[cfg(feature = "logger")] {
-        if logging::get_release_log() {
+        if logging::get_release() {
             logging::report(LogEventType::ReleaseTasks(tasks_mask));
         }
     }

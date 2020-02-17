@@ -5,6 +5,8 @@ use crate::KernelError;
 use crate::kernel::task::{get_curr_tid, release, schedule};
 use cortex_m::interrupt;
 use core::cell::RefCell;
+use crate::system::logger::LogEventType;
+use crate::kernel::logging;
 
 /// Semaphores form the core of synchronization and communication in the Kernel.
 pub struct Semaphore {
@@ -27,8 +29,8 @@ impl Semaphore {
             *flags |= tasks_mask;
             release(self.tasks);
             #[cfg(feature = "logger")] {
-                if logging::get_semaphore_signal_log() {
-                    logging::report(LogEventType::SemaphoreSignal(flags, self.tasks));
+                if logging::get_semaphore_signal() {
+                    logging::report(LogEventType::SemaphoreSignal(*flags, self.tasks));
                 }
             }
             schedule();
@@ -44,7 +46,7 @@ impl Semaphore {
             if *flags & curr_tid_mask == curr_tid_mask {
                 *flags &= !curr_tid_mask;
                 #[cfg(feature = "logger")] {
-                    if logging::get_semaphore_reset_log() {
+                    if logging::get_semaphore_reset() {
                         logging::report(LogEventType::SemaphoreReset(curr_tid));
                     }
                 }
