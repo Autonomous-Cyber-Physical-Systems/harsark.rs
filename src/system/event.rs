@@ -11,6 +11,7 @@ pub type EventId = usize;
 #[derive(Clone, Copy)]
 pub struct Event
 {
+    event_id: EventId,
     /// Whether this event is currently enabled or not.
     is_enabled: bool,
     /// This is the frequency (of time unit in which it belongs to) in which the Event should run.
@@ -24,6 +25,11 @@ impl Event {
         if self.is_enabled {
             if curr_time % self.threshold == 0 {
                 (self.handler)();
+                #[cfg(feature = "logger")] {
+                    if logging::get_timer_event_log() {
+                        logging::report(LogEventType::TimerEvent(self.event_id));
+                    }
+                }
             }
         }
     }
@@ -83,6 +89,7 @@ impl EventTable
             return Err(KernelError::LimitExceeded);
         }
         self.events[id] = Some(Event {
+            event_id: id,
             is_enabled,
             threshold,
             handler

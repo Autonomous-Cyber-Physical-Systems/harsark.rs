@@ -180,10 +180,3 @@ pub fn get_timer_event_log() -> bool {
         Logger.borrow(cs_token).borrow_mut().timer_event_log
     })
 }
-
-
-pub fn get_deadline_log() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().deadline_log
-    })
-}

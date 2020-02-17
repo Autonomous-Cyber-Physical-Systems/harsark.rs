@@ -6,7 +6,7 @@
 use crate::system::semaphore::Semaphore;
 use crate::system::scheduler::BooleanVector;
 use core::cell::RefCell;
-use cortex_m::interrupt;
+use crate::utils::arch::critical_section;
 
 /// Holds details corresponding to a single message
 pub struct Message<T: Sized + Clone> {
@@ -32,19 +32,31 @@ impl<T: Sized + Clone> Message<T> {
 
     /// The sender task calls this function, it broadcasts the message corresponding to `msg_id`.
     pub fn broadcast(&'static self,  msg: Option<T>) {
-        interrupt::free(|_| {
+        critical_section(|_| {
             if let Some(msg) = msg {
                 self.value.replace(msg);
             }
             self.semaphore.signal_and_release(self.receivers);
+            #[cfg(feature = "logger")] {
+                if logging::get_message_broadcast_log() {
+                    logging::report(LogEventType::MessageBroadcast(self.receivers_mask, self.tasks_mask));
+                }
+            }
         })
     }
 
     pub fn receive (&'static self) -> Option<T>
     {
-        interrupt::free(|_| {
+        critical_section(|_| {
             match self.semaphore.test_and_reset() {
-                Ok(res) if res == true => Some(self.value.borrow().clone()),
+                Ok(res) if res == true => {
+                    #[cfg(feature = "logger")] {
+                        if logging::get_message_recieve_log() {
+                            logging::report(LogEventType::MessageRecieve(get_curr_tid() as u32));
+                        }
+                    }
+                    Some(self.value.borrow().clone())
+                },
                 _ => None,
             }
         })
