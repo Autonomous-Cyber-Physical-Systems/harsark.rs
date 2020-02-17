@@ -84,19 +84,18 @@ pub mod task {
 #[cfg(feature="logger")]
 pub mod logging {
     pub use crate::kernel::logging::process;
-    pub use crate::kernel::set_all;
-    pub use crate::kernel::set_release_log;
-    pub use crate::kernel::set_block_tasks_log;
-    pub use crate::kernel::set_unblock_tasks_log;
-    pub use crate::kernel::set_task_exit_log;
-    pub use crate::kernel::set_resource_lock_log;
-    pub use crate::kernel::set_resource_unlock_log;
-    pub use crate::kernel::set_message_broadcast_log;
-    pub use crate::kernel::set_message_recieve_log;
-    pub use crate::kernel::set_semaphore_signal_log;
-    pub use crate::kernel::set_semaphore_reset_log;
-    pub use crate::kernel::set_timer_event_log;
-    pub use crate::kernel::set_deadline_log;
+    pub use crate::kernel::logging::set_all;
+    pub use crate::kernel::logging::set_release;
+    pub use crate::kernel::logging::set_block_tasks;
+    pub use crate::kernel::logging::set_unblock_tasks;
+    pub use crate::kernel::logging::set_task_exit;
+    pub use crate::kernel::logging::set_resource_lock;
+    pub use crate::kernel::logging::set_resource_unlock;
+    pub use crate::kernel::logging::set_message_broadcast;
+    pub use crate::kernel::logging::set_message_recieve;
+    pub use crate::kernel::logging::set_semaphore_signal;
+    pub use crate::kernel::logging::set_semaphore_reset;
+    pub use crate::kernel::logging::set_timer_event;
     pub use crate::system::logger::LogEvent;
 }
 

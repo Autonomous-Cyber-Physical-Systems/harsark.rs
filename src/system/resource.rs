@@ -11,6 +11,8 @@ use crate::system::pi_stack::PiStack;
 use crate::KernelError;
 use crate::kernel::task::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 use crate::system::scheduler::{TaskId, BooleanVector};
+use crate::system::logger::LogEventType;
+use crate::kernel::logging;
 
 /// Global instance of Resource manager
 static PiStackGlobal: Mutex<RefCell<PiStack>> = Mutex::new(RefCell::new(PiStack::new()));
@@ -70,7 +72,7 @@ impl<T: Sized> Resource<T> {
                 let mask = Self::get_pi_mask(ceiling) & !(1 << curr_tid);
                 block_tasks(mask);
                 #[cfg(feature = "logger")] {
-                    if logging::get_resource_lock_log() {
+                    if logging::get_resource_lock() {
                         logging::report(LogEventType::ResourceLock(curr_tid));
                     }
                 }
@@ -92,7 +94,7 @@ impl<T: Sized> Resource<T> {
                 schedule();
             }
             #[cfg(feature = "logger")] {
-                if logging::get_resource_unlock_log() {
+                if logging::get_resource_unlock() {
                     logging::report(LogEventType::ResourceUnlock(get_curr_tid() as u32));
                 }
             }

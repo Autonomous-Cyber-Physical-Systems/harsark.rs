@@ -24,7 +24,7 @@ impl ProcessMonitor {
         for tid in 0..MAX_TASKS {
             if let Some(deadline) = self.active_deadlines[tid] {
                 if deadline == curr_time {
-                    if logging::get_release_log() {
+                    if logging::get_release() {
                         logging::report(LogEventType::DeadlineExpired(tid as TaskId, 0));
                     }
                     self.active_deadlines[tid] = None;
