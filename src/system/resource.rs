@@ -69,6 +69,11 @@ impl<T: Sized> Resource<T> {
                 pi_stack.push_stack(ceiling)?;
                 let mask = Self::get_pi_mask(ceiling) & !(1 << curr_tid);
                 block_tasks(mask);
+                #[cfg(feature = "logger")] {
+                    if logging::get_resource_lock_log() {
+                        logging::report(LogEventType::ResourceLock(curr_tid));
+                    }
+                }
                 return Ok(&self.inner);
             }
             return Err(KernelError::AccessDenied);
@@ -85,6 +90,11 @@ impl<T: Sized> Resource<T> {
                 let mask = Self::get_pi_mask(self.ceiling);
                 unblock_tasks(mask);
                 schedule();
+            }
+            #[cfg(feature = "logger")] {
+                if logging::get_resource_unlock_log() {
+                    logging::report(LogEventType::ResourceUnlock(get_curr_tid() as u32));
+                }
             }
             Ok(())
         })

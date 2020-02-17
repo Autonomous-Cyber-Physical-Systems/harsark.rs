@@ -26,6 +26,11 @@ impl Semaphore {
             let flags: &mut BooleanVector = &mut self.flags.borrow_mut();
             *flags |= tasks_mask;
             release(self.tasks);
+            #[cfg(feature = "logger")] {
+                if logging::get_semaphore_signal_log() {
+                    logging::report(LogEventType::SemaphoreSignal(flags, self.tasks));
+                }
+            }
             schedule();
         })
     }
@@ -38,6 +43,11 @@ impl Semaphore {
             let flags: &mut BooleanVector = &mut self.flags.borrow_mut();
             if *flags & curr_tid_mask == curr_tid_mask {
                 *flags &= !curr_tid_mask;
+                #[cfg(feature = "logger")] {
+                    if logging::get_semaphore_reset_log() {
+                        logging::report(LogEventType::SemaphoreReset(curr_tid));
+                    }
+                }
                 return Ok(true);
             } else {
                 return Ok(false);

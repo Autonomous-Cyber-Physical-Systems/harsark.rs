@@ -11,7 +11,7 @@ pub enum LogEventType {
     BlockTasks(BooleanVector),
     UnblockTasks(BooleanVector),
     TaskExit(BooleanVector),
-    ResourceLock(TaskId,bool),
+    ResourceLock(TaskId),
     ResourceUnlock(TaskId),
     MessageBroadcast(BooleanVector,BooleanVector),
     MessageRecieve(TaskId),
