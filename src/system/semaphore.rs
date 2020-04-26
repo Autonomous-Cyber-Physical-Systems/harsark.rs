@@ -4,7 +4,7 @@ use core::cell::RefCell;
 use crate::system::scheduler::BooleanVector;
 use crate::KernelError;
 use crate::kernel::tasks::{get_curr_tid, release, schedule};
-use cortex_m::interrupt;
+use crate::utils::arch::critical_section;
 
 #[cfg(feature = "system_logger")]
 use {
@@ -28,7 +28,7 @@ impl Semaphore {
 
     /// This method, when called, appends the `tasks_mask` to the flags field. Next, the tasks in the tasks field are released.
     pub fn signal_and_release(&'static self, tasks_mask: BooleanVector) {
-        interrupt::free(|_| {
+        critical_section(|_| {
             let flags: &mut BooleanVector = &mut self.flags.borrow_mut();
             *flags |= tasks_mask;
             release(self.tasks);
@@ -43,7 +43,7 @@ impl Semaphore {
 
     /// This method, when called, appends the `tasks_mask` to the `flags` field. Next, the `tasks` in the `tasks` field are released.
     pub fn test_and_reset(&'static self) -> Result<bool, KernelError> {
-        interrupt::free(|_| {
+        critical_section(|_| {
             let curr_tid = get_curr_tid() as u32;
             let curr_tid_mask = 1 << curr_tid;
             let flags: &mut BooleanVector = &mut self.flags.borrow_mut();

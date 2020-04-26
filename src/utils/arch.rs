@@ -2,9 +2,29 @@
 //!
 //! Defines functions which are defined majorly in assembly. Thus, might change for one board to another.
 
+// Platform specific Exports
+pub use cortex_m::interrupt::free as critical_section;
+pub use cortex_m::interrupt::Mutex;
+pub use cortex_m::peripheral::syst::SystClkSource;
+pub use cortex_m::peripheral::Peripherals;
+
+use cortex_m_rt::exception;
+
+use crate::kernel::tasks::{TaskManager,schedule};
+use crate::kernel::timer::update_time;
 use crate::system::scheduler::TaskControlBlock;
+
+#[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
+use crate::kernel::events::sweep_event_table;
+
+#[cfg(feature="process_monitor")]
+use crate::kernel::process_monitor::sweep_deadlines;
+
 /// Returns the MSB of `val`. It is written using CLZ instruction.
-pub fn get_msb(val: u32) -> usize {
+pub fn get_msb(val: u32) -> Option<usize> {
+    if val == 0 {
+        return None
+    }
     let mut res;
     unsafe {
         asm!("clz $1, $0"
@@ -16,19 +36,7 @@ pub fn get_msb(val: u32) -> usize {
     if res > 0 {
         res -= 1;
     }
-    return res;
-}
-
-pub const fn get_msb_const(val: u32) -> usize {
-    let mut res = 0;
-    let mut i = 0;
-    while i < 32 {
-        if val & (1<<i) > 0 {
-            res = i;
-        }
-        i += 1;
-    }
-    return res;
+    return Some(res);
 }
 
 /// Creates an SVC Interrupt
@@ -39,13 +47,11 @@ pub fn svc_call() {
 }
 
 #[inline(always)]
-pub fn return_to_psp() {
-    unsafe{
+pub unsafe fn return_to_psp() {
         asm!("
         ldr r0, =0xFFFFFFFD
         bx	r0
         ");
-    }
 }
 
 #[inline(always)]
@@ -104,8 +110,62 @@ pub fn load_context(task_stack: &TaskControlBlock) {
     };
 }
 
-// processor specific Exports
-pub use cortex_m::interrupt::free as critical_section;
-pub use cortex_m::interrupt::Mutex;
-pub use cortex_m::peripheral::syst::SystClkSource;
-pub use cortex_m::peripheral::Peripherals;
+/// ### SysTick Interrupt handler
+/// Its the Crux of the Kernel’s time management module and Task scheduling.
+/// This interrupt handler updates the time and also dispatches the appropriate event handlers.
+/// The interrupt handler also calls `schedule()` in here so as to dispatch any higher priority
+/// task if there are any.
+
+#[cfg(feature="timer")]
+#[exception]
+fn SysTick() {
+
+    #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
+    sweep_event_table();
+
+    #[cfg(feature="timer")]
+    update_time();
+    
+    #[cfg(feature="process_monitor")]
+    sweep_deadlines();
+    
+    // hprintln!("hello");
+    schedule();
+}
+/// ### SVC Interrupt handler,
+/// calls `tasks::schedule()`
+#[exception]
+fn SVCall() {
+    schedule();
+}
+/// ### PendSV Interrupt handler,
+/// PendSV interrupt handler does the actual context switch in the Kernel.
+#[exception]
+fn PendSV() {
+    critical_section(|cs_token| {
+        let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
+        let curr_tid: usize = handler.curr_tid;
+        let next_tid: usize = handler.get_next_tid() as usize;
+        if curr_tid != next_tid || (!handler.started) {
+            if handler.started {
+                let curr_task = handler.task_control_blocks[curr_tid].as_ref().unwrap();
+                curr_task.save_context();
+            } else {
+                handler.started = true;
+            }
+            let next_task = handler.task_control_blocks[next_tid].as_ref().unwrap();
+            next_task.load_context();
+    
+            handler.curr_tid = next_tid;
+        }
+    });
+    unsafe {return_to_psp()}
+}
+
+pub fn set_pendsv() {
+    unsafe { cortex_m::peripheral::SCB::set_pendsv() }
+}
+
+pub fn wait_for_interrupt() {
+    unsafe { cortex_m::peripheral::SCB::set_pendsv() }
+}

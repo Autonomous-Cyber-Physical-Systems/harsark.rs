@@ -7,7 +7,7 @@ use core::cell::RefCell;
 use crate::KernelError;
 use crate::priv_execute;
 use crate::system::scheduler::*;
-use crate::utils::arch::{svc_call,Mutex,critical_section};
+use crate::utils::arch::{svc_call,Mutex,critical_section,set_pendsv};
 use crate::utils::helpers::is_privileged;
 
 #[cfg(feature = "system_logger")]
@@ -86,7 +86,7 @@ pub fn schedule() {
 }
 
 fn preempt() {
-    unsafe { cortex_m::peripheral::SCB::set_pendsv() }
+    set_pendsv();
 }
 
 /// Returns the TaskId of the currently running task in the kernel.

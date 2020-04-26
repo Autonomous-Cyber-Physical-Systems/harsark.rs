@@ -3,10 +3,8 @@
 //!
 use core::cell::{RefCell};
 
-use cortex_m::interrupt::free as execute_critical;
-use cortex_m::interrupt::Mutex;
-
-use crate::utils::arch::get_msb_const;
+use crate::utils::arch::{Mutex, critical_section};
+use crate::utils::helpers::get_msb_const;
 use crate::system::pi_stack::PiStack;
 use crate::KernelError;
 use crate::kernel::tasks::{block_tasks, get_curr_tid, schedule, unblock_tasks};
@@ -62,7 +60,7 @@ impl<T: Sized> Resource<T> {
     /// Lock the resources. It takes a BooleanVector corresponding to the tasks that have to be blocked
     /// from `resources_list.lock()` and calls `block_tasks()` on it.
     fn lock(&self) -> Result<&T,KernelError> {
-        execute_critical(|cs_token| {
+        critical_section(|cs_token| {
             let pi_stack = &mut PiStackGlobal.borrow(cs_token).borrow_mut();
             let curr_tid = get_curr_tid() as u32;
             
@@ -89,7 +87,7 @@ impl<T: Sized> Resource<T> {
     /// Unlocks the resource. It takes a BooleanVector corresponding to the tasks that have to be
     /// unblocked from `resource_manager.unlock()` and calls `unblock_tasks()` on it.
     fn unlock(&self) -> Result<(),KernelError> {
-        execute_critical(|cs_token| {
+        critical_section(|cs_token| {
             let pi_stack = &mut PiStackGlobal.borrow(cs_token).borrow_mut();
             if self.ceiling as i32 == pi_stack.system_ceiling {
                 pi_stack.pop_stack()?;

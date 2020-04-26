@@ -6,8 +6,6 @@ use crate::system::scheduler::*;
 use crate::utils::arch::{svc_call,Mutex,critical_section,SystClkSource,Peripherals};
 use crate::utils::helpers::is_privileged;
 
-use cortex_m_semihosting::hprintln;
-
 static SystemTimer: Mutex<RefCell<u32>> = Mutex::new(RefCell::new(0));
  
 pub fn update_time() {

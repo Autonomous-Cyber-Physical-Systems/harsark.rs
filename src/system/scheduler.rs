@@ -2,13 +2,11 @@
 //! The Definition of Data-structures required for task management.
 //!
 use crate::config::MAX_TASKS;
-use crate::utils::arch::{get_msb, save_context, load_context};
+use crate::utils::arch::{get_msb, save_context, load_context, wait_for_interrupt};
 use crate::KernelError;
 
 #[cfg(feature = "process_monitor")]
 use crate::kernel::process_monitor::{clear_deadline,set_deadline}; 
-
-use cortex_m_semihosting::hprintln;
 
 pub type TaskId = u32;
 pub type BooleanVector = u32;
@@ -87,7 +85,7 @@ impl Scheduler {
             100,
             unsafe { &mut stack0 },
             || loop {
-                cortex_m::asm::wfe();
+                wait_for_interrupt();
             }
         )
     }
@@ -101,7 +99,7 @@ impl Scheduler {
             0,
             unsafe { &mut stack0 },
             || loop {
-                cortex_m::asm::wfe();
+                wait_for_interrupt();
             }
         )
     }
@@ -215,7 +213,7 @@ impl Scheduler {
     /// by the boolean and of `active_tasks` and boolean not(`blocked_tasks`).
     pub fn get_next_tid(&self) -> usize {
         let mask = self.active_tasks & !self.blocked_tasks;
-        return get_msb(mask);
+        return get_msb(mask).unwrap();
     }
 
     /// Updates `active_tasks` with `task_mask`.
