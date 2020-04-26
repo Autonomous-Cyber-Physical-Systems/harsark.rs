@@ -24,7 +24,6 @@ pub const MAX_RESOURCES: usize = 16;
 #[cfg(all(feature = "resources_64",not(feature="resources_32")))]
 pub const MAX_RESOURCES: usize = 64;
 
-
 #[cfg(feature = "events_32")]
 pub const EVENT_COUNT: usize = 32;
 

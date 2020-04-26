@@ -8,7 +8,7 @@ use crate::KernelError;
 use crate::priv_execute;
 use crate::system::scheduler::*;
 use crate::utils::arch::{svc_call,Mutex,critical_section,set_pendsv};
-use crate::utils::helpers::is_privileged;
+use crate::utils::arch::is_privileged;
 
 #[cfg(feature = "system_logger")]
 use crate::kernel::logging; 

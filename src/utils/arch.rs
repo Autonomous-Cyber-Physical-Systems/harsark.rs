@@ -9,6 +9,7 @@ pub use cortex_m::peripheral::syst::SystClkSource;
 pub use cortex_m::peripheral::Peripherals;
 
 use cortex_m_rt::exception;
+use cortex_m::register::control;
 
 use crate::kernel::tasks::{TaskManager,schedule};
 use crate::kernel::timer::update_time;
@@ -168,4 +169,9 @@ pub fn set_pendsv() {
 
 pub fn wait_for_interrupt() {
     unsafe { cortex_m::peripheral::SCB::set_pendsv() }
+}
+
+/// Returns true if Currently the Kernel is operating in Privileged mode.
+pub fn is_privileged() -> bool {
+    return control::read().npriv() == control::Npriv::Privileged
 }

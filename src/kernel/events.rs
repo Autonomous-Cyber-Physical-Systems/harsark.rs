@@ -8,7 +8,7 @@ use crate::utils::arch::{critical_section,Mutex};
 
 use crate::priv_execute;
 use crate::system::event::*;
-use crate::utils::helpers::is_privileged;
+use crate::utils::arch::is_privileged;
 use crate::KernelError;
 use crate::kernel::timer::get_time;
 /// Global Instance of EventManager

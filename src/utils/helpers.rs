@@ -1,4 +1,3 @@
-use cortex_m::register::control;
 /// Takes a list of TaskIds and returns a BooleanVector corresponding to it.
 pub struct TaskMask<const N: usize> {}
 
@@ -24,9 +23,4 @@ pub const fn get_msb_const(val: u32) -> usize {
         i += 1;
     }
     return res;
-}
-
-/// Returns true if Currently the Kernel is operating in Privileged mode.
-pub fn is_privileged() -> bool {
-    return control::read().npriv() == control::Npriv::Privileged
 }

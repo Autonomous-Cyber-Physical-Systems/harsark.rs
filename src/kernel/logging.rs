@@ -4,7 +4,7 @@ use crate::KernelError;
 use crate::priv_execute;
 use crate::system::scheduler::*;
 use crate::utils::arch::{svc_call,Mutex,critical_section};
-use crate::utils::helpers::is_privileged;
+use crate::utils::arch::is_privileged;
 use crate::system::system_logger::*;
 
 static Logger: Mutex<RefCell<SystemLogger>> = Mutex::new(RefCell::new(SystemLogger::new()));
