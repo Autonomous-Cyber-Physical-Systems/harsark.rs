@@ -11,8 +11,12 @@ use crate::system::pi_stack::PiStack;
 use crate::KernelError;
 use crate::kernel::tasks::{block_tasks, get_curr_tid, schedule, unblock_tasks};
 use crate::system::scheduler::{TaskId, BooleanVector};
-use crate::system::system_logger::LogEventType;
-use crate::kernel::logging;
+
+#[cfg(feature = "system_logger")]
+use {
+    crate::system::system_logger::LogEventType,
+    crate::kernel::logging,
+};
 
 /// Global instance of Resource manager
 static PiStackGlobal: Mutex<RefCell<PiStack>> = Mutex::new(RefCell::new(PiStack::new()));

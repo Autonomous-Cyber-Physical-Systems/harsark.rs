@@ -4,8 +4,12 @@
 
 use crate::config::EVENT_COUNT;
 use crate::utils::errors::KernelError;
-use crate::system::system_logger::LogEventType;
-use crate::kernel::logging;
+
+#[cfg(feature = "system_logger")]
+use {
+    crate::system::system_logger::LogEventType,
+    crate::kernel::logging,
+};
 
 pub type EventId = usize;
 

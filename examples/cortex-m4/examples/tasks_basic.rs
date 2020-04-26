@@ -15,7 +15,7 @@ use hartex_rust::helpers::TaskMask;
 use hartex_rust::primitives::*;
 use hartex_rust::spawn;
 use hartex_rust::events;
-use hartex_rust::logging;
+// use hartex_rust::logging;
 
 const task1: u32 = 1;
 const task2: u32 = 2;

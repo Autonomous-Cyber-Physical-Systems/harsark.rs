@@ -3,13 +3,19 @@
 //! Inter task communication also utilizes semaphores to release tasks and keep track of the tasks
 //! which can access the message and the tasks that have to be notified about the arrival of messages.
 
+use core::cell::RefCell;
+
 use crate::system::semaphore::Semaphore;
 use crate::system::scheduler::BooleanVector;
-use core::cell::RefCell;
 use crate::utils::arch::critical_section;
-use crate::system::system_logger::LogEventType;
-use crate::kernel::logging;
 use crate::kernel::tasks::get_curr_tid;
+
+#[cfg(feature = "system_logger")]
+use {
+    crate::system::system_logger::LogEventType,
+    crate::kernel::logging,
+};
+
 /// Holds details corresponding to a single message
 pub struct Message<T: Sized + Clone> {
     /// Boolean vector representing the receiver tasks.

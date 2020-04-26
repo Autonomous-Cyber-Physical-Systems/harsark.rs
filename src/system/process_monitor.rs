@@ -1,8 +1,8 @@
 use crate::config::MAX_TASKS;
 use crate::system::scheduler::TaskId;
+use cortex_m_semihosting::hprintln;
 use crate::kernel::logging;
 use crate::system::system_logger::LogEventType;
-use cortex_m_semihosting::hprintln;
 
 pub struct ProcessMonitor {
     active_deadlines: [Option<u32>; MAX_TASKS]

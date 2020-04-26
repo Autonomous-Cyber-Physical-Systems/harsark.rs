@@ -1,12 +1,16 @@
 //! # Software synchronization bus definition
 //!
+use core::cell::RefCell;
 use crate::system::scheduler::BooleanVector;
 use crate::KernelError;
 use crate::kernel::tasks::{get_curr_tid, release, schedule};
 use cortex_m::interrupt;
-use core::cell::RefCell;
-use crate::system::system_logger::LogEventType;
-use crate::kernel::logging;
+
+#[cfg(feature = "system_logger")]
+use {
+    crate::system::system_logger::LogEventType,
+    crate::kernel::logging,
+};
 
 /// Semaphores form the core of synchronization and communication in the Kernel.
 pub struct Semaphore {
