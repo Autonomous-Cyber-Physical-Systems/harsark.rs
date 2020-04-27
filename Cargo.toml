@@ -1,6 +1,6 @@
 [package]
 name = "harsark"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["kanishkarj <kanishkarj@hotmail.com>"]
 edition = "2018"
 license-file = "LICENSE.md"
@@ -45,3 +45,10 @@ default = []
 [lib]
 test = false
 bench = false
+
+
+[package.metadata.docs.rs]
+
+features = [ "events_64", "timer", "system_logger", "alloc", "process_monitor"]
+default-target = "thumbv7em-none-eabi"
+targets = ["thumbv7em-none-eabi"]
