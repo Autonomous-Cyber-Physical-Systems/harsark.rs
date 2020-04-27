@@ -11,10 +11,12 @@ use crate::system::event::*;
 use crate::utils::arch::is_privileged;
 use crate::KernelError;
 use crate::kernel::timer::get_time;
+
 /// Global Instance of EventManager
 static event_manager: Mutex<RefCell<EventTable>> = Mutex::new(RefCell::new(EventTable::new()));
 
-/// Dispatches all the events of EventTableType same as `event_type`.
+/// Sweeps all events in event table and updates their counter, if counter has expired
+/// then it dispatches the event and resets the counter.
 pub fn sweep_event_table() {
     critical_section(|cs_token| {
         event_manager
@@ -24,7 +26,7 @@ pub fn sweep_event_table() {
     })
 }
 
-/// This function is used to enable events if disabled. Useful for dispatching OnOff type events.
+/// This function is used to enable events.
 pub fn enable(event_id: EventId) -> Result<(),KernelError> {
     critical_section(|cs_token| {
         event_manager
@@ -33,7 +35,7 @@ pub fn enable(event_id: EventId) -> Result<(),KernelError> {
             .enable(event_id)
     })
 }
-/// This function is used to enable events if disabled. Useful for dispatching OnOff type events.
+/// This function is used to disable events.
 pub fn disable(event_id: EventId) -> Result<(),KernelError> {
     critical_section(|cs_token| {
         event_manager
@@ -43,10 +45,7 @@ pub fn disable(event_id: EventId) -> Result<(),KernelError> {
     })
 }
 
-
-
-
-/// Creates a new Event of type EventType::FreeRunning.
+/// Creates new Events.
 pub fn new(
     is_enabled: bool,
     threshold: u32,

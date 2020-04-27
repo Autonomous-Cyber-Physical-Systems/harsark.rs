@@ -12,7 +12,6 @@ use cortex_m_rt::exception;
 use cortex_m::register::control;
 
 use crate::kernel::tasks::{TaskManager,schedule};
-use crate::kernel::timer::update_time;
 use crate::system::scheduler::TaskControlBlock;
 
 #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
@@ -20,6 +19,9 @@ use crate::kernel::events::sweep_event_table;
 
 #[cfg(feature="process_monitor")]
 use crate::kernel::process_monitor::sweep_deadlines;
+
+#[cfg(feature="timer")]
+use crate::kernel::timer::update_time;
 
 /// Returns the MSB of `val`. It is written using CLZ instruction.
 pub fn get_msb(val: u32) -> Option<usize> {
@@ -164,11 +166,11 @@ fn PendSV() {
 }
 
 pub fn set_pendsv() {
-    unsafe { cortex_m::peripheral::SCB::set_pendsv() }
+    cortex_m::peripheral::SCB::set_pendsv();
 }
 
 pub fn wait_for_interrupt() {
-    unsafe { cortex_m::peripheral::SCB::set_pendsv() }
+    cortex_m::asm::wfi();
 }
 
 /// Returns true if Currently the Kernel is operating in Privileged mode.

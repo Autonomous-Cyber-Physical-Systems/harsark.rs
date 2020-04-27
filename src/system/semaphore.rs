@@ -12,7 +12,7 @@ use {
     crate::kernel::logging,
 };
 
-/// Semaphores form the core of synchronization and communication in the Kernel.
+/// Enables task synchronization and communication.
 pub struct Semaphore {
     /// It is a boolean vector which represents the tasks notified by the semaphore.
     pub flags: RefCell<BooleanVector>,
@@ -21,12 +21,12 @@ pub struct Semaphore {
 }
 
 impl Semaphore {
-    /// Creates and returns a new semaphore instance with tasks field set to `tasks_mask`.
+    /// Initializes a new semaphore instance.
     pub const fn new(tasks: BooleanVector) -> Self {
         Self { flags: RefCell::new(0), tasks }
     }
 
-    /// This method, when called, appends the `tasks_mask` to the flags field. Next, the tasks in the tasks field are released.
+    /// Signals the semaphore, all tasks specified in semaphore::flags can test for it and all tasks in semaphore::tasks are released
     pub fn signal_and_release(&'static self, tasks_mask: BooleanVector) {
         critical_section(|_| {
             let flags: &mut BooleanVector = &mut self.flags.borrow_mut();
@@ -41,7 +41,7 @@ impl Semaphore {
         })
     }
 
-    /// This method, when called, appends the `tasks_mask` to the `flags` field. Next, the `tasks` in the `tasks` field are released.
+    /// Checks if the flag was enabled for the currently running task.
     pub fn test_and_reset(&'static self) -> Result<bool, KernelError> {
         critical_section(|_| {
             let curr_tid = get_curr_tid() as u32;

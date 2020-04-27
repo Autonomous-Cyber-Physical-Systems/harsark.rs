@@ -29,10 +29,10 @@ impl PiStack {
 
     /// Pops the stack top and assigns the `system_ceiling` to the new stack top.
     pub fn pop_stack(&mut self) -> Result<(),KernelError> {
-        self.top -= 1;
-        if self.top < 0 {
+        if self.top == 0 {
             return Err(KernelError::Empty)
         }
+        self.top -= 1;
         self.system_ceiling = self.pi_stack[self.top];
         Ok(())
     }

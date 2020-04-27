@@ -7,10 +7,10 @@ extern crate stm32f4;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
-use hartex_rust::tasks::*;
-use hartex_rust::helpers::TaskMask;
-use hartex_rust::primitives::*;
-use hartex_rust::spawn;
+use harsark::tasks::*;
+use harsark::helpers::TaskMask;
+use harsark::primitives::*;
+use harsark::spawn;
 
 /*
 The tasks can take only one argument, hence in case multiple variables have to be passed

@@ -12,12 +12,12 @@ use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 use alloc::vec::Vec;
 
-use hartex_rust::alloc;
-use hartex_rust::heap::init_heap;
-use hartex_rust::tasks::*;
-use hartex_rust::helpers::TaskMask;
-use hartex_rust::primitives::*;
-use hartex_rust::spawn;
+use harsark::alloc;
+use harsark::heap::init_heap;
+use harsark::tasks::*;
+use harsark::helpers::TaskMask;
+use harsark::primitives::*;
+use harsark::spawn;
 
 /*
 lazy_static is used to define global static variables.

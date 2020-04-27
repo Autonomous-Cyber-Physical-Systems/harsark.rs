@@ -6,13 +6,13 @@ use crate::system::scheduler::*;
 use crate::utils::arch::{svc_call,Mutex,critical_section};
 use crate::utils::arch::is_privileged;
 use crate::system::system_logger::*;
+use crate::kernel::timer::get_time;
 
 static Logger: Mutex<RefCell<SystemLogger>> = Mutex::new(RefCell::new(SystemLogger::new()));
 
 pub fn report(event_type: LogEventType) {
     critical_section(|cs_token| {
-        // use actual timer.
-        Logger.borrow(cs_token).borrow_mut().push(LogEvent::new(event_type, 0));
+        Logger.borrow(cs_token).borrow_mut().push(LogEvent::new(event_type, get_time()));
     })
 }
 

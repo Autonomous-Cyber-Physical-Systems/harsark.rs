@@ -19,35 +19,21 @@ use crate::system::system_logger::LogEventType;
 #[no_mangle]
 pub static TaskManager: Mutex<RefCell<Scheduler>> = Mutex::new(RefCell::new(Scheduler::new()));
 
-/// Initializes the Kernel scheduler. `is_preemptive` defines if the Kernel should operating preemptively 
-/// or not. This method sets the `is_preemptive` field of the Scheduler instance and creates the idle task. 
+/// Initializes the Kernel scheduler and creates the idle task, a task that puts the CPU to sleep in a loop. 
 /// The idle task is created with zero priority; hence, it is only executed when no other task is in Ready state.
 pub fn init() -> Result<(),KernelError>{
     critical_section(|cs_token| TaskManager.borrow(cs_token).borrow_mut().init() )
 }
 
-/// Starts the Kernel scheduler, which starts scheduling tasks and starts the SysTick timer using the
-/// reference of the Peripherals instance and the `tick_interval`. `tick_interval` specifies the
-/// frequency of the timer interrupt. The SysTick exception updates the kernel regarding the time
-/// elapsed, which is used to dispatch events and schedule tasks.
+/// Starts the Kernel scheduler, which starts scheduling tasks on the CPU.
 pub fn start_kernel() -> ! {
-    /**
-     * ensure contracts here else panic, for example:  
-     * ensure timer has started if events are being used
-     * logger initialization is complete 
-     * ... etc
-     * 
-     * address integer overflow throught out the code base and add it to the paper.
-     * also write about how size of enum with values is calculated
-     * safety in get_msb and all using option enum. go throught return errors.
-     */
     loop {
         schedule();
     }
 }
 
-/// Create a new task with the configuration set as arguments passed.
 #[cfg(feature="process_monitor")]
+/// Create a new task with the configuration set as arguments passed.
 pub fn create_task(
     priority: TaskId,
     deadline: u32,
@@ -61,6 +47,7 @@ pub fn create_task(
 }
 
 #[cfg(not(feature="process_monitor"))]
+/// Create a new task with the configuration set as arguments passed.
 pub fn create_task(
     priority: TaskId,
     stack: &mut [u32],
@@ -116,7 +103,7 @@ pub fn unblock_tasks(tasks_mask: BooleanVector) {
     critical_section(|cs_token| TaskManager.borrow(cs_token).borrow_mut().unblock_tasks(tasks_mask))
 }
 
-/// The `task_exit` function is called just after a task finishes execution. This function unsets the task’s corresponding bit in the `active_tasks` and calls schedule. Hence in the next call to schedule, the kernel schedules some other task.
+/// The `task_exit` function is called just after a task finishes execution. It marks the current running task as finished and then schedules the next high priority task.
 pub fn task_exit() {
     critical_section(|cs_token| {
         let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
@@ -140,6 +127,7 @@ pub fn release(tasks_mask: BooleanVector) {
     critical_section(|cs_token| {TaskManager.borrow(cs_token).borrow_mut().release(tasks_mask)});
 }
 
+/// Enable preemptive scheduling
 pub fn enable_preemption() {
     critical_section(|cs_token| {
         let handler = &mut TaskManager.borrow(cs_token).borrow_mut();
@@ -150,6 +138,7 @@ pub fn enable_preemption() {
     })
 }
 
+/// Disable preemptive scheduling
 pub fn disable_preemption() {
     critical_section(|cs_token| {
         let handler = &mut TaskManager.borrow(cs_token).borrow_mut();

@@ -1,14 +1,14 @@
 [package]
-name = "hartex-rust"
-version = "0.3.1"
+name = "harsark"
+version = "0.3.2"
 authors = ["kanishkarj <kanishkarj@hotmail.com>"]
 edition = "2018"
-license = "MIT"
 license-file = "LICENSE.md"
-categories = ["concurrency", "embedded", "no-std"]
+categories = ["embedded", "no-std", "concurrency"]
 keywords = ["arm", "cortex-m"]
 readme = "README.md"
-description = "A safe and lightweight real-time Kernel."
+description = "Safe and lightweight real-time Kernel."
+repository = "https://github.com/Autonomous-Cyber-Physical-Systems/harsark.rs"
 
 [build-dependencies]
 cc = "1.0.28"
@@ -16,7 +16,7 @@ cc = "1.0.28"
 [dependencies]
 cortex-m-semihosting = "0.3.2"
 cortex-m = {version="0.6.1", features=["inline-asm","const-fn"]}
-cortex-m-rt = "*"
+cortex-m-rt = "0.6.12"
 alloc-cortex-m = { version="0.3.5", optional=true }
 
 [features]
@@ -35,8 +35,8 @@ events_64 = ["timer"]
 
 timer = []
 
-system_logger = []
-process_monitor = ["timer", "system_logger"]
+system_logger = ["timer"]
+process_monitor = ["system_logger"]
 
 alloc = ["alloc-cortex-m"]
 

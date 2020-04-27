@@ -12,11 +12,11 @@ use cortex_m_semihosting::hprintln;
 use cortex_m_rt::entry;
 use stm32f4::stm32f407::Peripherals;
 
-use hartex_rust::tasks::*;
-use hartex_rust::helpers::TaskMask;
-use hartex_rust::primitives::*;
-use hartex_rust::spawn;
-use hartex_rust::events;
+use harsark::tasks::*;
+use harsark::helpers::TaskMask;
+use harsark::primitives::*;
+use harsark::spawn;
+use harsark::events;
 
 const task1: u32 = 1;
 const task2: u32 = 2;

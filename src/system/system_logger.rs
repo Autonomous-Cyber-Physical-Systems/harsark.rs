@@ -1,7 +1,9 @@
 use crate::system::scheduler::{BooleanVector,TaskId};
-use crate::system::event::EventId;
 use crate::config::MAX_LOGS;
 use core::fmt;
+
+#[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
+use crate::system::event::EventId;
 
 pub type Logs = [Option<LogEvent>; MAX_LOGS];
 
@@ -17,8 +19,9 @@ pub enum LogEventType {
     MessageRecieve(TaskId),
     SemaphoreSignal(BooleanVector,BooleanVector),
     SemaphoreReset(TaskId),
-    TimerEvent(EventId),
     DeadlineExpired(TaskId,u32),
+    #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
+    TimerEvent(EventId),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -50,6 +53,8 @@ pub struct SystemLogger {
     pub message_recieve_log: bool,
     pub semaphore_signal_log: bool,
     pub semaphore_reset_log: bool,
+    
+    #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
     pub timer_event_log: bool,
 }
 // use a circular queue instead of this crap.
@@ -70,6 +75,8 @@ impl SystemLogger {
             message_recieve_log : false,
             semaphore_signal_log : false,
             semaphore_reset_log : false,
+            
+            #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
             timer_event_log : false,
         }
     }
@@ -109,8 +116,9 @@ impl fmt::Debug for LogEventType {
             LogEventType::MessageRecieve(task_id) => write!(f, "MessageRecieve"),
             LogEventType::SemaphoreSignal(tasks_released,tasks_notified) => write!(f, "SemaphoreSignal"),
             LogEventType::SemaphoreReset(task_id) => write!(f, "SemaphoreReset"),
-            LogEventType::TimerEvent(EventId) => write!(f, "TimerEvent"),
             LogEventType::DeadlineExpired(TaskId, u32) => write!(f, "DeadlineExpired"),
+            #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
+            LogEventType::TimerEvent(EventId) => write!(f, "TimerEvent"),
         }
     }
 }

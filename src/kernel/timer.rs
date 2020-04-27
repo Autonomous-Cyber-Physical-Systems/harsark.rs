@@ -1,3 +1,4 @@
+//! Manages the kernel timer.
 use core::cell::RefCell;
 
 use crate::KernelError;
@@ -8,6 +9,8 @@ use crate::utils::arch::is_privileged;
 
 static SystemTimer: Mutex<RefCell<u32>> = Mutex::new(RefCell::new(0));
  
+// TODO: on timer expire raise an event or make a log entry
+
 pub fn update_time() {
     critical_section(|cs_token| {
         let time = &mut *SystemTimer.borrow(cs_token).borrow_mut();
@@ -21,10 +24,8 @@ pub fn get_time() -> u32 {
     })
 }
 
-/// Starts the Kernel scheduler, which starts scheduling tasks and starts the SysTick timer using the
-/// reference of the Peripherals instance and the `tick_interval`. `tick_interval` specifies the
-/// frequency of the timer interrupt. The SysTick exception updates the kernel regarding the time
-/// elapsed, which is used to dispatch events and schedule tasks.
+/// Starts the Kernel timer. Timing event manager, logging and task monitor
+/// are heavily dependent on the timer.
 pub fn start_timer(peripherals: &mut Peripherals, tick_interval: u32) {
     let syst = &mut peripherals.SYST;
     syst.set_clock_source(SystClkSource::Core);

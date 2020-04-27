@@ -1,7 +1,8 @@
-/// Takes a list of TaskIds and returns a BooleanVector corresponding to it.
+/// A helper struct to generate Boolean vector corresponding to an array of TaskIds at compile time.
 pub struct TaskMask<const N: usize> {}
 
 impl<const N: usize> TaskMask<N> {
+    /// Takes an array of TaskIds and returns a BooleanVector corresponding to it.
     pub const fn generate(tasks: [u32; N]) -> u32{
         let mut task_mask: u32 = 0;
         let mut i = 0;
@@ -12,6 +13,7 @@ impl<const N: usize> TaskMask<N> {
         task_mask
     }
 }
+
 
 pub const fn get_msb_const(val: u32) -> usize {
     let mut res = 0;

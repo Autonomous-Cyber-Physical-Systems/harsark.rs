@@ -1,6 +1,6 @@
 //! # Resource Management Module
-//! Defines the Kernel routines and primitives for resource management.
 //!
+//! Defines the Kernel routines and primitives for resource management.
 use core::cell::{RefCell};
 
 use crate::utils::arch::{Mutex, critical_section};
@@ -20,7 +20,7 @@ use {
 static PiStackGlobal: Mutex<RefCell<PiStack>> = Mutex::new(RefCell::new(PiStack::new()));
 
 /// A Safe Container to store a resource, it can hold resource of any Generic Type
-/// and allow safe access to it without leading into Data races or Deadlocks.
+/// and allow safe access to it without ending up in Data races or Deadlocks.
 #[derive(Debug)]
 pub struct Resource<T: Sized> 
 {
@@ -34,9 +34,7 @@ pub struct Resource<T: Sized>
 
 impl<T: Sized> Resource<T> {
     
-    /// It is used to instantiate a new Resource. This function takes ownership of the variable.
-    /// It returns a resource instantiated with the value. Hence ensuring the value cannot be accessed
-    /// without calls to `acquire` or `access`.
+    /// Create and initialize new Resource object
     pub const fn new(val: T, tasks_mask: BooleanVector) -> Self {
         let tasks_mask = tasks_mask | 1;
         Self { 
@@ -57,8 +55,7 @@ impl<T: Sized> Resource<T> {
         mask
     }
     
-    /// Lock the resources. It takes a BooleanVector corresponding to the tasks that have to be blocked
-    /// from `resources_list.lock()` and calls `block_tasks()` on it.
+    /// Lock the Resource for the currently running task and blocks the competing tasks 
     fn lock(&self) -> Result<&T,KernelError> {
         critical_section(|cs_token| {
             let pi_stack = &mut PiStackGlobal.borrow(cs_token).borrow_mut();
@@ -84,8 +81,7 @@ impl<T: Sized> Resource<T> {
         })
     }
 
-    /// Unlocks the resource. It takes a BooleanVector corresponding to the tasks that have to be
-    /// unblocked from `resource_manager.unlock()` and calls `unblock_tasks()` on it.
+    /// Unlocks the Resource and unblocks the tasks which were blocked during the call to lock
     fn unlock(&self) -> Result<(),KernelError> {
         critical_section(|cs_token| {
             let pi_stack = &mut PiStackGlobal.borrow(cs_token).borrow_mut();
@@ -103,9 +99,7 @@ impl<T: Sized> Resource<T> {
             Ok(())
         })
     }
-    /// Acquire is a helper function that ensures that if a resource is locked, it is unlocked too.
-    /// It takes one argument handler, which is function closure that takes a parameter of type `&T`.
-    /// If the resource is free, the the handler is executed with `inner` as the parameter.
+    /// A helper function that ensures that if a resource is locked, it is unlocked.
     pub fn acquire<F,R>(&self, handler: F) -> Result<R,KernelError>
     where
         F: Fn(&T) -> R,
