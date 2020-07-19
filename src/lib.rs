@@ -7,7 +7,7 @@
 //! 
 //! ```toml
 //! [dependencies]
-//! harsark = { version = "0.3.2" }
+//! harsark = { version = "0.3.4" }
 //! ```
 
 #![no_std]

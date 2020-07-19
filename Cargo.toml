@@ -1,6 +1,6 @@
 [package]
 name = "harsark"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["kanishkarj <kanishkarj@hotmail.com>"]
 edition = "2018"
 license-file = "LICENSE.md"
@@ -17,7 +17,7 @@ cc = "1.0.28"
 cortex-m-semihosting = "0.3.2"
 cortex-m = {version="0.6.1", features=["inline-asm","const-fn"]}
 cortex-m-rt = "0.6.12"
-alloc-cortex-m = { version="0.3.5", optional=true }
+alloc-cortex-m = { version="0.4.0" , optional = true}
 
 [features]
 
