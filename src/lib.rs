@@ -7,10 +7,11 @@
 //! 
 //! ```toml
 //! [dependencies]
-//! harsark = { version = "0.3.4" }
+//! harsark = { version = "0.3.5" }
 //! ```
 
 #![no_std]
+#![feature(llvm_asm)]
 #![feature(asm)]
 #![feature(const_fn)]
 #![feature(lang_items)]

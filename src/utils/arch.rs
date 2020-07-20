@@ -30,7 +30,7 @@ pub fn get_msb(val: u32) -> Option<usize> {
     }
     let mut res;
     unsafe {
-        asm!("clz $1, $0"
+        llvm_asm!("clz $1, $0"
         : "=r"(res)
         : "0"(val)
         );
@@ -60,7 +60,7 @@ pub unsafe fn return_to_psp() {
 #[inline(always)]
 pub fn save_context(task_stack: &TaskControlBlock) {
     unsafe {
-        asm!(
+        llvm_asm!(
             "
     mrs	r0, psp
     subs	r0, #16
@@ -88,7 +88,7 @@ pub fn save_context(task_stack: &TaskControlBlock) {
 #[inline(always)]
 pub fn load_context(task_stack: &TaskControlBlock) {
     unsafe {
-        asm!(
+        llvm_asm!(
             "
             cpsid	i
 
