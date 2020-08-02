@@ -18,7 +18,7 @@ use crate::system::scheduler::TaskControlBlock;
 use crate::kernel::events::sweep_event_table;
 
 #[cfg(feature="process_monitor")]
-use crate::kernel::process_monitor::sweep_deadlines;
+use crate::kernel::task_monitor::sweep_deadlines;
 
 #[cfg(feature="timer")]
 use crate::kernel::timer::update_time;
@@ -72,7 +72,6 @@ pub fn save_context(task_stack: &TaskControlBlock) {
             "stmia	r0!,{{r4-r7}}",
             "subs	r0, #16",
             "mov	r1, {0}",
-            "@bkpt",
             "@ldr	r1, [r2]",
             "str	r0, [r1]",
             in(reg) task_stack,

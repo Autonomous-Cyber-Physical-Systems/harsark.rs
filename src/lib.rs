@@ -39,7 +39,6 @@ use crate::utils::errors::KernelError;
 /// Helper functions.
 pub mod helpers {
     pub use crate::utils::helpers::TaskMask;
-    pub use crate::utils::arch::is_privileged;
 }
 
 /// Kernel routines which assist in Event management.
@@ -72,6 +71,8 @@ pub mod tasks {
     pub use crate::kernel::tasks::release;
     pub use crate::kernel::tasks::start_kernel;
     pub use crate::kernel::tasks::task_exit;
+    #[cfg(feature="task_monitor")]
+    pub use crate::kernel::task_monitor::set_handler as set_deadline_exceed_handler;
 }
 
 #[cfg(feature="system_logger")]

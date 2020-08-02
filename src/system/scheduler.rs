@@ -6,7 +6,7 @@ use crate::utils::arch::{get_msb, save_context, load_context, wait_for_interrupt
 use crate::KernelError;
 
 #[cfg(feature = "process_monitor")]
-use crate::kernel::process_monitor::{clear_deadline,set_deadline}; 
+use crate::kernel::task_monitor::{clear_deadline, set_deadline};
 
 pub type TaskId = u32;
 pub type BooleanVector = u32;

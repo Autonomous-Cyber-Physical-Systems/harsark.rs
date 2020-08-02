@@ -13,4 +13,4 @@ pub mod event;
 pub mod system_logger;
 
 #[cfg(feature="process_monitor")]
-pub mod process_monitor;
+pub mod task_monitor;

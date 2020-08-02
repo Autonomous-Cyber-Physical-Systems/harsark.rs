@@ -11,7 +11,7 @@ use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
 use harsark::tasks::*;
-use harsark::helpers::TaskMask;
+use harsark::helpers::{TaskMask,is_privileged};
 use harsark::primitives::*;
 use harsark::spawn;
 use harsark::events;
@@ -48,7 +48,7 @@ fn main() -> ! {
     The fourth variable corresponds to the task body.
     */
     spawn!(task1, stack1, {
-        hprintln!("TASK 1");
+        hprintln!("TASK 1 {}", is_privileged());
     });
     spawn!(task2, stack2, {
         hprintln!("TASK 2");

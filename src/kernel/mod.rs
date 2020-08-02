@@ -9,7 +9,7 @@ pub mod events;
 pub mod logging;
 
 #[cfg(feature="process_monitor")]
-pub mod process_monitor;
+pub mod task_monitor;
 
 #[cfg(feature="timer")]
 pub mod timer;
