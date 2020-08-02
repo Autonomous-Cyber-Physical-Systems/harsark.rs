@@ -49,18 +49,12 @@ fn main() -> ! {
     */
     spawn!(task1, stack1, {
         hprintln!("TASK 1");
-        cortex_m::asm::delay(9999999);
-        // logging::process(|log: logging::LogEvent| {
-        //     hprintln!("{:?}", log);
-        // });
     });
     spawn!(task2, stack2, {
         hprintln!("TASK 2");
-        cortex_m::asm::delay(9999999);
     });
     spawn!(task3, stack3, {
         hprintln!("TASK 3");
-        cortex_m::asm::delay(9999999);
     });
 
 

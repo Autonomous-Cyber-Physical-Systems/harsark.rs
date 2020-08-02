@@ -25,18 +25,18 @@ use crate::kernel::timer::update_time;
 
 /// Returns the MSB of `val`. It is written using CLZ instruction.
 pub fn get_msb(val: u32) -> Option<usize> {
-    if val == 0 {
-        return None
-    }
-    let mut res;
+    let mut res: usize;
     unsafe {
-        llvm_asm!("clz $1, $0"
-        : "=r"(res)
-        : "0"(val)
+        asm!(
+            "clz {1}, {0}",
+            in(reg) val,
+            out(reg) res,
         );
     }
     res = 32 - res;
-    if res > 0 {
+    if res == 0 {
+        return None
+    } else {
         res -= 1;
     }
     return Some(res);
@@ -60,27 +60,24 @@ pub unsafe fn return_to_psp() {
 #[inline(always)]
 pub fn save_context(task_stack: &TaskControlBlock) {
     unsafe {
-        llvm_asm!(
-            "
-    mrs	r0, psp
-    subs	r0, #16
-    stmia	r0!,{r4-r7}
-    mov	r4, r8
-    mov	r5, r9
-    mov	r6, r10
-    mov	r7, r11
-    subs	r0, #32
-    stmia	r0!,{r4-r7}
-    subs	r0, #16
-
-    mov	r1, $0
-    @bkpt
-    @ldr	r1, [r2]
-    str	r0, [r1]
-            "
-            :
-            : "r"(task_stack)
-            : "r0", "r1"
+        asm!(
+            "mrs r0, psp",
+            "subs r0, #16",
+            "stmia r0!,{{r4-r7}}",
+            "mov	r4, r8",
+            "mov	r5, r9",
+            "mov	r6, r10",
+            "mov	r7, r11",
+            "subs	r0, #32",
+            "stmia	r0!,{{r4-r7}}",
+            "subs	r0, #16",
+            "mov	r1, {0}",
+            "@bkpt",
+            "@ldr	r1, [r2]",
+            "str	r0, [r1]",
+            in(reg) task_stack,
+            out("r0") _, 
+            out("r1") _,
         )
     };
 }
@@ -88,27 +85,22 @@ pub fn save_context(task_stack: &TaskControlBlock) {
 #[inline(always)]
 pub fn load_context(task_stack: &TaskControlBlock) {
     unsafe {
-        llvm_asm!(
-            "
-            cpsid	i
-
-            mov	r1, $0
-            @ldr	r2, =os_next_task
-            @ldr	r1, [r2]
-            @ldr	r1, [r1]
-            ldr	r0, [r1]
-            
-            ldmia	r0!,{r4-r7}
-            mov	r8, r4
-            mov	r9, r5
-            mov	r10, r6
-            mov	r11, r7
-            ldmia	r0!,{r4-r7}
-            msr	psp, r0
-            "
-            :
-            : "r"(task_stack)
-            : "r0", "r1"
+        asm!(
+            "cpsid	i",
+            "mov	r1, {0}",
+            "@ldr	r1, [r2]",
+            "@ldr	r1, [r1]",
+            "ldr	r0, [r1]",
+            "ldmia	r0!,{{r4-r7}}",
+            "mov	r8, r4",
+            "mov	r9, r5",
+            "mov	r10, r6",
+            "mov	r11, r7",
+            "ldmia	r0!,{{r4-r7}}",
+            "msr	psp, r0",
+            in(reg) task_stack,
+            out("r0") _, 
+            out("r1") _,
         )
     };
 }

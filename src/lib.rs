@@ -11,7 +11,6 @@
 //! ```
 
 #![no_std]
-#![feature(llvm_asm)]
 #![feature(asm)]
 #![feature(const_fn)]
 #![feature(lang_items)]
