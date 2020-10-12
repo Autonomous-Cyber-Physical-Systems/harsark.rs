@@ -4,7 +4,7 @@ A safe and lightweight real-time Kernel written in Rust. The Kernel is developed
 
 This Project is the Implementation of my Bachelor's Thesis. For details regarding design and architecuture take a look at the thesis. The Kernel subsystem design has been inspired from the Hartex design specification.
 
-HarSaRK has been presented at Workshop on the Reliability of Intelligent Environments 2020 (WoRIE). The paper can be found [here](HarSaRK-RS&#32;-&#32;WoRIE'20.pdf)
+HarSaRK has been presented at Workshop on the Reliability of Intelligent Environments 2020 (WoRIE). The publication can be found [here](HarSaRK-RS&#32;-&#32;WoRIE'20.pdf).
 
 ## Features
 
