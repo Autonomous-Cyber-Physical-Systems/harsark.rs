@@ -17,14 +17,6 @@ use harsark::spawn;
 use harsark::events;
 // use harsark::logging;
 
-const task1: u32 = 1;
-const task2: u32 = 2;
-const task3: u32 = 3;
-
-static mut stack1: [u32; 128] = [0; 128];
-static mut stack2: [u32; 128] = [0; 128];
-static mut stack3: [u32; 128] = [0; 128];
-
 #[entry]
 fn main() -> ! {
     /*
@@ -47,8 +39,17 @@ fn main() -> ! {
     The third variable corresponds to the task stack.
     The fourth variable corresponds to the task body.
     */
+
+    const task1: u32 = 1;
+    const task2: u32 = 2;
+    const task3: u32 = 3;
+
+    static mut stack1: [u32; 128] = [0; 128];
+    static mut stack2: [u32; 128] = [0; 128];
+    static mut stack3: [u32; 128] = [0; 128];
+
     spawn!(task1, stack1, {
-        hprintln!("TASK 1 {}", is_privileged());
+        hprintln!("TASK 1");
     });
     spawn!(task2, stack2, {
         hprintln!("TASK 2");

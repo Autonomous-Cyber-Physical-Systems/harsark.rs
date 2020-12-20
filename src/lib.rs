@@ -17,6 +17,7 @@
 #![feature(const_if_match)]
 #![feature(const_loop)]
 #![feature(const_generics)]
+#![feature(const_fn_fn_ptr_basics)]
 
 #[cfg(feature = "alloc")]
 pub extern crate alloc;

@@ -1,8 +1,10 @@
-# harsark.rs
+# HarSaRK-RS
 
 A safe and lightweight real-time Kernel written in Rust. The Kernel is developed for cortex-m3/m4 based microcontrollers. The goal of the project was to develop a memory efficient, safe and lightweight real-time Kernel. Rust-lang was choosen due to its powerful compile-time checks. All the subsystems have been developed and manually tested. Language features like Traits, Generics helped define powerful and safe types. The Kernel uses statically allocated data structures to keep itself simple and fast. But using feature flags, the developer can enable dynamic memory allocation (for end-application and not Kernel itself). Cargo feature flags are used to configure constants such as maximum tasks, resources, etc. 
 
 This Project is the Implementation of my Bachelor's Thesis. For details regarding design and architecuture take a look at the thesis. The Kernel subsystem design has been inspired from the Hartex design specification.
+
+HarSaRK has been presented at Workshop on the Reliability of Intelligent Environments 2020 (WoRIE). The publication can be found [here](HarSaRK-RS&#32;-&#32;WoRIE'20.pdf).
 
 ## Features
 
@@ -14,13 +16,11 @@ This Project is the Implementation of my Bachelor's Thesis. For details regardin
 
 For examples, take a look at `/examples`.
 
-[User Documentation](https://docs.rs/harsark.rs/)
-
-[API Reference](http://autonomous-cyber-physical-systems.github.io/harsark.rs)
+[API Reference](https://docs.rs/harsark/0.3.5/harsark/)
 
 ## References
 
-Gourinath Banda. “Scalable Real-Time Kernel for Small Embedded Systems”. En- glish. PhD thesis. Denmark: University of Southern Denmark, June 2003. URL: http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=84D11348847CDC13691DFAED09883FCB?doi=10.1.1.118.1909&rep=rep1&type=pdf.
+Gourinath Banda. “Scalable Real-Time Kernel for Small Embedded Systems”. English. MSEngg Dissertation. Denmark: University of Southern Denmark, June 2003. URL: http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=84D11348847CDC13691DFAED09883FCB?doi=10.1.1.118.1909&rep=rep1&type=pdf.
 
 ## Future Work
 

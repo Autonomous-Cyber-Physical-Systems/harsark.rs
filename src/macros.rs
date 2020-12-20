@@ -17,7 +17,6 @@
 ///     hprintln!("Hello!");
 /// });
 /// ```
-
 #[macro_export]
 macro_rules! spawn {
     ($priority: expr, $stack: expr, $handler_fn: block) => {
