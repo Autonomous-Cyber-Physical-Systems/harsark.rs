@@ -11,7 +11,7 @@ use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 
 use harsark::tasks::*;
-use harsark::helpers::{TaskMask,is_privileged};
+use harsark::helpers::{TaskMask};
 use harsark::primitives::*;
 use harsark::spawn;
 use harsark::events;

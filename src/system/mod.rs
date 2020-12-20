@@ -12,5 +12,5 @@ pub mod event;
 #[cfg(feature="system_logger")]
 pub mod system_logger;
 
-#[cfg(feature="process_monitor")]
+#[cfg(feature="task_monitor")]
 pub mod task_monitor;

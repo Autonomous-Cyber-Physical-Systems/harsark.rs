@@ -49,6 +49,6 @@ bench = false
 
 [package.metadata.docs.rs]
 
-features = [ "events_64", "timer", "system_logger", "alloc", "process_monitor"]
+features = [ "events_64", "timer", "system_logger", "alloc", "task_monitor"]
 default-target = "thumbv7em-none-eabi"
 targets = ["thumbv7em-none-eabi"]

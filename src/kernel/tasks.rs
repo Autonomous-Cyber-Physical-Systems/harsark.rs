@@ -32,7 +32,7 @@ pub fn start_kernel() -> ! {
     }
 }
 
-#[cfg(feature="process_monitor")]
+#[cfg(feature="task_monitor")]
 /// Create a new task with the configuration set as arguments passed.
 pub fn create_task(
     priority: TaskId,
@@ -46,7 +46,7 @@ pub fn create_task(
     })
 }
 
-#[cfg(not(feature="process_monitor"))]
+#[cfg(not(feature="task_monitor"))]
 /// Create a new task with the configuration set as arguments passed.
 pub fn create_task(
     priority: TaskId,

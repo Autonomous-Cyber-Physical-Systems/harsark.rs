@@ -5,7 +5,7 @@ authors = ["kanishkarj"]
 edition = "2018"
 
 [dependencies]
-harsark = { path = "../..", features=["system_logger","tasks_16","events_16","alloc"] }
+harsark = { path = "../..", features=["system_logger","tasks_16","events_16","alloc", "task_monitor"] }
 cortex-m = {version="0.6.1", features=["inline-asm"]}
 cortex-m-rt = "*"
 panic-halt = "0.2.0"

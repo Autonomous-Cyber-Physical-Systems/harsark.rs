@@ -17,7 +17,7 @@ use crate::system::scheduler::TaskControlBlock;
 #[cfg(any(feature = "events_32", feature = "events_16", feature = "events_64"))]
 use crate::kernel::events::sweep_event_table;
 
-#[cfg(feature="process_monitor")]
+#[cfg(feature="task_monitor")]
 use crate::kernel::task_monitor::sweep_deadlines;
 
 #[cfg(feature="timer")]
@@ -120,7 +120,7 @@ fn SysTick() {
     #[cfg(feature="timer")]
     update_time();
     
-    #[cfg(feature="process_monitor")]
+    #[cfg(feature="task_monitor")]
     sweep_deadlines();
     
     // hprintln!("hello");

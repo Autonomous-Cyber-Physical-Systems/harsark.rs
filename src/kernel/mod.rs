@@ -8,7 +8,7 @@ pub mod events;
 #[cfg(feature="system_logger")]
 pub mod logging;
 
-#[cfg(feature="process_monitor")]
+#[cfg(feature="task_monitor")]
 pub mod task_monitor;
 
 #[cfg(feature="timer")]
