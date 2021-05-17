@@ -1,22 +1,25 @@
 use core::cell::RefCell;
 
-use crate::KernelError;
+use crate::kernel::timer::get_time;
 use crate::priv_execute;
 use crate::system::scheduler::*;
-use crate::utils::arch::{svc_call,Mutex,critical_section};
-use crate::utils::arch::is_privileged;
 use crate::system::system_logger::*;
-use crate::kernel::timer::get_time;
+use crate::utils::arch::is_privileged;
+use crate::utils::arch::{critical_section, Mutex};
+use crate::KernelError;
 
 static Logger: Mutex<RefCell<SystemLogger>> = Mutex::new(RefCell::new(SystemLogger::new()));
 
 pub fn report(event_type: LogEventType) {
     critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().push(LogEvent::new(event_type, get_time()));
+        Logger
+            .borrow(cs_token)
+            .borrow_mut()
+            .push(LogEvent::new(event_type, get_time()));
     })
 }
 
-pub fn process<F> (handler: F) 
+pub fn process<F>(handler: F)
 where
     F: Fn(LogEvent),
 {
@@ -110,67 +113,45 @@ pub fn set_timer_event(val: bool) {
 }
 
 pub fn get_release() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().release_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().release_log)
 }
 
 pub fn get_block_tasks() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().block_tasks_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().block_tasks_log)
 }
 
 pub fn get_unblock_tasks() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().unblock_tasks_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().unblock_tasks_log)
 }
 
 pub fn get_task_exit() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().task_exit_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().task_exit_log)
 }
 
 pub fn get_resource_lock() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().resource_lock_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().resource_lock_log)
 }
 
 pub fn get_resource_unlock() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().resource_unlock_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().resource_unlock_log)
 }
 
 pub fn get_message_broadcast() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().message_broadcast_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().message_broadcast_log)
 }
 
 pub fn get_message_recieve() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().message_recieve_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().message_recieve_log)
 }
 
 pub fn get_semaphore_signal() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().semaphore_signal_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().semaphore_signal_log)
 }
 
 pub fn get_semaphore_reset() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().semaphore_reset_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().semaphore_reset_log)
 }
 
 pub fn get_timer_event() -> bool {
-    critical_section(|cs_token| {
-        Logger.borrow(cs_token).borrow_mut().timer_event_log
-    })
+    critical_section(|cs_token| Logger.borrow(cs_token).borrow_mut().timer_event_log)
 }

@@ -7,17 +7,17 @@ extern crate lazy_static;
 extern crate panic_halt;
 extern crate stm32f4;
 
+use alloc::vec::Vec;
 use core::cell::RefCell;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
-use alloc::vec::Vec;
 
 use harsark::alloc;
 use harsark::heap::init_heap;
-use harsark::tasks::*;
 use harsark::helpers::TaskMask;
 use harsark::primitives::*;
 use harsark::spawn;
+use harsark::tasks::*;
 
 /*
 lazy_static is used to define global static variables.
@@ -29,41 +29,50 @@ only way to share data with them is via global statics.
 The Resource res1 stores a resource of type Vec. Vec is a dynamic memory data structure.
 */
 
-const task1: u32 = 1;
-const task2: u32 = 2;
+const TASK1: u32 = 1;
+const TASK2: u32 = 2;
 
+const STACK_SIZE: usize = 512;
+
+lazy_static! {
+    static ref resource1: Resource<RefCell<Vec<u32>>> =
+        Resource::new(RefCell::new(Vec::new()), TaskMask::generate([1, 2]),);
+}
 
 #[entry]
 fn main() -> ! {
     // Initialize heap for the application. The argument is the size of the heap.
     init_heap(1024);
-    let peripherals = init_peripherals();
-    
-    static mut stack1: [u32; 1024] = [0; 1024];
-    static mut stack2: [u32; 1024] = [0; 1024];
-    
-    static resource1: Resource<RefCell<Vec<u32>>> = Resource::new(RefCell::new(Vec::new()), TaskMask::generate([1, 2]));
-    
-    spawn!(task1, stack1, {
-        hprintln!("TASK 1: Enter");
-        resource1.acquire(|res| {
-            let res = &mut res.borrow_mut();
-            res.push(1);
-            hprintln!("TASK 1: Resource : {:?}", res);
-        });
-        hprintln!("TASK 1: End");
-    });
-    spawn!(task2, stack2, {
-        hprintln!("TASK 2: Enter");
-        resource1.acquire(|res| {
-            let res = &mut res.borrow_mut();
-            res.push(2);
-            hprintln!("TASK 2: Resource : {:?}", res);
-        });
-        hprintln!("TASK 2: End");
-    });
 
-    init();
-    release(TaskMask::generate([task1, task2]));
+    spawn!(
+        TASK1,
+        STACK_SIZE,
+        (|cxt| {
+            hprintln!("TASK 1: Enter");
+            resource1.acquire(cxt, |res| {
+                let res = &mut res.borrow_mut();
+                // x = res.clone();
+                res.push(1);
+                hprintln!("TASK 1: Resource : {:?}", res);
+            });
+            hprintln!("TASK 1: End");
+        })
+    );
+    spawn!(
+        TASK2,
+        STACK_SIZE,
+        (|cxt| {
+            hprintln!("TASK 2: Enter");
+            resource1.acquire(cxt, |res| {
+                let res = &mut res.borrow_mut();
+                res.push(2);
+                hprintln!("TASK 2: Resource : {:?}", res);
+            });
+            hprintln!("TASK 2: End");
+        })
+    );
+
+    init(|_| Ok(()));
+    release(TaskMask::generate([TASK1, TASK2]));
     start_kernel()
 }

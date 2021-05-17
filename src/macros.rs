@@ -1,6 +1,5 @@
 //! Macro Definitions
 
-
 /// The tasks must be looping infinitely and call `task_exit` whenever a particular task is done.
 /// This makes it complicated to create tasks and also might introduce undefined behavior if task_exit is not called.
 /// The `spawn` macro makes it easier to define tasks. It also defines a static variable of type TaskId,
@@ -19,24 +18,28 @@
 /// ```
 #[macro_export]
 macro_rules! spawn {
-    ($priority: expr, $stack: expr, $handler_fn: block) => {
+    ($priority: expr, $stack_size: ident, $handler_fn: tt) => {
+        let mut stack = [0; $stack_size];
         create_task(
             $priority,
-            unsafe{ &mut $stack },
-            || loop {
-                $handler_fn
+            unsafe { &mut stack },
+            |cxt: ContextType| loop {
+            $handler_fn(cxt);
                 task_exit();
-        }).unwrap();
+            },
+        );
     };
-    ($priority: expr, $deadline: expr, $stack: expr, $handler_fn: block) => {
+    ($priority: expr, $deadline: expr, $stack_size: ident, $handler_fn: tt) => {
+        let mut stack = [0; $stack_size]
         create_task(
             $priority,
             $deadline,
-            unsafe{ &mut $stack },
-            || loop {
-                $handler_fn
+            unsafe { &mut stack },
+            |cxt: ContextType| loop {
+                $handler_fn(cxt);
                 task_exit();
-        }).unwrap();
+            },
+        );
     };
 }
 

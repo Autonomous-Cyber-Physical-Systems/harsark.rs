@@ -12,14 +12,16 @@ use cortex_m_semihosting::hprintln;
 use cortex_m_rt::entry;
 use stm32f4::stm32f407::Peripherals;
 
-use harsark::tasks::*;
+use harsark::events;
 use harsark::helpers::TaskMask;
 use harsark::primitives::*;
 use harsark::spawn;
-use harsark::events;
+use harsark::tasks::*;
+use harsark::timer;
+const TASK1: u32 = 1;
+const TASK2: u32 = 2;
 
-const task1: u32 = 1;
-const task2: u32 = 2;
+const STACK_SIZE: usize = 512;
 
 lazy_static! {
     static ref board_peripherals: Resource<RefCell<Peripherals>> = Resource::new(
@@ -50,57 +52,52 @@ fn peripherals_configure(peripherals: &mut Peripherals) {
 
 #[entry]
 fn main() -> ! {
-    let cortex_peripherals = init_peripherals();
+    let mut cortex_peripherals = cortex_m::Peripherals::take().unwrap();
 
-    board_peripherals.acquire(|perf| {
-        let perf = &mut *perf.borrow_mut();
-        peripherals_configure(perf);
-    });
+    let event1 = events::new(true, 5, || release(TaskMask::generate([TASK1])));
+    let event2 = events::new(true, 4, || release(TaskMask::generate([TASK2])));
 
-    let event1 = event::new(true, 5, || {
-        release(TaskMask::generate([task1]))
-    });
-    let event2 = event::new(true, 4, || {
-        release(TaskMask::generate([task2]))
-    });
-
-    static mut stack1: [u32; 512] = [0; 512];
-    static mut stack2: [u32; 512] = [0; 512];
-
-    spawn!(task1, stack1, {
-        board_peripherals.acquire(|perf| {
-            let perf = &mut *perf.borrow_mut();
-            perf.GPIOA.odr.modify(|r, w| {
-                let led2 = r.odr6().bit();
-                if led2 {
-                    w.odr6().clear_bit()
-                } else {
-                    w.odr6().set_bit()
-                }
+    spawn!(
+        TASK1,
+        STACK_SIZE,
+        (|cxt| {
+            board_peripherals.acquire(cxt, |perf| {
+                let perf = &mut *perf.borrow_mut();
+                perf.GPIOA.odr.modify(|r, w| {
+                    let led2 = r.odr6().bit();
+                    if led2 {
+                        w.odr6().clear_bit()
+                    } else {
+                        w.odr6().set_bit()
+                    }
+                });
             });
-        });
-    });
-    spawn!(task2, stack2, {
-        board_peripherals.acquire(|perf| {
-            let perf = &mut *perf.borrow_mut();
-            perf.GPIOA.odr.modify(|r, w| {
-                let led3 = r.odr7().bit();
-                if led3 {
-                    w.odr7().clear_bit()
-                } else {
-                    w.odr7().set_bit()
-                }
+        })
+    );
+    spawn!(
+        TASK2,
+        STACK_SIZE,
+        (|cxt| {
+            board_peripherals.acquire(cxt, |perf| {
+                let perf = &mut *perf.borrow_mut();
+                perf.GPIOA.odr.modify(|r, w| {
+                    let led3 = r.odr7().bit();
+                    if led3 {
+                        w.odr7().clear_bit()
+                    } else {
+                        w.odr7().set_bit()
+                    }
+                });
             });
-        });
-    });
+        })
+    );
 
-    init();
-    cortex_peripherals.acquire(|perf| {
-        let perf = &mut *perf.borrow_mut();
-        event::systick_start(
-            perf,
-            80_000_00,
-        )
+    init(|cxt| {
+        board_peripherals.acquire(cxt, |perf| {
+            let perf = &mut *perf.borrow_mut();
+            peripherals_configure(perf);
+        })
     });
+    timer::start_timer(&mut cortex_peripherals, 80_000_00);
     start_kernel()
 }

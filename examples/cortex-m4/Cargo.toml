@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 # while running the heap.rs example, add the "alloc" in the list of features for harsark.
-harsark = { path = "../..", features=["system_logger","tasks_16","events_16"] }
+harsark = { path = "../..", features=["tasks_32","events_32","alloc", "system_logger"] }
 cortex-m = {version="0.6.1", features=["inline-asm"]}
 cortex-m-rt = "*"
 panic-halt = "0.2.0"
@@ -25,6 +25,6 @@ bench = false
 
 [profile.release]
 codegen-units = 1 # better optimizations
-opt-level = "s"
+opt-level = 3
 debug = true # symbols are nice and they don't increase the size on Flash
 lto = true # better optimizations
