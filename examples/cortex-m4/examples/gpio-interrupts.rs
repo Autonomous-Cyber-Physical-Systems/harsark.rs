@@ -9,24 +9,30 @@ extern crate stm32f4;
 use core::cell::RefCell;
 use cortex_m_semihosting::hprintln;
 
-use cortex_m_rt::entry;
-use stm32f4::stm32f407::{self, Peripherals};
-use stm32f4::stm32f407::interrupt;
 use cortex_m::peripheral::NVIC;
+use cortex_m_rt::entry;
+use stm32f4::stm32f407::interrupt;
+use stm32f4::stm32f407::{self, Peripherals};
 
-use harsark::tasks::*;
 use harsark::helpers::TaskMask;
 use harsark::primitives::*;
 use harsark::spawn;
+use harsark::tasks::*;
 
-const task1: u32 = 1;
-const task2: u32 = 2;
+const TASK1: u32 = 1;
+const TASK2: u32 = 2;
+const TASK3: u32 = 3;
+const TASK4: u32 = 4;
+
+const STACK_SIZE: usize = 512;
 
 lazy_static! {
     static ref board_peripherals: Resource<RefCell<Peripherals>> = Resource::new(
         RefCell::new(Peripherals::take().unwrap()),
         TaskMask::generate([1, 2]),
     );
+    static ref perif_pr3: Semaphore = Semaphore::new(TaskMask::generate([TASK3]));
+    static ref perif_pr4: Semaphore = Semaphore::new(TaskMask::generate([TASK3]));
 }
 
 fn peripherals_configure(peripherals: &mut Peripherals) {
@@ -90,61 +96,77 @@ fn peripherals_configure(peripherals: &mut Peripherals) {
 
 #[interrupt]
 fn EXTI3() {
-    board_peripherals.acquire(|peripherals| {
-        let peripherals = &mut *peripherals.borrow_mut();
-        peripherals.EXTI.pr.write(|w| w.pr3().set_bit());
-    });
-    release(2);
+    perif_pr3.signal_and_release(TaskMask::generate([TASK3]));
 }
 
 #[interrupt]
 fn EXTI4() {
-    board_peripherals.acquire(|peripherals| {
-        let peripherals = &mut *peripherals.borrow_mut();
-        peripherals.EXTI.pr.write(|w| w.pr4().set_bit());
-    });
-    release(4);
+    perif_pr4.signal_and_release(TaskMask::generate([TASK3]));
 }
 
 #[entry]
 fn main() -> ! {
-    let cortex_peripherals = init_peripherals();
-
-    board_peripherals.acquire(|perf| {
-        let perf = &mut *perf.borrow_mut();
-        peripherals_configure(perf);
-    });
-
-    static mut stack1: [u32; 300] = [0; 300];
-    static mut stack2: [u32; 300] = [0; 300];
-
-    spawn!(task1, stack1, {
-        board_peripherals.acquire(|perf| {
-            let perf = &mut *perf.borrow_mut();
-            perf.GPIOA.odr.modify(|r, w| {
-                let led2 = r.odr6().bit();
-                if led2 {
-                    w.odr6().clear_bit()
-                } else {
-                    w.odr6().set_bit()
-                }
+    spawn!(
+        TASK1,
+        STACK_SIZE,
+        (|cxt| {
+            board_peripherals.acquire(cxt, |perf| {
+                let perf = &mut *perf.borrow_mut();
+                perf.GPIOA.odr.modify(|r, w| {
+                    let led2 = r.odr6().bit();
+                    if led2 {
+                        w.odr6().clear_bit()
+                    } else {
+                        w.odr6().set_bit()
+                    }
+                });
             });
-        });
-    });
-    spawn!(task2, stack2, {
-        board_peripherals.acquire(|perf| {
-            let perf = &mut *perf.borrow_mut();
-            perf.GPIOA.odr.modify(|r, w| {
-                let led3 = r.odr7().bit();
-                if led3 {
-                    w.odr7().clear_bit()
-                } else {
-                    w.odr7().set_bit()
-                }
+        })
+    );
+    spawn!(
+        TASK2,
+        STACK_SIZE,
+        (|cxt| {
+            board_peripherals.acquire(cxt, |perf| {
+                let perf = &mut *perf.borrow_mut();
+                perf.GPIOA.odr.modify(|r, w| {
+                    let led3 = r.odr7().bit();
+                    if led3 {
+                        w.odr7().clear_bit()
+                    } else {
+                        w.odr7().set_bit()
+                    }
+                });
             });
-        });
-    });
+        })
+    );
 
-    init();
+    spawn!(
+        TASK3,
+        STACK_SIZE,
+        (|cxt| {
+            if perif_pr3.test_and_reset(cxt).unwrap() {
+                board_peripherals.acquire(cxt, |peripherals| {
+                    let peripherals = &mut *peripherals.borrow_mut();
+                    peripherals.EXTI.pr.write(|w| w.pr3().set_bit());
+                });
+                release(2);
+            }
+            if perif_pr4.test_and_reset(cxt).unwrap() {
+                board_peripherals.acquire(cxt, |peripherals| {
+                    let peripherals = &mut *peripherals.borrow_mut();
+                    peripherals.EXTI.pr.write(|w| w.pr4().set_bit());
+                });
+                release(4);
+            }
+        })
+    );
+
+    init(|cxt| {
+        board_peripherals.acquire(cxt, |perf| {
+            let perf = &mut *perf.borrow_mut();
+            peripherals_configure(perf);
+        })
+    });
     start_kernel()
 }

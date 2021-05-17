@@ -4,8 +4,8 @@
 //! and implements the locking and unlocking mechanism.
 
 use crate::config::MAX_RESOURCES;
-use crate::KernelError;
 use crate::system::scheduler::TaskId;
+use crate::KernelError;
 
 const PI: i32 = -1;
 
@@ -27,21 +27,23 @@ impl PiStack {
         }
     }
 
+    #[inline(always)]
     /// Pops the stack top and assigns the `system_ceiling` to the new stack top.
-    pub fn pop_stack(&mut self) -> Result<(),KernelError> {
+    pub fn pop_stack(&mut self) -> Result<(), KernelError> {
         if self.top == 0 {
-            return Err(KernelError::Empty)
+            return Err(KernelError::Empty);
         }
         self.top -= 1;
         self.system_ceiling = self.pi_stack[self.top];
         Ok(())
     }
 
+    #[inline(always)]
     /// Pushes the passed ceiling onto the pi_stack.
-    pub fn push_stack(&mut self, ceiling: TaskId) -> Result<(),KernelError> {
+    pub fn push_stack(&mut self, ceiling: TaskId) -> Result<(), KernelError> {
         self.top += 1;
         if self.top >= MAX_RESOURCES {
-            return Err(KernelError::LimitExceeded)
+            return Err(KernelError::LimitExceeded);
         }
         self.pi_stack[self.top] = ceiling as i32;
         self.system_ceiling = ceiling as i32;

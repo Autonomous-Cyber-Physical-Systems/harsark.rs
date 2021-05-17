@@ -20,7 +20,3 @@ load
 # stepi
 
 c
-x 0xe0001004
-c
-x 0xe0001004
-quit

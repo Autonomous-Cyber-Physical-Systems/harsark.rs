@@ -7,14 +7,15 @@ extern crate stm32f4;
 use core::cell::RefCell;
 
 use cortex_m::peripheral::Peripherals;
-use cortex_m_rt::entry;
+use cortex_m_rt::{entry, exception};
 use cortex_m_semihosting::hprintln;
 
-use harsark::tasks::*;
-use harsark::helpers::{TaskMask};
+use harsark::events;
+use harsark::helpers::TaskMask;
 use harsark::primitives::*;
 use harsark::spawn;
-use harsark::events;
+use harsark::tasks::*;
+use harsark::KernelError;
 // use harsark::logging;
 
 #[entry]
@@ -40,31 +41,40 @@ fn main() -> ! {
     The fourth variable corresponds to the task body.
     */
 
-    const task1: u32 = 1;
-    const task2: u32 = 2;
-    const task3: u32 = 3;
+    const TASK1: u32 = 1;
+    const TASK2: u32 = 2;
+    const TASK3: u32 = 3;
 
-    static mut stack1: [u32; 128] = [0; 128];
-    static mut stack2: [u32; 128] = [0; 128];
-    static mut stack3: [u32; 128] = [0; 128];
+    const STACK_SIZE: usize = 256;
 
-    spawn!(task1, stack1, {
-        hprintln!("TASK 1");
-    });
-    spawn!(task2, stack2, {
-        hprintln!("TASK 2");
-    });
-    spawn!(task3, stack3, {
-        hprintln!("TASK 3");
-    });
-
+    spawn!(
+        TASK1,
+        STACK_SIZE,
+        (|cxt| {
+            hprintln!("TASK 1: {:?}", cxt);
+        })
+    );
+    spawn!(
+        TASK2,
+        STACK_SIZE,
+        (|cxt| {
+            hprintln!("TASK 2: {:?}", cxt);
+        })
+    );
+    spawn!(
+        TASK3,
+        STACK_SIZE,
+        (|cxt| {
+            hprintln!("TASK 3: {:?}", cxt);
+        })
+    );
 
     // Initializes the kernel in preemptive mode.
-    init();
+    init(|_| Ok(()));
 
-    // Releases tasks task1, task2, task3
+    // Releases tasks TASK1, TASK2, TASK3
     // logging::set_all(true);
-    release(TaskMask::generate([task1, task2, task3]));
+    release(TaskMask::generate([TASK1]));
     // event::start_timer(&mut peripherals, 1000_0);
     /*
     Starts scheduling tasks on the device.
@@ -72,4 +82,17 @@ fn main() -> ! {
     150_000 corresponds to the tick interval of the SysTick timer.
     */
     start_kernel()
+}
+
+#[exception]
+unsafe fn DefaultHandler(x: i16) -> ! {
+    cortex_m::asm::bkpt();
+    loop {}
+}
+
+#[exception]
+unsafe fn UsageFault() -> ! {
+    // prints the exception frame as a panic message
+    cortex_m::asm::bkpt();
+    loop {}
 }
